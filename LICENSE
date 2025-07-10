@@ -1,7 +1,7 @@
 Open-Commercial Innovation License (OCIL)
 Version 1.0
 
-Copyright (c) [YEAR] [YOUR NAME OR COMPANY NAME]
+Copyright (c) 2025 ETION TEAM
 
 PREAMBLE:
 This license is designed to promote open innovation while creating commercial 
@@ -20,11 +20,11 @@ TERMS:
    a) Attribution:
       - Include this license file in all distributions
       - Display prominent credit in documentation/UIs:
-        "Includes technology from [PROJECT NAME] (github.com/[your-repo])"
+        "Includes technology from [PROJECT NAME] (github.com/aemiliotis/Robotics-AI-cells)"
    
    b) Commercial Use Notice:
       - Companies using this in products/services must add:
-        "Utilizes [PROJECT NAME] components" in product documentation
+        "Utilizes Ronotics AI cells components" in product documentation
         or marketing materials.
 
 3. COMMERCIAL PARTNERSHIPS
@@ -32,7 +32,7 @@ TERMS:
    - Licensing agreements for proprietary versions
    - Sponsored development of custom features
    - Commercial acquisition opportunities
-   Contact: [YOUR EMAIL] or visit [WEBSITE]
+   Contact: etion.prosfores@gmail.com
 
 4. LIMITATIONS
    a) No Patent Claims:
@@ -55,6 +55,6 @@ we actively seek commercial partners for:
 - Enterprise support contracts
 - Technology transfer opportunities
 
-For serious inquiries, contact: [COMMERCIAL CONTACT EMAIL]
+For serious inquiries, contact: etion.prosfores@gmail.com
 
 END OF LICENSE
