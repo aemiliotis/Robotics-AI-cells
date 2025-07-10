@@ -1,24 +1,60 @@
-This is free and unencumbered software released into the public domain.
+Open-Commercial Innovation License (OCIL)
+Version 1.0
 
-Anyone is free to copy, modify, publish, use, compile, sell, or
-distribute this software, either in source code form or as a compiled
-binary, for any purpose, commercial or non-commercial, and by any
-means.
+Copyright (c) [YEAR] [YOUR NAME OR COMPANY NAME]
 
-In jurisdictions that recognize copyright laws, the author or authors
-of this software dedicate any and all copyright interest in the
-software to the public domain. We make this dedication for the benefit
-of the public at large and to the detriment of our heirs and
-successors. We intend this dedication to be an overt act of
-relinquishment in perpetuity of all present and future rights to this
-software under copyright law.
+PREAMBLE:
+This license is designed to promote open innovation while creating commercial 
+opportunities. You are free to use this work, but we encourage partnerships
+for serious commercial applications.
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
-IN NO EVENT SHALL THE AUTHORS BE LIABLE FOR ANY CLAIM, DAMAGES OR
-OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
-ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
-OTHER DEALINGS IN THE SOFTWARE.
+TERMS:
 
-For more information, please refer to <https://unlicense.org>
+1. GRANT OF RIGHTS
+   a) You may use, modify, and distribute this software for any purpose,
+      including commercial applications.
+   b) You may incorporate this work into proprietary systems without
+      requiring disclosure of your entire codebase.
+
+2. REQUIREMENTS
+   a) Attribution:
+      - Include this license file in all distributions
+      - Display prominent credit in documentation/UIs:
+        "Includes technology from [PROJECT NAME] (github.com/[your-repo])"
+   
+   b) Commercial Use Notice:
+      - Companies using this in products/services must add:
+        "Utilizes [PROJECT NAME] components" in product documentation
+        or marketing materials.
+
+3. COMMERCIAL PARTNERSHIPS
+   While this software is open, the authors welcome:
+   - Licensing agreements for proprietary versions
+   - Sponsored development of custom features
+   - Commercial acquisition opportunities
+   Contact: [YOUR EMAIL] or visit [WEBSITE]
+
+4. LIMITATIONS
+   a) No Patent Claims:
+      Users waive rights to patent any derivative work.
+   b) No Warranty:
+      This software is provided "as-is" without liability.
+   c) No Trademark Use:
+      Cannot use project names/logos without permission.
+
+5. SPECIAL PROVISIONS
+   For companies generating over $1M annually using this software:
+   - We request notification via email
+   - We encourage (but don't require) a revenue-sharing agreement
+   - Priority access to premium support options
+
+NOTICE TO COMPANIES:
+This project represents significant R&D investment. While free to use,
+we actively seek commercial partners for:
+- Custom implementations
+- Enterprise support contracts
+- Technology transfer opportunities
+
+For serious inquiries, contact: [COMMERCIAL CONTACT EMAIL]
+
+END OF LICENSE
