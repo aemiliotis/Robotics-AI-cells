@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Robotics AI Cell Hub</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 1000px; margin: 0 auto; padding: 20px; background: #f0f0f0; }
+        .container { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        h1 { color: #333; text-align: center; }
+        .cell-selector { margin: 20px 0; }
+        select, textarea, button, input { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ddd; border-radius: 4px; }
+        button { background: #4CAF50; color: white; border: none; cursor: pointer; font-weight: bold; }
+        button:hover { background: #45a049; }
+        #output { margin-top: 20px; padding: 15px; background: #f9f9f9; border-radius: 4px; min-height: 100px; }
+        .api-example { background: #1e1e1e; color: #f8f8f8; padding: 15px; border-radius: 4px; font-family: monospace; overflow-x: auto; }
+        .sensor-data { display: flex; gap: 10px; }
+        .sensor-data > div { flex: 1; }
+        canvas { border: 1px solid #ccc; margin-top: 10px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🤖 Robotics AI Cell Hub</h1>
+        <p>On-demand micro-AI for robots. Lightweight. Modular. Real-time.</p>
+        
+        <!-- Step 1: Select AI Cells -->
+        <div class="cell-selector">
+            <h3>🔧 Select AI Cells</h3>
+            <select id="cellSelection" multiple>
+                <option value="object_detection">Object Detection (YOLO Tiny)</option>
+                <option value="path_planning">Path Planning (A*)</option>
+                <option value="lidar_processor">Lidar Data Processor</option>
+                <option value="gesture_control">Gesture Control (MediaPipe)</option>
+                <option value="obstacle_avoidance">Obstacle Avoidance</option>
+                <option value="voice_command">Voice Command (Whisper Tiny)</option>
+            </select>
+        </div>
+        
+        <!-- Step 2: Input Data -->
+        <div>
+            <h3>📥 Input Data</h3>
+            <div class="sensor-data">
+                <div>
+                    <label>Camera Feed (Mock)</label>
+                    <canvas id="cameraCanvas" width="300" height="200"></canvas>
+                    <button onclick="mockCamera()">Simulate Camera</button>
+                </div>
+                <div>
+                    <label>Lidar Data (JSON)</label>
+                    <textarea id="lidarData" rows="5">{"angles": [0, 45, 90], "distances": [2.0, 1.5, 3.0]}</textarea>
+                </div>
+            </div>
+            <label>Voice Command (Try: "Move left")</label>
+            <input type="text" id="voiceCommand" placeholder="Or type a command...">
+        </div>
+        
+        <!-- Step 3: Run -->
+        <button onclick="processRoboticsAI()">🚀 Run AI Cells</button>
+        
+        <!-- Step 4: Output -->
+        <div id="output">
+            <h3>📤 Output</h3>
+            <pre id="result">AI results will appear here...</pre>
+            <canvas id="pathCanvas" width="300" height="200"></canvas>
+        </div>
+        
+        <!-- API Example -->
+        <div>
+            <h3>🔌 Call from Robots (API)</h3>
+            <div class="api-example">
+                <p>// Python Example (Raspberry Pi/Robot):</p>
+                <p>import requests</p>
+                <p>response = requests.post(</p>
+                <p>    "https://your-site.com/robotics-api",</p>
+                <p>    json={</p>
+                <p>        "cells": ["object_detection", "path_planning"],</p>
+                <p>        "camera_image": "base64_encoded_image",</p>
+                <p>        "lidar_data": {"angles": [...], "distances": [...]}</p>
+                <p>    }</p>
+                <p>).json()</p>
+                <p>print(response["path"])  # Optimal path coordinates</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Mock Camera Feed (Draw random shapes)
+        const cameraCanvas = document.getElementById('cameraCanvas');
+        const ctx = cameraCanvas.getContext('2d');
+        function mockCamera() {
+            ctx.clearRect(0, 0, cameraCanvas.width, cameraCanvas.height);
+            // Draw a random "object"
+            ctx.fillStyle = ['red', 'blue', 'green'][Math.floor(Math.random() * 3)];
+            ctx.fillRect(
+                Math.random() * 200, 
+                Math.random() * 150, 
+                50, 50
+            );
+        }
+        mockCamera(); // Initialize
+
+        // Mock AI Processing
+        function processRoboticsAI() {
+            const selectedCells = Array.from(document.getElementById('cellSelection').selectedOptions)
+                .map(option => option.value);
+            const lidarData = JSON.parse(document.getElementById('lidarData').value);
+            const voiceCommand = document.getElementById('voiceCommand').value;
+            
+            // Mock AI Results
+            const mockResults = {
+                object_detection: { objects: [{ label: "box", x: 120, y: 80, confidence: 0.92 }] },
+                path_planning: { 
+                    path: [[0, 0], [100, 50], [200, 30]], 
+                    cost: 42 
+                },
+                lidar_processor: { 
+                    nearest_obstacle: Math.min(...lidarData.distances),
+                    direction: lidarData.angles[lidarData.distances.indexOf(Math.min(...lidarData.distances))]
+                },
+                gesture_control: { gesture: voiceCommand.includes("left") ? "👈 Move left" : "👉 Move right" },
+                obstacle_avoidance: { action: "Turn 45° right" },
+                voice_command: { intent: voiceCommand || "No command detected" }
+            };
+            
+            // Simulate processing delay
+            document.getElementById('result').innerHTML = "🤖 Processing...";
+            setTimeout(() => {
+                let output = "";
+                selectedCells.forEach(cell => {
+                    output += `=== ${cell.toUpperCase()} ===\n${JSON.stringify(mockResults[cell], null, 2)}\n\n`;
+                });
+                document.getElementById('result').innerHTML = output;
+                
+                // Draw path if selected
+                if (selectedCells.includes('path_planning')) {
+                    const pathCtx = document.getElementById('pathCanvas').getContext('2d');
+                    pathCtx.clearRect(0, 0, 300, 200);
+                    pathCtx.beginPath();
+                    mockResults.path_planning.path.forEach(([x, y], i) => {
+                        if (i === 0) pathCtx.moveTo(x, y);
+                        else pathCtx.lineTo(x, y);
+                    });
+                    pathCtx.strokeStyle = 'blue';
+                    pathCtx.stroke();
+                }
+            }, 1000);
+        }
+    </script>
+</body>
+</html>
