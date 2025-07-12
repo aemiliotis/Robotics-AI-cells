@@ -12,6 +12,8 @@
             --bg: #f5f7fa;
             --card-bg: #ffffff;
             --text: #333333;
+            --success: #4CAF50;
+            --error: #F44336;
         }
         
         body {
@@ -109,6 +111,11 @@
             background-color: var(--secondary);
         }
         
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        
         .response {
             margin-top: 10px;
             padding: 10px;
@@ -118,6 +125,15 @@
             overflow-y: auto;
             font-family: monospace;
             font-size: 0.9em;
+            white-space: pre-wrap;
+        }
+        
+        .success {
+            border-left: 4px solid var(--success);
+        }
+        
+        .error {
+            border-left: 4px solid var(--error);
         }
         
         .api-status {
@@ -129,11 +145,21 @@
         }
         
         .online {
-            background-color: #4CAF50;
+            background-color: var(--success);
         }
         
         .offline {
-            background-color: #F44336;
+            background-color: var(--error);
+        }
+        
+        .loading {
+            animation: pulse 1.5s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 0.5; }
+            50% { opacity: 1; }
+            100% { opacity: 0.5; }
         }
         
         .tab-content {
@@ -224,11 +250,11 @@
 
     <script>
         // Configuration
-        const API_URL = "https://robotics-ai-cells.onrender.com/ai-api";
+        const API_URL = "https://your-project-name.onrender.com/ai-api";
         const CELLS = [
             // 1. Core Mathematical Cells
             {
-                id: "fast_math",
+                id: "fast_trig",
                 name: "Fast Trigonometry",
                 category: "utils",
                 description: "High-speed sin/cos calculations",
@@ -287,7 +313,9 @@
                 category: "perception",
                 description: "Camera-based movement tracking",
                 inputs: [
-                    { id: "image_data", label: "Image Data", type: "file", accept: "image/*" }
+                    { id: "prev_gray", label: "Previous Frame", type: "json", value: "[[120, 125], [130, 135]]" },
+                    { id: "curr_gray", label: "Current Frame", type: "json", value: "[[125, 130], [135, 140]]" },
+                    { id: "prev_keypoints", label: "Keypoints", type: "json", value: "[[10,20], [30,40]]" }
                 ]
             },
             
@@ -322,7 +350,7 @@
                 category: "perception",
                 description: "On-device object detection",
                 inputs: [
-                    { id: "image_data", label: "Image", type: "file", accept: "image/*" }
+                    { id: "image_data", label: "Image", type: "json", value: "[[[120, 110, 100], [121, 111, 101]], [[122, 112, 102], [123, 113, 103]]]" }
                 ]
             },
             {
@@ -431,7 +459,7 @@
                 category: "perception",
                 description: "Lightweight image processing",
                 inputs: [
-                    { id: "image_data", label: "Image", type: "file", accept: "image/*" }
+                    { id: "image_data", label: "Image", type: "json", value: "[[[120, 120, 120], [125, 125, 125]], [[130, 130, 130], [135, 135, 135]]]" }
                 ]
             },
             
@@ -647,14 +675,8 @@
                         
                     case 'json':
                         inputElement = document.createElement('textarea');
-                        inputElement.value = input.value;
+                        inputElement.value = typeof input.value === 'string' ? input.value : JSON.stringify(input.value, null, 2);
                         inputElement.rows = 3;
-                        break;
-                        
-                    case 'file':
-                        inputElement = document.createElement('input');
-                        inputElement.type = 'file';
-                        if (input.accept) inputElement.accept = input.accept;
                         break;
                 }
                 
@@ -680,55 +702,67 @@
             return card;
         }
 
-        function executeCell(cellId) {
+        async function executeCell(cellId) {
             const cell = CELLS.find(c => c.id === cellId);
             if (!cell) return;
             
             const responseElement = document.getElementById(`${cellId}_response`);
+            const button = document.querySelector(`.cell-card[data-cell-id="${cellId}"] button`);
+            
+            // Clear previous state
+            responseElement.className = 'response';
             responseElement.textContent = 'Processing...';
+            button.disabled = true;
             
-            // Prepare input data
-            const inputData = {};
-            cell.inputs.forEach(input => {
-                const inputElement = document.getElementById(`${cellId}_${input.id}`);
-                
-                switch(input.type) {
-                    case 'number':
-                        inputData[input.id] = parseFloat(inputElement.value);
-                        break;
-                    case 'text':
-                    case 'select':
-                        inputData[input.id] = inputElement.value;
-                        break;
-                    case 'json':
-                        try {
-                            inputData[input.id] = JSON.parse(inputElement.value);
-                        } catch (e) {
-                            responseElement.textContent = `Invalid JSON: ${e.message}`;
-                            return;
-                        }
-                        break;
-                    case 'file':
-                        if (inputElement.files.length > 0) {
-                            // In a real app, you'd process the file here
-                            inputData[input.id] = "file_data_placeholder";
-                        }
-                        break;
-                }
-            });
-            
-            // Call API
-            callApi([cellId], inputData)
-                .then(response => {
-                    if (response.error) {
-                        responseElement.textContent = `Error: ${response.error}`;
-                    } else {
-                        responseElement.textContent = JSON.stringify(response.results[cellId], null, 2);
+            try {
+                // Prepare input data
+                const inputData = {};
+                for (const input of cell.inputs) {
+                    const inputElement = document.getElementById(`${cellId}_${input.id}`);
+                    
+                    switch(input.type) {
+                        case 'number':
+                            inputData[input.id] = parseFloat(inputElement.value);
+                            break;
+                        case 'text':
+                        case 'select':
+                            inputData[input.id] = inputElement.value;
+                            break;
+                        case 'json':
+                            try {
+                                inputData[input.id] = JSON.parse(inputElement.value);
+                            } catch (e) {
+                                throw new Error(`Invalid JSON in ${input.label}: ${e.message}`);
+                            }
+                            break;
                     }
-                })
-                .catch(error => {
-                    responseElement.textContent = `API Error: ${error.message}`;
-                });
+                }
+                
+                // Call API
+                const response = await callApi([cellId], inputData);
+                
+                if (response.error) {
+                    throw new Error(response.error);
+                }
+                
+                if (!response.results || !response.results[cellId]) {
+                    throw new Error("No results returned from API");
+                }
+                
+                // Display success
+                responseElement.textContent = JSON.stringify(response.results[cellId], null, 2);
+                responseElement.classList.add('success');
+                lastResponse = response;
+                updateLastUpdate();
+                
+            } catch (error) {
+                // Display error
+                responseElement.textContent = error.message;
+                responseElement.classList.add('error');
+                console.error(`Error executing ${cellId}:`, error);
+            } finally {
+                button.disabled = false;
+            }
         }
 
         async function callApi(cells, inputData) {
@@ -747,13 +781,11 @@
                 });
                 
                 if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}`);
+                    const errorData = await response.json().catch(() => ({}));
+                    throw new Error(errorData.error || `HTTP ${response.status}`);
                 }
                 
-                const data = await response.json();
-                lastResponse = data;
-                updateLastUpdate();
-                return data;
+                return await response.json();
             } catch (error) {
                 console.error('API Error:', error);
                 throw error;
@@ -782,20 +814,27 @@
 
         async function checkApiStatus() {
             try {
+                apiStatusElement.classList.add('loading');
                 const response = await fetch(API_URL.replace('/ai-api', '/ping'), {
                     method: 'GET',
                     timeout: 3000
                 });
                 
                 apiStatus = response.ok;
+                if (apiStatus) {
+                    const data = await response.json();
+                    console.log("API Status:", data.status);
+                }
             } catch (e) {
                 apiStatus = false;
+                console.error("API Status Check Failed:", e);
+            } finally {
+                apiStatusElement.classList.remove('loading');
+                updateApiStatusDisplay();
+                
+                // Check every 30 seconds
+                setTimeout(checkApiStatus, 30000);
             }
-            
-            updateApiStatusDisplay();
-            
-            // Check every 30 seconds
-            setTimeout(checkApiStatus, 30000);
         }
 
         function updateApiStatusDisplay() {
