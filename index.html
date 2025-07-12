@@ -1,71 +1,101 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Modular AI Hub</title>
+    <title>Robotics AI Hub</title>
     <link rel="stylesheet" href="styles.css">
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        .container { background: #f9f9f9; padding: 20px; border-radius: 8px; }
+        select, textarea, button { width: 100%; padding: 10px; margin: 5px 0 15px; }
+        button { background: #4CAF50; color: white; border: none; cursor: pointer; }
+        #output { background: white; padding: 15px; border-radius: 4px; min-height: 100px; }
+        .cell-item { margin: 5px 0; padding: 8px; background: #eee; border-radius: 4px; }
+    </style>
 </head>
 <body>
     <div class="container">
-        <h1>🤖 Modular AI Hub</h1>
+        <h1>🤖 Robotics AI Hub</h1>
         
         <div class="controls">
-            <button id="refreshCells">Refresh Available Cells</button>
-            <div id="cellList">Loading cells...</div>
+            <h3>Available AI Cells:</h3>
+            <div id="availableCells">
+                Loading cells...
+            </div>
             
-            <h3>Selected Cells:</h3>
-            <select id="cellSelect" multiple></select>
+            <h3>Select Cells:</h3>
+            <select id="cellSelect" multiple size="4"></select>
             
             <h3>Input Data (JSON):</h3>
-            <textarea id="inputData">{
+            <textarea id="inputData" rows="5">{
     "image_data": "base64...",
     "lidar_data": [1.5, 2.0, 3.2]
 }</textarea>
             
-            <button id="runBtn">Run Selected Cells</button>
+            <button id="runButton">Run Selected Cells</button>
         </div>
         
         <div class="output">
             <h3>Results:</h3>
-            <pre id="output"></pre>
+            <pre id="apiOutput">Waiting for action...</pre>
         </div>
     </div>
 
     <script>
-        const API_URL = "https://robotics-ai-cells.onrender.com";
+        const API_BASE = "https://your-render-url.onrender.com";
         
         // Load available cells
-        async function loadCells() {
-            const response = await fetch(`${API_URL}/list-cells`);
-            const data = await response.json();
-            
-            const cellSelect = document.getElementById("cellSelect");
-            cellSelect.innerHTML = "";
-            
-            data.available_cells.forEach(cell => {
-                const option = document.createElement("option");
-                option.value = cell;
-                option.textContent = cell;
-                cellSelect.appendChild(option);
-            });
-            
-            document.getElementById("cellList").textContent = 
-                `Available cells: ${data.available_cells.join(", ")}`;
+        async function loadAvailableCells() {
+            try {
+                const response = await fetch(`${API_BASE}/list-cells`);
+                if (!response.ok) throw new Error("Network response was not ok");
+                
+                const data = await response.json();
+                if (!data.success) throw new Error(data.error || "Failed to load cells");
+                
+                // Update cells listing
+                const cellSelect = document.getElementById("cellSelect");
+                cellSelect.innerHTML = "";
+                
+                data.available_cells.forEach(cell => {
+                    const option = document.createElement("option");
+                    option.value = cell;
+                    option.textContent = cell;
+                    cellSelect.appendChild(option);
+                });
+                
+                // Update available cells display
+                document.getElementById("availableCells").innerHTML = 
+                    data.available_cells.map(cell => 
+                        `<div class="cell-item">${cell}</div>`
+                    ).join("");
+                
+            } catch (error) {
+                document.getElementById("availableCells").innerHTML = 
+                    `Error loading cells: ${error.message}`;
+                console.error("Cell loading error:", error);
+            }
         }
         
-        // Execute cells
-        async function runCells() {
+        // Execute selected cells
+        async function executeCells() {
             const selectedCells = Array.from(
                 document.getElementById("cellSelect").selectedOptions
             ).map(opt => opt.value);
             
-            const inputData = JSON.parse(
-                document.getElementById("inputData").value || "{}"
-            );
+            if (selectedCells.length === 0) {
+                alert("Please select at least one cell!");
+                return;
+            }
             
-            document.getElementById("output").textContent = "Running...";
+            const outputElement = document.getElementById("apiOutput");
+            outputElement.textContent = "Processing...";
             
             try {
-                const response = await fetch(`${API_URL}/ai-api`, {
+                const inputData = JSON.parse(
+                    document.getElementById("inputData").value || "{}"
+                );
+                
+                const response = await fetch(`${API_BASE}/ai-api`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({
@@ -74,21 +104,20 @@
                     })
                 });
                 
+                if (!response.ok) throw new Error("API request failed");
+                
                 const result = await response.json();
-                document.getElementById("output").textContent = 
-                    JSON.stringify(result, null, 2);
+                outputElement.textContent = JSON.stringify(result, null, 2);
+                
             } catch (error) {
-                document.getElementById("output").textContent = 
-                    `Error: ${error.message}`;
+                outputElement.textContent = `Error: ${error.message}`;
+                console.error("Execution error:", error);
             }
         }
         
-        // Event listeners
-        document.getElementById("refreshCells").addEventListener("click", loadCells);
-        document.getElementById("runBtn").addEventListener("click", runCells);
-        
-        // Initial load
-        loadCells();
+        // Initialize
+        document.getElementById("runButton").addEventListener("click", executeCells);
+        loadAvailableCells();  // Load cells on startup
     </script>
 </body>
 </html>
