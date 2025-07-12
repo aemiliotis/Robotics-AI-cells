@@ -1,10 +1,11 @@
 from flask import Flask, request, jsonify
 from cell_loader import load_cells
 import os
-from flask_cors import CORS  # NEW
+from flask_cors import CORS
+
 
 app = Flask(__name__)
-CORS(app)  # Enable CORS for all routes  # NEW
+CORS(app, resources={r"/*": {"origins": "*"}})  # Enable CORS for all routes  # NEW
 
 # Load cells
 CELLS_DIR = os.path.join(os.path.dirname(__file__), "cells")
