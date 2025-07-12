@@ -27,8 +27,108 @@
             
             <h3>Input Data (JSON):</h3>
             <textarea id="inputData" rows="5">{
-    "image_data": "base64...",
-    "lidar_data": [1.5, 2.0, 3.2]
+  "fast_trig": {
+    "angle": 37.8
+  },
+  "pid_controller": {
+    "error": 2.5,
+    "integral": 12.7,
+    "last_error": 3.1
+  },
+  "arm_ik": {
+    "target": [0.5, 0.2, 0.8],
+    "arm_lengths": [0.3, 0.3, 0.2]
+  },
+  "hexapod_gait": {
+    "gait": "tripod",
+    "step_count": 42
+  },
+  "lidar_compress": {
+    "scan": [1.2, 1.21, 1.19, 5.3, 5.31, 5.29, 2.1, 2.2]
+  },
+  "visual_odometry": {
+    "prev_gray": [[125, 126], [127, 128]],
+    "curr_gray": [[126, 127], [128, 129]],
+    "prev_keypoints": [[10,20], [30,40]]
+  },
+  "motor_model": {
+    "motor_type": "maxon_ec45",
+    "voltage": 12.6,
+    "rpm": 3500
+  },
+  "solar_planner": {
+    "month": 7,
+    "lat": 37.7,
+    "panel_w": 100
+  },
+  "tinyml_classify": {
+    "image": [[[120, 110, 100], [121, 111, 101]], [[122, 112, 102], [123, 113, 103]]]
+  },
+  "gesture_ml": {
+    "accel": [0.12, 9.81, 0.33],
+    "gyro": [0.01, -0.02, 0.005]
+  },
+  "lora_packer": {
+    "temp": 25.3,
+    "humidity": 45,
+    "accel_x": 0.12,
+    "battery": 78.5
+  },
+  "ros2_adapter": {
+    "vel_x": 0.5,
+    "ang_vel": 0.2,
+    "frame": "base_link"
+  },
+  "error_handler": {
+    "error_code": 33
+  },
+  "micro_logger": {
+    "event": "obstacle_detected",
+    "value": 1.75
+  },
+  "sensor_fusion": {
+    "imu": {"accel": [0.1, 0.02, 9.8], "gyro": [0.05, -0.01, 0.03]},
+    "gps": [37.7749, -122.4194],
+    "lidar": [1.2, 1.5, 2.0]
+  },
+  "path_optimization": {
+    "waypoints": [[0,0], [1,1], [2,0], [3,1]],
+    "terrain": 1.2
+  },
+  "battery_optimization": {
+    "charge_cycles": 150,
+    "avg_dod": 80,
+    "avg_temp": 35
+  },
+  "vision_optimized": {
+    "image": [[[120, 120, 120], [125, 125, 125]], [[130, 130, 130], [135, 135, 135]]]
+  },
+  "shared_memory": {
+    "key": "last_position",
+    "value": [1.2, 3.4, 0.8]
+  },
+  "math_utils": {
+    "x": 42.0
+  },
+  "precision_scaling": {
+    "arr": [1.23, 4.56, 7.89],
+    "factor": 100
+  },
+  "timed_process": {
+    "data": {"sensor": "temp", "value": 27.3}
+  },
+  "data_logger": {
+    "timestamp": 1625097600,
+    "readings": {"current": 1.2, "voltage": 12.3}
+  },
+  "network_optimizer": {
+    "packet_size": 128,
+    "signal_strength": -67
+  },
+  "safety_monitor": {
+    "joint_angles": [0.1, 0.5, 1.2],
+    "limits": [1.0, 1.0, 1.5]
+}
 }</textarea>
             
             <button id="runButton">Run Selected Cells</button>
