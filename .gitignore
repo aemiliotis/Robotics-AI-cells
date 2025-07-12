@@ -1,0 +1,24 @@
+# Python
+__pycache__/       # Python bytecode cache
+*.py[cod]          # More Python cache files
+*.so               # Compiled C extensions
+*.egg-info/        # Package metadata
+dist/              # Built distributions
+build/             # Build artifacts
+venv/              # Virtual environment (if you use one)
+env/               # Alternative env folder
+.python-version    # Python version file (pyenv)
+
+# Local development
+.DS_Store          # macOS hidden file
+Thumbs.db          # Windows thumbnail cache
+*.swp              # Vim swap files
+*.swo              # More Vim files
+
+# Environment variables
+.env               # Local environment secrets
+.secrets          # Sensitive data
+
+# Render/Deployment
+*.log              # Log files
+temp/              # Temporary files
