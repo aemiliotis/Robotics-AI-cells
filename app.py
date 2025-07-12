@@ -58,5 +58,13 @@ def list_cells():
         "available_cells": list(ai_cells.keys())
     }))
 
+# backend/app.py - Add this test endpoint
+@app.route('/ping', methods=['GET'])
+def ping():
+    return _corsify_response(jsonify({
+        "status": "alive",
+        "cells": list(ai_cells.keys())
+    }))
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
