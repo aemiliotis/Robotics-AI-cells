@@ -1,1 +1,1 @@
-Added cells to this folder are  automaticaly included on service 
+Added cells to this folder are  automaticaly included in service 
