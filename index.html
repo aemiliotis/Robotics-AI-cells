@@ -196,7 +196,7 @@
                 );
                 
                 const response = await fetch(`${API_BASE}/ai-api`, {
-                    method: "POST",
+                    method: "OPTIONS",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({
                         cells: selectedCells,
