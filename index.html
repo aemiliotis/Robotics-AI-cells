@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Modular AI Hub</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>🤖 Modular AI Hub</h1>
+        
+        <div class="controls">
+            <button id="refreshCells">Refresh Available Cells</button>
+            <div id="cellList">Loading cells...</div>
+            
+            <h3>Selected Cells:</h3>
+            <select id="cellSelect" multiple></select>
+            
+            <h3>Input Data (JSON):</h3>
+            <textarea id="inputData">{
+    "image_data": "base64...",
+    "lidar_data": [1.5, 2.0, 3.2]
+}</textarea>
+            
+            <button id="runBtn">Run Selected Cells</button>
+        </div>
+        
+        <div class="output">
+            <h3>Results:</h3>
+            <pre id="output"></pre>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = "https://robotics-ai-cells.onrender.com";
+        
+        // Load available cells
+        async function loadCells() {
+            const response = await fetch(`${API_URL}/list-cells`);
+            const data = await response.json();
+            
+            const cellSelect = document.getElementById("cellSelect");
+            cellSelect.innerHTML = "";
+            
+            data.available_cells.forEach(cell => {
+                const option = document.createElement("option");
+                option.value = cell;
+                option.textContent = cell;
+                cellSelect.appendChild(option);
+            });
+            
+            document.getElementById("cellList").textContent = 
+                `Available cells: ${data.available_cells.join(", ")}`;
+        }
+        
+        // Execute cells
+        async function runCells() {
+            const selectedCells = Array.from(
+                document.getElementById("cellSelect").selectedOptions
+            ).map(opt => opt.value);
+            
+            const inputData = JSON.parse(
+                document.getElementById("inputData").value || "{}"
+            );
+            
+            document.getElementById("output").textContent = "Running...";
+            
+            try {
+                const response = await fetch(`${API_URL}/ai-api`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        cells: selectedCells,
+                        ...inputData
+                    })
+                });
+                
+                const result = await response.json();
+                document.getElementById("output").textContent = 
+                    JSON.stringify(result, null, 2);
+            } catch (error) {
+                document.getElementById("output").textContent = 
+                    `Error: ${error.message}`;
+            }
+        }
+        
+        // Event listeners
+        document.getElementById("refreshCells").addEventListener("click", loadCells);
+        document.getElementById("runBtn").addEventListener("click", runCells);
+        
+        // Initial load
+        loadCells();
+    </script>
+</body>
+</html>
