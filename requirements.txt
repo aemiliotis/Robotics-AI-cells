@@ -1,8 +1,45 @@
 setuptools==67.8.0
 pip==23.2.1
 wheel==0.41.2
-flask==2.3.2
 flask-cors==3.0.10
+opencv-python-headless==4.7.0.72  # For computer vision cells
+
+# Core Dependencies
+flask==2.3.2
 numpy==1.24.3
 gunicorn==21.2.0
-opencv-python-headless==4.7.0.72  # For computer vision cells
+
+# Computer Vision
+opencv-python-headless==4.7.0.72  # Lightweight OpenCV
+opencv-contrib-python-headless==4.7.0.72  # For SIFT/SURF
+
+# Machine Learning
+tensorflow-macos==2.13.0  # For Apple Silicon
+tensorflow==2.13.0  # For other platforms
+tflite-runtime==2.13.0  # For edge deployment
+
+# Math/Signal Processing
+scipy==1.11.1  # For advanced math
+pyquaternion==0.9.9  # For 3D rotations
+
+# Robotics Specific
+roslibpy==0.7.0  # ROS bridge
+pyserial==3.5  # For motor control
+
+# Optimization
+numba==0.57.1  # JIT acceleration
+cython==3.0.0  # For critical path code
+
+# Communication
+paho-mqtt==1.6.1  # IoT protocols
+zeroconf==0.38.7  # Local service discovery
+protobuf==4.23.4  # Message serialization
+
+# Utility
+pyyaml==6.0  # Config files
+python-dotenv==1.0.0  # Environment variables
+psutil==5.9.5  # System monitoring
+
+# Testing
+pytest==7.4.0
+pytest-benchmark==4.0.0
