@@ -631,6 +631,15 @@
     }
 
     // API Call - MODIFIED SECTION
+      
+     // Right before updating response:
+console.log("Current response element content:", responseElement.textContent);
+responseElement.textContent = "TESTING 123";
+setTimeout(() => {
+  responseElement.textContent = JSON.stringify(data.results[cellId], null, 2);
+  responseElement.className = 'response success';
+}, 100);
+      
     const response = await fetch(API_URL, {
       method: 'POST',
       headers: { 
