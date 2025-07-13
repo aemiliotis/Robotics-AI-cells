@@ -597,83 +597,78 @@
         }
 
         async function executeCell(cellId) {
-            const cell = CELLS.find(c => c.id === cellId);
-            if (!cell) return;
-            
-            const responseElement = document.getElementById(`${cellId}_response`);
-            const button = document.querySelector(`.cell-card[data-cell-id="${cellId}"] button`);
-            
-            // Reset UI state
-            responseElement.className = 'response loading';
-            responseElement.textContent = '';
-            button.disabled = true;
-            
-            try {
-                // Prepare input data with validation
-                const inputData = {};
-                for (const input of cell.inputs) {
-                    const inputElement = document.getElementById(`${cellId}_${input.id}`);
-                    const value = inputElement.value.trim();
-                    
-                    try {
-                        switch(input.type) {
-                            case 'number':
-                                inputData[input.id] = parseFloat(value);
-                                if (isNaN(inputData[input.id])) throw new Error('Invalid number');
-                                break;
-                            case 'text':
-                            case 'select':
-                                inputData[input.id] = value;
-                                break;
-                            case 'json':
-                                inputData[input.id] = value ? JSON.parse(value) : null;
-                                break;
-                        }
-                    } catch (e) {
-                        throw new Error(`${input.label}: ${e.message}`);
-                    }
-                }
-                
-                // Call API
-                const response = await fetch(API_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        cells: [cellId],
-                        ...inputData
-                    })
-                });
-                
-                if (!response.ok) {
-                    const error = await response.json().catch(() => ({}));
-                    throw new Error(error.message || `API Error: ${response.status}`);
-                }
-                
-                const data = await response.json();
-                
-                if (!data.results || !data.results[cellId]) {
-                    throw new Error('API returned no results for this cell');
-                }
-                
-                // Display the response
-                responseElement.textContent = JSON.stringify(data.results[cellId], null, 2);
-                responseElement.classList.remove('loading');
-                responseElement.classList.add('success');
-                
-                // Update last successful call
-                lastResponse = data;
-                updateLastUpdate();
-                
-            } catch (error) {
-                console.error(`Cell ${cellId} error:`, error);
-                responseElement.textContent = error.message;
-                responseElement.classList.remove('loading');
-                responseElement.classList.add('error');
-                
-            } finally {
-                button.disabled = false;
-            }
-        }
+  const cell = CELLS.find(c => c.id === cellId);
+  if (!cell) return;
+
+  const responseElement = document.getElementById(`${cellId}_response`);
+  const button = document.querySelector(`.cell-card[data-cell-id="${cellId}"] button`);
+  
+  // Reset UI
+  responseElement.className = 'response loading';
+  responseElement.textContent = 'Processing...';
+  button.disabled = true;
+
+  try {
+    // Prepare input data (unchanged from your original)
+    const inputData = {};
+    for (const input of cell.inputs) {
+      const inputElement = document.getElementById(`${cellId}_${input.id}`);
+      const value = inputElement.value.trim();
+      
+      switch(input.type) {
+        case 'number':
+          inputData[input.id] = parseFloat(value);
+          if (isNaN(inputData[input.id])) throw new Error('Invalid number');
+          break;
+        case 'text':
+        case 'select':
+          inputData[input.id] = value;
+          break;
+        case 'json':
+          inputData[input.id] = value ? JSON.parse(value) : null;
+          break;
+      }
+    }
+
+    // API Call - MODIFIED SECTION
+    const response = await fetch(API_URL, {
+      method: 'POST',
+      headers: { 
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify({
+        cells: [cellId],
+        ...inputData
+      })
+    });
+
+    // NEW: Proper response handling
+    const data = await response.json();
+    
+    if (!response.ok || !data.success) {
+      throw new Error(data.message || `API request failed with status ${response.status}`);
+    }
+
+    if (!data.results || !data.results[cellId]) {
+      throw new Error('No results returned for this cell');
+    }
+
+    // Display results
+    responseElement.textContent = JSON.stringify(data.results[cellId], null, 2);
+    responseElement.className = 'response success';
+    
+    // Update last update time
+    updateLastUpdate();
+
+  } catch (error) {
+    console.error('Cell execution error:', error);
+    responseElement.textContent = error.message;
+    responseElement.className = 'response error';
+  } finally {
+    button.disabled = false;
+  }
+}
 
         function switchTab(tabId) {
             // Update active tab
@@ -688,33 +683,53 @@
         }
 
         async function checkApiStatus() {
-            const statusElement = document.getElementById('api-status');
-            statusElement.className = 'api-status checking';
-            
-            try {
-                const response = await fetch(PING_URL, { timeout: 3000 });
-                apiStatus = response.ok;
-                
-                if (apiStatus) {
-                    const data = await response.json();
-                    console.log("API Status:", data.status);
-                }
-            } catch (e) {
-                apiStatus = false;
-                console.error("API Status Check Failed:", e);
-            }
-            
-            statusElement.className = `api-status ${apiStatus ? 'online' : 'offline'}`;
-            
-            // Check every 30 seconds
-            setTimeout(checkApiStatus, 30000);
-        }
+  const statusElement = document.getElementById('api-status');
+  statusElement.className = 'api-status checking';
+  
+  try {
+    // Use AbortController for timeout
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 3000);
+    
+    const response = await fetch(PING_URL, { 
+      signal: controller.signal 
+    });
+    
+    clearTimeout(timeout);
+    
+    apiStatus = response.ok;
+    statusElement.className = `api-status ${apiStatus ? 'online' : 'offline'}`;
+    
+    if (apiStatus) {
+      const data = await response.json();
+      console.log("API Status:", data.status);
+    }
+  } catch (e) {
+    apiStatus = false;
+    statusElement.className = 'api-status offline';
+    console.error("API Status Check Failed:", e);
+  }
+  
+  // Check every 30 seconds
+  setTimeout(checkApiStatus, 30000);
+}
 
         function updateLastUpdate() {
             const now = new Date();
             document.getElementById('last-update').textContent = 
                 `Last updated: ${now.toLocaleTimeString()}`;
         }
+        // Add this at the bottom of your script
+window.debugExecute = function(cellId) {
+  console.log(`Debug executing ${cellId}`);
+  const cell = CELLS.find(c => c.id === cellId);
+  if (!cell) return console.error('Cell not found');
+  
+  console.group(`Cell: ${cell.name}`);
+  console.log('Inputs:', cell.inputs);
+  executeCell(cellId);
+  console.groupEnd();
+};
     </script>
 </body>
 </html>
