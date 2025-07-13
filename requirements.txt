@@ -1,6 +1,6 @@
 # Core Web Framework
 flask==2.2.5
-flask-cors==4.0.0  # CORS support
+flask-cors==3.0.10  # CORS support
 werkzeug==2.2.3  # Pinned for Flask 2.2.5 compatibility
 jinja2==3.0.3
 itsdangerous==2.0.1
