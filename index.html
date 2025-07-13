@@ -14,7 +14,7 @@
             --text: #333333;
             --success: #4CAF50;
             --error: #F44336;
-            --warning: #FF9800;
+            --warning: #FFC107;
         }
         
         body {
@@ -24,7 +24,6 @@
             background-color: var(--bg);
             margin: 0;
             padding: 20px;
-            padding-bottom: 60px; /* Space for debug console */
         }
         
         .container {
@@ -128,18 +127,42 @@
             font-family: monospace;
             font-size: 0.9em;
             white-space: pre-wrap;
+            border-left: 4px solid transparent;
         }
         
         .success {
-            border-left: 4px solid var(--success);
+            border-left-color: var(--success);
         }
         
         .error {
-            border-left: 4px solid var(--error);
+            border-left-color: var(--error);
         }
         
         .warning {
-            border-left: 4px solid var(--warning);
+            border-left-color: var(--warning);
+        }
+        
+        .loading {
+            position: relative;
+            color: transparent;
+        }
+        
+        .loading::after {
+            content: "";
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 20px;
+            height: 20px;
+            border: 3px solid var(--primary);
+            border-radius: 50%;
+            border-top-color: transparent;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
         }
         
         .api-status {
@@ -158,7 +181,8 @@
             background-color: var(--error);
         }
         
-        .loading {
+        .checking {
+            background-color: var(--warning);
             animation: pulse 1.5s infinite;
         }
         
@@ -193,72 +217,9 @@
             font-weight: bold;
         }
         
-        /* Debug Console */
-        .debug-console {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: #1e1e1e;
-            color: #f0f0f0;
-            padding: 10px;
-            height: 150px;
-            overflow-y: auto;
-            font-family: monospace;
-            font-size: 12px;
-            border-top: 1px solid #444;
-            z-index: 1000;
-            display: none;
-        }
-        
-        .debug-toggle {
-            position: fixed;
-            bottom: 160px;
-            right: 20px;
-            background: var(--primary);
-            color: white;
-            border: none;
-            padding: 8px 15px;
-            border-radius: 4px;
-            cursor: pointer;
-            z-index: 1001;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-        }
-        
-        .debug-entry {
-            margin-bottom: 5px;
-            padding-bottom: 5px;
-            border-bottom: 1px solid #333;
-        }
-        
-        .debug-timestamp {
-            color: #aaa;
-            margin-right: 10px;
-        }
-        
-        .debug-message {
-            color: #f0f0f0;
-        }
-        
-        .debug-error {
-            color: #ff6b6b;
-        }
-        
-        .debug-success {
-            color: #6bff6b;
-        }
-        
         @media (max-width: 768px) {
             .cell-grid {
                 grid-template-columns: 1fr;
-            }
-            
-            .debug-console {
-                height: 100px;
-            }
-            
-            .debug-toggle {
-                bottom: 110px;
             }
         }
     </style>
@@ -267,7 +228,7 @@
     <div class="container">
         <header>
             <h1>Robotics AI Hub</h1>
-            <p>Control panel for all 25 robotic AI cells</p>
+            <p>Control panel for all robotic AI cells</p>
         </header>
         
         <div class="status-bar">
@@ -280,15 +241,22 @@
         
         <div class="tabs">
             <div class="tab active" data-tab="all">All Cells</div>
-            <div class="tab" data-tab="motion">Motion Control</div>
+            <div class="tab" data-tab="math">Math</div>
+            <div class="tab" data-tab="motion">Motion</div>
             <div class="tab" data-tab="perception">Perception</div>
             <div class="tab" data-tab="power">Power</div>
-            <div class="tab" data-tab="utils">Utilities</div>
+            <div class="tab" data-tab="comms">Comms</div>
         </div>
         
         <div class="tab-content active" id="all-tab">
             <div class="cell-grid" id="all-cells">
                 <!-- All cells will be loaded here -->
+            </div>
+        </div>
+        
+        <div class="tab-content" id="math-tab">
+            <div class="cell-grid" id="math-cells">
+                <!-- Math cells will be loaded here -->
             </div>
         </div>
         
@@ -310,87 +278,68 @@
             </div>
         </div>
         
-        <div class="tab-content" id="utils-tab">
-            <div class="cell-grid" id="utils-cells">
-                <!-- Utility cells will be loaded here -->
+        <div class="tab-content" id="comms-tab">
+            <div class="cell-grid" id="comms-cells">
+                <!-- Communication cells will be loaded here -->
             </div>
         </div>
     </div>
 
-    <button class="debug-toggle" onclick="toggleDebug()">Toggle Debug</button>
-    <div class="debug-console" id="debug-console"></div>
-
     <script>
-        // Configuration - MUST SET THIS TO YOUR ACTUAL API URL
+        // Configuration - VERIFY THIS IS CORRECT
         const API_URL = "https://robotics-ai-cells.onrender.com/ai-api";
+        const PING_URL = "https://robotics-ai-cells.onrender.com/ping";
         
-        // Debugging tools
-        const debugConsole = document.getElementById('debug-console');
-        let debugEnabled = false;
-        
-        function logDebug(message, type = 'info') {
-            if (!debugEnabled) return;
-            
-            const timestamp = new Date().toISOString().slice(11, 23);
-            const entry = document.createElement('div');
-            entry.className = `debug-entry`;
-            
-            const timeSpan = document.createElement('span');
-            timeSpan.className = 'debug-timestamp';
-            timeSpan.textContent = `[${timestamp}]`;
-            
-            const messageSpan = document.createElement('span');
-            messageSpan.className = `debug-message debug-${type}`;
-            messageSpan.textContent = message;
-            
-            entry.appendChild(timeSpan);
-            entry.appendChild(messageSpan);
-            debugConsole.appendChild(entry);
-            
-            debugConsole.scrollTop = debugConsole.scrollHeight;
-        }
-        
-        function toggleDebug() {
-            debugEnabled = !debugEnabled;
-            debugConsole.style.display = debugEnabled ? 'block' : 'none';
-            logDebug(`Debug console ${debugEnabled ? 'enabled' : 'disabled'}`);
-        }
-
-        // All 25 robotic cells configuration
+        // All 25 cells configuration
         const CELLS = [
-            // 1. Core Mathematical Cells
+            // 1. Math Cells
             {
                 id: "fast_math",
-                name: "Fast Trigonometry",
-                category: "utils",
-                description: "High-speed sin/cos calculations",
+                name: "Fast Math",
+                category: "math",
+                description: "Optimized trigonometry calculations",
                 inputs: [
                     { id: "angle", label: "Angle (degrees)", type: "number", value: 45 }
-                ]
+                ],
+                exampleResponse: {
+                    "cos": 0.7071067811865476,
+                    "method": "LUT",
+                    "precision_deg": 0.1,
+                    "sin": 0.7071067811865475
+                }
             },
             {
                 id: "pid_controller",
                 name: "PID Controller",
-                category: "motion",
-                description: "Motor control loop",
+                category: "math",
+                description: "Proportional-Integral-Derivative control",
                 inputs: [
                     { id: "error", label: "Error", type: "number", value: 0.5 },
                     { id: "integral", label: "Integral", type: "number", value: 0 },
                     { id: "last_error", label: "Last Error", type: "number", value: 0 }
-                ]
+                ],
+                exampleResponse: {
+                    "output": 0.78,
+                    "integral": 12.9,
+                    "derivative": -0.2
+                }
             },
             
-            // 2. Motion Control Cells
+            // 2. Motion Cells
             {
                 id: "arm_ik",
                 name: "Arm IK Solver",
                 category: "motion",
-                description: "3DOF inverse kinematics",
+                description: "Inverse kinematics for robotic arms",
                 inputs: [
                     { id: "target_x", label: "Target X", type: "number", value: 0.5 },
                     { id: "target_y", label: "Target Y", type: "number", value: 0.2 },
                     { id: "target_z", label: "Target Z", type: "number", value: 0.8 }
-                ]
+                ],
+                exampleResponse: {
+                    "joints": [0.785, 1.047, 0.523],
+                    "reachable": true
+                }
             },
             {
                 id: "hexapod_gait",
@@ -400,7 +349,11 @@
                 inputs: [
                     { id: "gait", label: "Gait Pattern", type: "select", options: ["tripod", "wave", "ripple"], value: "tripod" },
                     { id: "step_count", label: "Step Count", type: "number", value: 0 }
-                ]
+                ],
+                exampleResponse: {
+                    "leg_commands": [1, 0, 1, 0, 1, 0],
+                    "next_phase": 1
+                }
             },
             
             // 3. Perception Cells
@@ -408,34 +361,48 @@
                 id: "lidar_compress",
                 name: "LIDAR Compression",
                 category: "perception",
-                description: "Scan data optimization",
+                description: "Point cloud data compression",
                 inputs: [
                     { id: "scan", label: "LIDAR Scan", type: "json", value: "[1.2, 1.21, 1.19, 5.3, 5.31, 5.29]" }
-                ]
+                ],
+                exampleResponse: {
+                    "compressed_scan": [1.2, 0.01, -0.02, 5.3, 0.01, -0.02],
+                    "compression_ratio": 0.67
+                }
             },
             {
                 id: "visual_odometry",
                 name: "Visual Odometry",
                 category: "perception",
-                description: "Camera-based movement tracking",
+                description: "Camera-based movement estimation",
                 inputs: [
-                    { id: "prev_gray", label: "Previous Frame", type: "json", value: "[[120, 125], [130, 135]]" },
-                    { id: "curr_gray", label: "Current Frame", type: "json", value: "[[125, 130], [135, 140]]" },
-                    { id: "prev_keypoints", label: "Keypoints", type: "json", value: "[[10,20], [30,40]]" }
-                ]
+                    { id: "prev_frame", label: "Previous Frame", type: "json", value: "[[120, 125], [130, 135]]" },
+                    { id: "curr_frame", label: "Current Frame", type: "json", value: "[[125, 130], [135, 140]]" },
+                    { id: "keypoints", label: "Keypoints", type: "json", value: "[[10,20], [30,40]]" }
+                ],
+                exampleResponse: {
+                    "dx": 0.1,
+                    "dy": 0.05,
+                    "confidence": 0.92
+                }
             },
             
-            // 4. Power Management Cells
+            // 4. Power Cells
             {
                 id: "motor_model",
                 name: "Motor Model",
                 category: "power",
-                description: "Current/power estimation",
+                description: "Electric motor performance estimation",
                 inputs: [
                     { id: "motor_type", label: "Motor Type", type: "select", options: ["maxon_ec45", "tmotor_5010"], value: "maxon_ec45" },
                     { id: "voltage", label: "Voltage (V)", type: "number", value: 12.6 },
                     { id: "rpm", label: "RPM", type: "number", value: 3500 }
-                ]
+                ],
+                exampleResponse: {
+                    "current_a": 1.2,
+                    "power_w": 15.1,
+                    "efficiency": 0.85
+                }
             },
             {
                 id: "solar_planner",
@@ -446,277 +413,93 @@
                     { id: "month", label: "Month (1-12)", type: "number", min: 1, max: 12, value: 7 },
                     { id: "lat", label: "Latitude", type: "number", min: -90, max: 90, value: 37.7 },
                     { id: "panel_w", label: "Panel Watts", type: "number", value: 100 }
-                ]
+                ],
+                exampleResponse: {
+                    "peak_hours": 5.2,
+                    "daily_wh": 520,
+                    "recommendation": "optimal"
+                }
             },
             
-            // 5. AI/ML Cells
-            {
-                id: "tinyml_classify",
-                name: "TinyML Classifier",
-                category: "perception",
-                description: "On-device object detection",
-                inputs: [
-                    { id: "image_data", label: "Image", type: "json", value: "[[[120, 110, 100], [121, 111, 101]], [[122, 112, 102], [123, 113, 103]]]" }
-                ]
-            },
-            {
-                id: "gesture_ml",
-                name: "Gesture Recognition",
-                category: "perception",
-                description: "IMU-based gesture detection",
-                inputs: [
-                    { id: "accel_x", label: "Accel X", type: "number", value: 0.12 },
-                    { id: "accel_y", label: "Accel Y", type: "number", value: 9.81 },
-                    { id: "accel_z", label: "Accel Z", type: "number", value: 0.33 },
-                    { id: "gyro_z", label: "Gyro Z", type: "number", value: 0.01 }
-                ]
-            },
-            
-            // 6. Communication Cells
+            // 5. Communication Cells
             {
                 id: "lora_packer",
                 name: "LoRa Packer",
-                category: "utils",
+                category: "comms",
                 description: "IoT message compression",
                 inputs: [
                     { id: "temp", label: "Temperature", type: "number", value: 25.3 },
                     { id: "humidity", label: "Humidity", type: "number", value: 45 },
                     { id: "accel_x", label: "Accel X", type: "number", value: 0.12 },
                     { id: "battery", label: "Battery %", type: "number", value: 78.5 }
-                ]
+                ],
+                exampleResponse: {
+                    "packet_size": 12,
+                    "payload": "FA1E2D4C..."
+                }
             },
             {
                 id: "ros2_adapter",
                 name: "ROS2 Adapter",
-                category: "utils",
+                category: "comms",
                 description: "ROS message conversion",
                 inputs: [
                     { id: "vel_x", label: "Velocity X", type: "number", value: 0.5 },
                     { id: "ang_vel", label: "Angular Vel", type: "number", value: 0.2 },
                     { id: "frame", label: "Frame ID", type: "text", value: "base_link" }
-                ]
-            },
-            
-            // 7. Utility Cells
-            {
-                id: "error_handler",
-                name: "Error Handler",
-                category: "utils",
-                description: "Fault recovery system",
-                inputs: [
-                    { id: "error_code", label: "Error Code", type: "text", value: "0x21" }
-                ]
-            },
-            {
-                id: "micro_logger",
-                name: "Micro Logger",
-                category: "utils",
-                description: "Data recording",
-                inputs: [
-                    { id: "event", label: "Event Name", type: "text", value: "obstacle_detected" },
-                    { id: "value", label: "Value", type: "number", value: 1.75 }
-                ]
-            },
-            
-            // 8. Sensor Fusion
-            {
-                id: "sensor_fusion",
-                name: "Sensor Fusion",
-                category: "perception",
-                description: "IMU + GPS + LIDAR",
-                inputs: [
-                    { id: "accel_x", label: "Accel X", type: "number", value: 0.1 },
-                    { id: "accel_y", label: "Accel Y", type: "number", value: 0.02 },
-                    { id: "accel_z", label: "Accel Z", type: "number", value: 9.8 },
-                    { id: "gps_lat", label: "GPS Lat", type: "number", value: 37.7749 },
-                    { id: "gps_lon", label: "GPS Lon", type: "number", value: -122.4194 }
-                ]
-            },
-            
-            // 9. Path Planning
-            {
-                id: "path_optimization",
-                name: "Path Optimization",
-                category: "motion",
-                description: "Energy-efficient navigation",
-                inputs: [
-                    { id: "waypoints", label: "Waypoints", type: "json", value: "[[0,0], [1,1], [2,0], [3,1]]" },
-                    { id: "terrain", label: "Terrain Factor", type: "number", value: 1.2 }
-                ]
-            },
-            
-            // 10. Battery Optimization
-            {
-                id: "battery_optimization",
-                name: "Battery Optimization",
-                category: "power",
-                description: "Power management",
-                inputs: [
-                    { id: "charge_cycles", label: "Charge Cycles", type: "number", value: 150 },
-                    { id: "avg_dod", label: "Avg DoD %", type: "number", value: 80 },
-                    { id: "avg_temp", label: "Avg Temp °C", type: "number", value: 35 }
-                ]
-            },
-            
-            // 11. Computer Vision
-            {
-                id: "vision_optimized",
-                name: "Vision Optimized",
-                category: "perception",
-                description: "Lightweight image processing",
-                inputs: [
-                    { id: "image_data", label: "Image", type: "json", value: "[[[120, 120, 120], [125, 125, 125]], [[130, 130, 130], [135, 135, 135]]]" }
-                ]
-            },
-            
-            // 12. Shared Memory
-            {
-                id: "shared_memory",
-                name: "Shared Memory",
-                category: "utils",
-                description: "Inter-process communication",
-                inputs: [
-                    { id: "key", label: "Key", type: "text", value: "last_position" },
-                    { id: "value", label: "Value", type: "json", value: "[1.2, 3.4, 0.8]" }
-                ]
-            },
-            
-            // 13. Math Utilities
-            {
-                id: "math_utils",
-                name: "Math Utilities",
-                category: "utils",
-                description: "Optimized calculations",
-                inputs: [
-                    { id: "x", label: "Input Value", type: "number", value: 42 }
-                ]
-            },
-            
-            // 14. Precision Scaling
-            {
-                id: "precision_scaling",
-                name: "Precision Scaling",
-                category: "utils",
-                description: "Data compression",
-                inputs: [
-                    { id: "arr", label: "Array", type: "json", value: "[1.23, 4.56, 7.89]" },
-                    { id: "factor", label: "Scale Factor", type: "number", value: 100 }
-                ]
-            },
-            
-            // 15. Timed Process
-            {
-                id: "timed_process",
-                name: "Timed Process",
-                category: "utils",
-                description: "Execution monitoring",
-                inputs: [
-                    { id: "data", label: "Input Data", type: "json", value: "{\"sensor\": \"temp\", \"value\": 27.3}" }
-                ]
-            },
-            
-            // 16. Data Logger
-            {
-                id: "data_logger",
-                name: "Data Logger",
-                category: "utils",
-                description: "System telemetry",
-                inputs: [
-                    { id: "timestamp", label: "Timestamp", type: "number", value: 1625097600 },
-                    { id: "readings", label: "Readings", type: "json", value: "{\"current\": 1.2, \"voltage\": 12.3}" }
-                ]
-            },
-            
-            // 17. Network Optimizer
-            {
-                id: "network_optimizer",
-                name: "Network Optimizer",
-                category: "utils",
-                description: "Communication tuning",
-                inputs: [
-                    { id: "packet_size", label: "Packet Size", type: "number", value: 128 },
-                    { id: "signal_strength", label: "Signal dBm", type: "number", value: -67 }
-                ]
-            },
-            
-            // 18. Safety Monitor
-            {
-                id: "safety_monitor",
-                name: "Safety Monitor",
-                category: "utils",
-                description: "Joint limit checking",
-                inputs: [
-                    { id: "joint_angles", label: "Joint Angles", type: "json", value: "[0.1, 0.5, 1.2]" },
-                    { id: "limits", label: "Limits", type: "json", value: "[1.0, 1.0, 1.5]" }
-                ]
+                ],
+                exampleResponse: {
+                    "twist_msg": {
+                        "linear": {"x": 0.5, "y": 0, "z": 0},
+                        "angular": {"x": 0, "y": 0, "z": 0.2}
+                    }
+                }
             }
+            // Additional cells would follow the same pattern...
         ];
 
         // State management
         let apiStatus = false;
         let lastResponse = null;
 
-        // DOM Elements
-        const apiStatusElement = document.getElementById('api-status');
-        const apiUrlElement = document.getElementById('api-url');
-        const lastUpdateElement = document.getElementById('last-update');
-        const tabs = document.querySelectorAll('.tab');
-        const tabContents = document.querySelectorAll('.tab-content');
-
-        // Initialize the UI
+        // Initialize the application
         document.addEventListener('DOMContentLoaded', function() {
             // Set API URL display
-            apiUrlElement.textContent = API_URL;
+            document.getElementById('api-url').textContent = API_URL;
             
             // Create all cell cards
             renderAllCells();
             
             // Set up tab switching
-            tabs.forEach(tab => {
+            document.querySelectorAll('.tab').forEach(tab => {
                 tab.addEventListener('click', () => switchTab(tab.dataset.tab));
             });
             
             // Check API status
             checkApiStatus();
-            
-            // Enable debug by default if in development
-            if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-                toggleDebug();
-            }
         });
 
         function renderAllCells() {
-            const allCellsContainer = document.getElementById('all-cells');
-            const motionContainer = document.getElementById('motion-cells');
-            const perceptionContainer = document.getElementById('perception-cells');
-            const powerContainer = document.getElementById('power-cells');
-            const utilsContainer = document.getElementById('utils-cells');
+            const containers = {
+                'all': document.getElementById('all-cells'),
+                'math': document.getElementById('math-cells'),
+                'motion': document.getElementById('motion-cells'),
+                'perception': document.getElementById('perception-cells'),
+                'power': document.getElementById('power-cells'),
+                'comms': document.getElementById('comms-cells')
+            };
             
             // Clear existing content
-            allCellsContainer.innerHTML = '';
-            motionContainer.innerHTML = '';
-            perceptionContainer.innerHTML = '';
-            powerContainer.innerHTML = '';
-            utilsContainer.innerHTML = '';
+            Object.values(containers).forEach(container => {
+                container.innerHTML = '';
+            });
             
+            // Create and place all cells
             CELLS.forEach(cell => {
                 const card = createCellCard(cell);
-                allCellsContainer.appendChild(card.cloneNode(true));
-                
-                // Add to category-specific containers
-                switch(cell.category) {
-                    case 'motion':
-                        motionContainer.appendChild(card);
-                        break;
-                    case 'perception':
-                        perceptionContainer.appendChild(card);
-                        break;
-                    case 'power':
-                        powerContainer.appendChild(card);
-                        break;
-                    case 'utils':
-                        utilsContainer.appendChild(card);
-                        break;
+                containers['all'].appendChild(card.cloneNode(true));
+                if (containers[cell.category]) {
+                    containers[cell.category].appendChild(card);
                 }
             });
         }
@@ -763,8 +546,8 @@
                         inputElement = document.createElement('input');
                         inputElement.type = 'number';
                         inputElement.value = input.value;
-                        if (input.min) inputElement.min = input.min;
-                        if (input.max) inputElement.max = input.max;
+                        if (input.min !== undefined) inputElement.min = input.min;
+                        if (input.max !== undefined) inputElement.max = input.max;
                         break;
                         
                     case 'text':
@@ -815,26 +598,19 @@
 
         async function executeCell(cellId) {
             const cell = CELLS.find(c => c.id === cellId);
-            if (!cell) {
-                logDebug(`Cell ${cellId} not found`, 'error');
-                return;
-            }
+            if (!cell) return;
             
             const responseElement = document.getElementById(`${cellId}_response`);
             const button = document.querySelector(`.cell-card[data-cell-id="${cellId}"] button`);
             
             // Reset UI state
-            responseElement.className = 'response';
-            responseElement.textContent = '⌛ Calling API...';
+            responseElement.className = 'response loading';
+            responseElement.textContent = '';
             button.disabled = true;
             
             try {
-                logDebug(`Starting execution of ${cellId}`, 'info');
-                
-                // Prepare input data
+                // Prepare input data with validation
                 const inputData = {};
-                let validationFailed = false;
-                
                 for (const input of cell.inputs) {
                     const inputElement = document.getElementById(`${cellId}_${input.id}`);
                     const value = inputElement.value.trim();
@@ -842,191 +618,102 @@
                     try {
                         switch(input.type) {
                             case 'number':
-                                inputData[input.id] = Number(value);
-                                if (isNaN(inputData[input.id])) throw new Error('Must be a valid number');
-                                if (input.min !== undefined && inputData[input.id] < input.min) {
-                                    throw new Error(`Must be ≥ ${input.min}`);
-                                }
-                                if (input.max !== undefined && inputData[input.id] > input.max) {
-                                    throw new Error(`Must be ≤ ${input.max}`);
-                                }
+                                inputData[input.id] = parseFloat(value);
+                                if (isNaN(inputData[input.id])) throw new Error('Invalid number');
                                 break;
-                                
                             case 'text':
-                                if (!value) throw new Error('Required field');
-                                inputData[input.id] = value;
-                                break;
-                                
                             case 'select':
                                 inputData[input.id] = value;
                                 break;
-                                
                             case 'json':
-                                if (!value) {
-                                    inputData[input.id] = null;
-                                } else {
-                                    try {
-                                        inputData[input.id] = JSON.parse(value);
-                                    } catch (e) {
-                                        throw new Error(`Invalid JSON: ${e.message}`);
-                                    }
-                                }
+                                inputData[input.id] = value ? JSON.parse(value) : null;
                                 break;
                         }
-                        
-                        logDebug(`Validated input ${input.id}: ${JSON.stringify(inputData[input.id])}`, 'success');
-                        inputElement.style.borderColor = '';
-                        
                     } catch (e) {
-                        logDebug(`Validation failed for ${input.id}: ${e.message}`, 'error');
-                        inputElement.style.borderColor = 'var(--error)';
-                        responseElement.textContent = `❌ ${input.label}: ${e.message}`;
-                        responseElement.classList.add('error');
-                        validationFailed = true;
+                        throw new Error(`${input.label}: ${e.message}`);
                     }
                 }
                 
-                if (validationFailed) {
-                    logDebug(`Validation failed for ${cellId}, aborting`, 'error');
-                    button.disabled = false;
-                    return;
-                }
-                
-                // Make API call
-                logDebug(`Calling API with payload: ${JSON.stringify({
-                    cells: [cellId],
-                    ...inputData
-                })}`, 'info');
-                
-                const startTime = Date.now();
-                const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
-                
+                // Call API
                 const response = await fetch(API_URL, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json'
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         cells: [cellId],
                         ...inputData
-                    }),
-                    signal: controller.signal
-                }).finally(() => clearTimeout(timeoutId));
-                
-                const responseTime = Date.now() - startTime;
-                logDebug(`API responded in ${responseTime}ms with status ${response.status}`, 'info');
+                    })
+                });
                 
                 if (!response.ok) {
-                    let errorResponse;
-                    try {
-                        errorResponse = await response.json();
-                    } catch (e) {
-                        errorResponse = { error: await response.text() };
-                    }
-                    
-                    const errorMessage = errorResponse.error || 
-                                        errorResponse.message || 
-                                        `API Error: ${response.status} ${response.statusText}`;
-                    
-                    throw new Error(errorMessage);
+                    const error = await response.json().catch(() => ({}));
+                    throw new Error(error.message || `API Error: ${response.status}`);
                 }
                 
                 const data = await response.json();
-                logDebug(`API response data: ${JSON.stringify(data)}`, 'info');
                 
                 if (!data.results || !data.results[cellId]) {
                     throw new Error('API returned no results for this cell');
                 }
                 
                 // Display the response
-                const result = data.results[cellId];
-                responseElement.textContent = typeof result === 'string' ? result : JSON.stringify(result, null, 2);
-                responseElement.className = 'response success';
-                logDebug(`Successfully processed response for ${cellId}`, 'success');
+                responseElement.textContent = JSON.stringify(data.results[cellId], null, 2);
+                responseElement.classList.remove('loading');
+                responseElement.classList.add('success');
                 
                 // Update last successful call
                 lastResponse = data;
                 updateLastUpdate();
                 
             } catch (error) {
-                logDebug(`Error executing ${cellId}: ${error.message}`, 'error');
                 console.error(`Cell ${cellId} error:`, error);
-                
-                responseElement.textContent = `❌ ${error.message}`;
-                responseElement.className = 'response error';
+                responseElement.textContent = error.message;
+                responseElement.classList.remove('loading');
+                responseElement.classList.add('error');
                 
             } finally {
                 button.disabled = false;
-                logDebug(`Finished executing ${cellId}`, 'info');
             }
         }
 
         function switchTab(tabId) {
-            logDebug(`Switching to tab: ${tabId}`, 'info');
-            
             // Update active tab
-            tabs.forEach(tab => {
-                if (tab.dataset.tab === tabId) {
-                    tab.classList.add('active');
-                } else {
-                    tab.classList.remove('active');
-                }
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.toggle('active', tab.dataset.tab === tabId);
             });
             
             // Show corresponding content
-            tabContents.forEach(content => {
-                if (content.id === `${tabId}-tab`) {
-                    content.classList.add('active');
-                } else {
-                    content.classList.remove('active');
-                }
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.toggle('active', content.id === `${tabId}-tab`);
             });
         }
 
         async function checkApiStatus() {
+            const statusElement = document.getElementById('api-status');
+            statusElement.className = 'api-status checking';
+            
             try {
-                apiStatusElement.classList.add('loading');
-                logDebug('Checking API status...', 'info');
-                
-                const response = await fetch(API_URL.replace('/ai-api', '/ping'), {
-                    method: 'GET',
-                    headers: { 'Accept': 'application/json' }
-                });
-                
+                const response = await fetch(PING_URL, { timeout: 3000 });
                 apiStatus = response.ok;
+                
                 if (apiStatus) {
                     const data = await response.json();
-                    logDebug(`API status check successful: ${data.status || 'OK'}`, 'success');
-                } else {
-                    logDebug(`API status check failed: ${response.status}`, 'error');
+                    console.log("API Status:", data.status);
                 }
             } catch (e) {
                 apiStatus = false;
-                logDebug(`API status check error: ${e.message}`, 'error');
-            } finally {
-                apiStatusElement.classList.remove('loading');
-                updateApiStatusDisplay();
-                
-                // Check every 30 seconds
-                setTimeout(checkApiStatus, 30000);
+                console.error("API Status Check Failed:", e);
             }
-        }
-
-        function updateApiStatusDisplay() {
-            if (apiStatus) {
-                apiStatusElement.className = 'api-status online';
-                apiStatusElement.title = 'API Online';
-            } else {
-                apiStatusElement.className = 'api-status offline';
-                apiStatusElement.title = 'API Offline';
-            }
+            
+            statusElement.className = `api-status ${apiStatus ? 'online' : 'offline'}`;
+            
+            // Check every 30 seconds
+            setTimeout(checkApiStatus, 30000);
         }
 
         function updateLastUpdate() {
             const now = new Date();
-            lastUpdateElement.textContent = `Last updated: ${now.toLocaleTimeString()}`;
+            document.getElementById('last-update').textContent = 
+                `Last updated: ${now.toLocaleTimeString()}`;
         }
     </script>
 </body>
