@@ -8,11 +8,13 @@ from typing import Dict, Any
 app = Flask(__name__)
 
 # Configure CORS properly
-CORS(app, resources={
-    r"/ai-api": {"origins": "*", "methods": ["POST", "OPTIONS"]},
-    r"/list-cells": {"origins": "*", "methods": ["GET", "OPTIONS"]},
-    r"/ping": {"origins": "*"}
-})
+CORS(app)
+
+#CORS(app, resources={
+    #r"/ai-api": {"origins": "*", "methods": ["POST", "OPTIONS"]},
+    #r"/list-cells": {"origins": "*", "methods": ["GET", "OPTIONS"]},
+    #r"/ping": {"origins": "*"}
+#})
 
 # Constants
 MAX_PAYLOAD_SIZE = 1024 * 1024  # 1MB
