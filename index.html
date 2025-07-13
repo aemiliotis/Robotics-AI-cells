@@ -730,6 +730,47 @@ window.debugExecute = function(cellId) {
   executeCell(cellId);
   console.groupEnd();
 };
+        // Function to parse URL parameters
+function getUrlParams() {
+  const params = new URLSearchParams(window.location.search);
+  return {
+    cell: params.get('cell'),
+    ...Object.fromEntries(params.entries())
+  };
+}
+
+// Function to auto-execute a cell from URL parameters
+function executeFromUrl() {
+  const params = getUrlParams();
+  if (params.cell) {
+    const cellId = params.cell;
+    const cell = CELLS.find(c => c.id === cellId);
+    
+    if (cell) {
+      // Set input values from URL params
+      cell.inputs.forEach(input => {
+        const paramValue = params[input.id];
+        if (paramValue !== undefined) {
+          const inputElement = document.getElementById(`${cellId}_${input.id}`);
+          if (inputElement) {
+            inputElement.value = paramValue;
+          }
+        }
+      });
+      
+      // Execute the cell after a short delay to ensure DOM is ready
+      setTimeout(() => executeCell(cellId), 300);
+    }
+  }
+}
+
+// Call this when page loads
+document.addEventListener('DOMContentLoaded', function() {
+  // ... your existing initialization code ...
+  
+  // Add this line at the end:
+  executeFromUrl();
+});
     </script>
 </body>
 </html>
