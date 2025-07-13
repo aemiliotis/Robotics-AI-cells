@@ -14,6 +14,7 @@
             --text: #333333;
             --success: #4CAF50;
             --error: #F44336;
+            --warning: #FF9800;
         }
         
         body {
@@ -23,6 +24,7 @@
             background-color: var(--bg);
             margin: 0;
             padding: 20px;
+            padding-bottom: 60px; /* Space for debug console */
         }
         
         .container {
@@ -136,6 +138,10 @@
             border-left: 4px solid var(--error);
         }
         
+        .warning {
+            border-left: 4px solid var(--warning);
+        }
+        
         .api-status {
             display: inline-block;
             width: 10px;
@@ -187,9 +193,72 @@
             font-weight: bold;
         }
         
+        /* Debug Console */
+        .debug-console {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: #1e1e1e;
+            color: #f0f0f0;
+            padding: 10px;
+            height: 150px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 12px;
+            border-top: 1px solid #444;
+            z-index: 1000;
+            display: none;
+        }
+        
+        .debug-toggle {
+            position: fixed;
+            bottom: 160px;
+            right: 20px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            z-index: 1001;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        
+        .debug-entry {
+            margin-bottom: 5px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid #333;
+        }
+        
+        .debug-timestamp {
+            color: #aaa;
+            margin-right: 10px;
+        }
+        
+        .debug-message {
+            color: #f0f0f0;
+        }
+        
+        .debug-error {
+            color: #ff6b6b;
+        }
+        
+        .debug-success {
+            color: #6bff6b;
+        }
+        
         @media (max-width: 768px) {
             .cell-grid {
                 grid-template-columns: 1fr;
+            }
+            
+            .debug-console {
+                height: 100px;
+            }
+            
+            .debug-toggle {
+                bottom: 110px;
             }
         }
     </style>
@@ -248,9 +317,46 @@
         </div>
     </div>
 
+    <button class="debug-toggle" onclick="toggleDebug()">Toggle Debug</button>
+    <div class="debug-console" id="debug-console"></div>
+
     <script>
-        // Configuration
+        // Configuration - MUST SET THIS TO YOUR ACTUAL API URL
         const API_URL = "https://robotics-ai-cells.onrender.com/ai-api";
+        
+        // Debugging tools
+        const debugConsole = document.getElementById('debug-console');
+        let debugEnabled = false;
+        
+        function logDebug(message, type = 'info') {
+            if (!debugEnabled) return;
+            
+            const timestamp = new Date().toISOString().slice(11, 23);
+            const entry = document.createElement('div');
+            entry.className = `debug-entry`;
+            
+            const timeSpan = document.createElement('span');
+            timeSpan.className = 'debug-timestamp';
+            timeSpan.textContent = `[${timestamp}]`;
+            
+            const messageSpan = document.createElement('span');
+            messageSpan.className = `debug-message debug-${type}`;
+            messageSpan.textContent = message;
+            
+            entry.appendChild(timeSpan);
+            entry.appendChild(messageSpan);
+            debugConsole.appendChild(entry);
+            
+            debugConsole.scrollTop = debugConsole.scrollHeight;
+        }
+        
+        function toggleDebug() {
+            debugEnabled = !debugEnabled;
+            debugConsole.style.display = debugEnabled ? 'block' : 'none';
+            logDebug(`Debug console ${debugEnabled ? 'enabled' : 'disabled'}`);
+        }
+
+        // All 25 robotic cells configuration
         const CELLS = [
             // 1. Core Mathematical Cells
             {
@@ -572,6 +678,11 @@
             
             // Check API status
             checkApiStatus();
+            
+            // Enable debug by default if in development
+            if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+                toggleDebug();
+            }
         });
 
         function renderAllCells() {
@@ -704,21 +815,25 @@
 
         async function executeCell(cellId) {
             const cell = CELLS.find(c => c.id === cellId);
-            if (!cell) return;
+            if (!cell) {
+                logDebug(`Cell ${cellId} not found`, 'error');
+                return;
+            }
             
             const responseElement = document.getElementById(`${cellId}_response`);
             const button = document.querySelector(`.cell-card[data-cell-id="${cellId}"] button`);
             
-            // Clear previous state and show loading
+            // Reset UI state
             responseElement.className = 'response';
             responseElement.textContent = '⌛ Calling API...';
-            responseElement.classList.add('loading');
             button.disabled = true;
             
             try {
-                // Prepare input data with proper validation
+                logDebug(`Starting execution of ${cellId}`, 'info');
+                
+                // Prepare input data
                 const inputData = {};
-                let hasErrors = false;
+                let validationFailed = false;
                 
                 for (const input of cell.inputs) {
                     const inputElement = document.getElementById(`${cellId}_${input.id}`);
@@ -727,8 +842,8 @@
                     try {
                         switch(input.type) {
                             case 'number':
-                                inputData[input.id] = value === '' ? NaN : Number(value);
-                                if (isNaN(inputData[input.id])) throw new Error(`Invalid number`);
+                                inputData[input.id] = Number(value);
+                                if (isNaN(inputData[input.id])) throw new Error('Must be a valid number');
                                 if (input.min !== undefined && inputData[input.id] < input.min) {
                                     throw new Error(`Must be ≥ ${input.min}`);
                                 }
@@ -738,9 +853,12 @@
                                 break;
                                 
                             case 'text':
+                                if (!value) throw new Error('Required field');
+                                inputData[input.id] = value;
+                                break;
+                                
                             case 'select':
                                 inputData[input.id] = value;
-                                if (!value && value !== '0') throw new Error(`Required field`);
                                 break;
                                 
                             case 'json':
@@ -755,32 +873,41 @@
                                 }
                                 break;
                         }
+                        
+                        logDebug(`Validated input ${input.id}: ${JSON.stringify(inputData[input.id])}`, 'success');
+                        inputElement.style.borderColor = '';
+                        
                     } catch (e) {
+                        logDebug(`Validation failed for ${input.id}: ${e.message}`, 'error');
                         inputElement.style.borderColor = 'var(--error)';
                         responseElement.textContent = `❌ ${input.label}: ${e.message}`;
                         responseElement.classList.add('error');
-                        hasErrors = true;
+                        validationFailed = true;
                     }
                 }
                 
-                if (hasErrors) {
+                if (validationFailed) {
+                    logDebug(`Validation failed for ${cellId}, aborting`, 'error');
                     button.disabled = false;
-                    responseElement.classList.remove('loading');
                     return;
                 }
                 
-                // Reset input borders
-                cell.inputs.forEach(input => {
-                    document.getElementById(`${cellId}_${input.id}`).style.borderColor = '';
-                });
+                // Make API call
+                logDebug(`Calling API with payload: ${JSON.stringify({
+                    cells: [cellId],
+                    ...inputData
+                })}`, 'info');
                 
-                // Call API with timeout
+                const startTime = Date.now();
                 const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 10000);
+                const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
                 
                 const response = await fetch(API_URL, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
                     body: JSON.stringify({
                         cells: [cellId],
                         ...inputData
@@ -788,68 +915,57 @@
                     signal: controller.signal
                 }).finally(() => clearTimeout(timeoutId));
                 
+                const responseTime = Date.now() - startTime;
+                logDebug(`API responded in ${responseTime}ms with status ${response.status}`, 'info');
+                
                 if (!response.ok) {
-                    const error = await response.json().catch(() => ({}));
-                    throw new Error(error.message || `API Error: ${response.status}`);
+                    let errorResponse;
+                    try {
+                        errorResponse = await response.json();
+                    } catch (e) {
+                        errorResponse = { error: await response.text() };
+                    }
+                    
+                    const errorMessage = errorResponse.error || 
+                                        errorResponse.message || 
+                                        `API Error: ${response.status} ${response.statusText}`;
+                    
+                    throw new Error(errorMessage);
                 }
                 
                 const data = await response.json();
+                logDebug(`API response data: ${JSON.stringify(data)}`, 'info');
                 
                 if (!data.results || !data.results[cellId]) {
                     throw new Error('API returned no results for this cell');
                 }
                 
-                // Display formatted response
-                responseElement.textContent = typeof data.results[cellId] === 'string' 
-                    ? data.results[cellId]
-                    : JSON.stringify(data.results[cellId], null, 2);
-                
-                responseElement.classList.add('success');
-                responseElement.classList.remove('loading', 'error');
+                // Display the response
+                const result = data.results[cellId];
+                responseElement.textContent = typeof result === 'string' ? result : JSON.stringify(result, null, 2);
+                responseElement.className = 'response success';
+                logDebug(`Successfully processed response for ${cellId}`, 'success');
                 
                 // Update last successful call
                 lastResponse = data;
                 updateLastUpdate();
                 
             } catch (error) {
+                logDebug(`Error executing ${cellId}: ${error.message}`, 'error');
                 console.error(`Cell ${cellId} error:`, error);
-                responseElement.textContent = `❌ ${error.message || 'Unknown error'}`;
-                responseElement.classList.add('error');
-                responseElement.classList.remove('loading', 'success');
+                
+                responseElement.textContent = `❌ ${error.message}`;
+                responseElement.className = 'response error';
                 
             } finally {
                 button.disabled = false;
-            }
-        }
-
-        async function callApi(cells, inputData) {
-            const payload = {
-                cells: cells,
-                ...inputData
-            };
-            
-            try {
-                const response = await fetch(API_URL, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(payload)
-                });
-                
-                if (!response.ok) {
-                    const errorData = await response.json().catch(() => ({}));
-                    throw new Error(errorData.error || `HTTP ${response.status}`);
-                }
-                
-                return await response.json();
-            } catch (error) {
-                console.error('API Error:', error);
-                throw error;
+                logDebug(`Finished executing ${cellId}`, 'info');
             }
         }
 
         function switchTab(tabId) {
+            logDebug(`Switching to tab: ${tabId}`, 'info');
+            
             // Update active tab
             tabs.forEach(tab => {
                 if (tab.dataset.tab === tabId) {
@@ -872,19 +988,23 @@
         async function checkApiStatus() {
             try {
                 apiStatusElement.classList.add('loading');
+                logDebug('Checking API status...', 'info');
+                
                 const response = await fetch(API_URL.replace('/ai-api', '/ping'), {
                     method: 'GET',
-                    timeout: 3000
+                    headers: { 'Accept': 'application/json' }
                 });
                 
                 apiStatus = response.ok;
                 if (apiStatus) {
                     const data = await response.json();
-                    console.log("API Status:", data.status);
+                    logDebug(`API status check successful: ${data.status || 'OK'}`, 'success');
+                } else {
+                    logDebug(`API status check failed: ${response.status}`, 'error');
                 }
             } catch (e) {
                 apiStatus = false;
-                console.error("API Status Check Failed:", e);
+                logDebug(`API status check error: ${e.message}`, 'error');
             } finally {
                 apiStatusElement.classList.remove('loading');
                 updateApiStatusDisplay();
