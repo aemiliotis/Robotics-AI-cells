@@ -709,57 +709,114 @@
             const responseElement = document.getElementById(`${cellId}_response`);
             const button = document.querySelector(`.cell-card[data-cell-id="${cellId}"] button`);
             
-            // Clear previous state
+            // Clear previous state and show loading
             responseElement.className = 'response';
-            responseElement.textContent = 'Processing...';
+            responseElement.textContent = '⌛ Calling API...';
+            responseElement.classList.add('loading');
             button.disabled = true;
             
             try {
-                // Prepare input data
+                // Prepare input data with proper validation
                 const inputData = {};
+                let hasErrors = false;
+                
                 for (const input of cell.inputs) {
                     const inputElement = document.getElementById(`${cellId}_${input.id}`);
+                    const value = inputElement.value.trim();
                     
-                    switch(input.type) {
-                        case 'number':
-                            inputData[input.id] = parseFloat(inputElement.value);
-                            break;
-                        case 'text':
-                        case 'select':
-                            inputData[input.id] = inputElement.value;
-                            break;
-                        case 'json':
-                            try {
-                                inputData[input.id] = JSON.parse(inputElement.value);
-                            } catch (e) {
-                                throw new Error(`Invalid JSON in ${input.label}: ${e.message}`);
-                            }
-                            break;
+                    try {
+                        switch(input.type) {
+                            case 'number':
+                                inputData[input.id] = value === '' ? NaN : Number(value);
+                                if (isNaN(inputData[input.id])) throw new Error(`Invalid number`);
+                                if (input.min !== undefined && inputData[input.id] < input.min) {
+                                    throw new Error(`Must be ≥ ${input.min}`);
+                                }
+                                if (input.max !== undefined && inputData[input.id] > input.max) {
+                                    throw new Error(`Must be ≤ ${input.max}`);
+                                }
+                                break;
+                                
+                            case 'text':
+                            case 'select':
+                                inputData[input.id] = value;
+                                if (!value && value !== '0') throw new Error(`Required field`);
+                                break;
+                                
+                            case 'json':
+                                if (!value) {
+                                    inputData[input.id] = null;
+                                } else {
+                                    try {
+                                        inputData[input.id] = JSON.parse(value);
+                                    } catch (e) {
+                                        throw new Error(`Invalid JSON: ${e.message}`);
+                                    }
+                                }
+                                break;
+                        }
+                    } catch (e) {
+                        inputElement.style.borderColor = 'var(--error)';
+                        responseElement.textContent = `❌ ${input.label}: ${e.message}`;
+                        responseElement.classList.add('error');
+                        hasErrors = true;
                     }
                 }
                 
-                // Call API
-                const response = await callApi([cellId], inputData);
-                
-                if (response.error) {
-                    throw new Error(response.error);
+                if (hasErrors) {
+                    button.disabled = false;
+                    responseElement.classList.remove('loading');
+                    return;
                 }
                 
-                if (!response.results || !response.results[cellId]) {
-                    throw new Error("No results returned from API");
+                // Reset input borders
+                cell.inputs.forEach(input => {
+                    document.getElementById(`${cellId}_${input.id}`).style.borderColor = '';
+                });
+                
+                // Call API with timeout
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 10000);
+                
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        cells: [cellId],
+                        ...inputData
+                    }),
+                    signal: controller.signal
+                }).finally(() => clearTimeout(timeoutId));
+                
+                if (!response.ok) {
+                    const error = await response.json().catch(() => ({}));
+                    throw new Error(error.message || `API Error: ${response.status}`);
                 }
                 
-                // Display success
-                responseElement.textContent = JSON.stringify(response.results[cellId], null, 2);
+                const data = await response.json();
+                
+                if (!data.results || !data.results[cellId]) {
+                    throw new Error('API returned no results for this cell');
+                }
+                
+                // Display formatted response
+                responseElement.textContent = typeof data.results[cellId] === 'string' 
+                    ? data.results[cellId]
+                    : JSON.stringify(data.results[cellId], null, 2);
+                
                 responseElement.classList.add('success');
-                lastResponse = response;
+                responseElement.classList.remove('loading', 'error');
+                
+                // Update last successful call
+                lastResponse = data;
                 updateLastUpdate();
                 
             } catch (error) {
-                // Display error
-                responseElement.textContent = error.message;
+                console.error(`Cell ${cellId} error:`, error);
+                responseElement.textContent = `❌ ${error.message || 'Unknown error'}`;
                 responseElement.classList.add('error');
-                console.error(`Error executing ${cellId}:`, error);
+                responseElement.classList.remove('loading', 'success');
+                
             } finally {
                 button.disabled = false;
             }
