@@ -609,7 +609,7 @@
   button.disabled = true;
 
   try {
-    // Prepare input data (unchanged from your original)
+    // Prepare input data
     const inputData = {};
     for (const input of cell.inputs) {
       const inputElement = document.getElementById(`${cellId}_${input.id}`);
@@ -630,9 +630,10 @@
       }
     }
 
-    // API Call - MODIFIED SECTION
+    // Enhanced API Call
     const response = await fetch(API_URL, {
       method: 'POST',
+      mode: 'cors', // Explicitly enable CORS mode
       headers: { 
         'Content-Type': 'application/json',
         'Accept': 'application/json'
@@ -640,31 +641,35 @@
       body: JSON.stringify({
         cells: [cellId],
         ...inputData
-      })
+      }),
+      credentials: 'omit' // Explicitly disable credentials
     });
 
-    // NEW: Proper response handling
-    const data = await response.json();
-    
-    if (!response.ok || !data.success) {
-      throw new Error(data.message || `API request failed with status ${response.status}`);
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
 
-    if (!data.results || !data.results[cellId]) {
-      throw new Error('No results returned for this cell');
+    const data = await response.json();
+    
+    if (!data.success) {
+      throw new Error(data.error || 'Unknown API error');
     }
 
     // Display results
     responseElement.textContent = JSON.stringify(data.results[cellId], null, 2);
     responseElement.className = 'response success';
     
-    // Update last update time
     updateLastUpdate();
 
   } catch (error) {
-    console.error('Cell execution error:', error);
-    responseElement.textContent = error.message;
+    console.error('Execution error:', error);
+    responseElement.textContent = `Error: ${error.message}`;
     responseElement.className = 'response error';
+    
+    // Additional error logging
+    if (error instanceof SyntaxError) {
+      responseElement.textContent += '\n(Invalid JSON response)';
+    }
   } finally {
     button.disabled = false;
   }
@@ -687,15 +692,11 @@
   statusElement.className = 'api-status checking';
   
   try {
-    // Use AbortController for timeout
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 3000);
-    
-    const response = await fetch(PING_URL, { 
-      signal: controller.signal 
+    const response = await fetch(PING_URL, {
+      method: 'GET',
+      mode: 'cors',
+      credentials: 'omit'
     });
-    
-    clearTimeout(timeout);
     
     apiStatus = response.ok;
     statusElement.className = `api-status ${apiStatus ? 'online' : 'offline'}`;
@@ -710,7 +711,6 @@
     console.error("API Status Check Failed:", e);
   }
   
-  // Check every 30 seconds
   setTimeout(checkApiStatus, 30000);
 }
 
