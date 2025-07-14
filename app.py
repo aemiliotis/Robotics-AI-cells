@@ -10,12 +10,12 @@ app = Flask(__name__)
 # Configure CORS properly
 CORS(app, resources={
     r"/ai-api": {
-        "origins": ["https://aemiliotis.github.io/Robotics-AI-cells"],
+        "origins": ["https://aemiliotis.github.io/Robotics-AI-cells", "http://localhost:*"],
         "methods": ["POST", "OPTIONS"],
         "allow_headers": ["Content-Type"]
     },
     r"/list-cells": {
-        "origins": ["https://aemiliotis.github.io/Robotics-AI-cells"],
+        "origins": "*",  # More open for listing
         "methods": ["GET", "OPTIONS"]
     }
 })
