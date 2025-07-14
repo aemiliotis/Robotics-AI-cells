@@ -8,13 +8,17 @@ from typing import Dict, Any
 app = Flask(__name__)
 
 # Configure CORS properly
-CORS(app)
-
-#CORS(app, resources={
-    #r"/ai-api": {"origins": "*", "methods": ["POST", "OPTIONS"]},
-    #r"/list-cells": {"origins": "*", "methods": ["GET", "OPTIONS"]},
-    #r"/ping": {"origins": "*"}
-#})
+CORS(app, resources={
+    r"/ai-api": {
+        "origins": ["https://aemiliotis.github.io"],
+        "methods": ["POST", "OPTIONS"],
+        "allow_headers": ["Content-Type"]
+    },
+    r"/list-cells": {
+        "origins": ["https://aemiliotis.github.io"],
+        "methods": ["GET", "OPTIONS"]
+    }
+})
 
 # Constants
 MAX_PAYLOAD_SIZE = 1024 * 1024  # 1MB
@@ -40,44 +44,40 @@ def before_request():
         return jsonify({"error": "Payload too large"}), 413
 
 @app.route('/ai-api', methods=['POST', 'OPTIONS'])
+
+
+@app.route('/ai-api', methods=['POST', 'OPTIONS'])
 def handle_request():
-    """Main AI processing endpoint"""
     if request.method == 'OPTIONS':
-        return _build_cors_preflight_response()
+        # Handle preflight request
+        response = jsonify({"status": "preflight"})
+        response.headers.add('Access-Control-Allow-Origin', 'https://aemiliotis.github.io')
+        response.headers.add('Access-Control-Allow-Methods', 'POST, OPTIONS')
+        response.headers.add('Access-Control-Allow-Headers', 'Content-Type')
+        return response
 
     try:
-        # Input validation
-        if not request.is_json:
-            return jsonify({"error": "Request must be JSON"}), 400
-
-        data: Dict[str, Any] = request.get_json()
-        if not isinstance(data.get("cells"), list):
-            return jsonify({"error": "Invalid cells format"}), 400
-
-        # Process cells
+        data = request.json
         results = {}
-        for cell_name in data["cells"]:
-            if cell_name not in ai_cells:
-                continue
-            try:
+        
+        for cell_name in data.get("cells", []):
+            if cell_name in ai_cells:
                 results[cell_name] = ai_cells[cell_name](data)
-            except Exception as e:
-                results[cell_name] = {"error": str(e)}
-
-        return jsonify({
+        
+        response = jsonify({
             "success": True,
-            "results": results,
-            "timestamp": time.time(),
-            "processed_cells": list(results.keys())
+            "results": results
         })
-
+        response.headers.add('Access-Control-Allow-Origin', 'https://aemiliotis.github.io')
+        return response
+    
     except Exception as e:
-        app.logger.error(f"API error: {str(e)}")
-        return jsonify({
+        response = jsonify({
             "success": False,
-            "error": "Internal server error",
-            "request_id": request.headers.get("X-Request-ID")
-        }), 500
+            "error": str(e)
+        })
+        response.headers.add('Access-Control-Allow-Origin', 'https://aemiliotis.github.io')
+        return response, 500
 
 @app.route('/list-cells', methods=['GET'])
 def list_cells():
