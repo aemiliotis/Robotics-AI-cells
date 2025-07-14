@@ -44,9 +44,6 @@ def before_request():
         return jsonify({"error": "Payload too large"}), 413
 
 @app.route('/ai-api', methods=['POST', 'OPTIONS'])
-
-
-@app.route('/ai-api', methods=['POST', 'OPTIONS'])
 def handle_request():
     if request.method == 'OPTIONS':
         # Handle preflight request
