@@ -640,6 +640,8 @@
                 data: inputData
             })
         });
+
+        console.log("Full response:", response);
         
         if (!response.ok) {
             const error = await response.json().catch(() => ({}));
