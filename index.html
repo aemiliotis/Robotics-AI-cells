@@ -180,44 +180,69 @@
         
         // Execute selected cells
         async function executeCells() {
-            const selectedCells = Array.from(
-                document.getElementById("cellSelect").selectedOptions
-            ).map(opt => opt.value);
-            
-            if (selectedCells.length === 0) {
-                alert("Please select at least one cell!");
-                return;
-            }
-            
-            const outputElement = document.getElementById("apiOutput");
-            outputElement.textContent = "Processing...";
-            
-            try {
-                const inputData = JSON.parse(
-                    document.getElementById("inputData").value || "{}"
-                );
-                
-                const response = await fetch(`${API_BASE}/ai-api`, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        cells: selectedCells,
-                        data: inputData
-                    })
-                });
-                
-                console.log("Response:", response);
-                
-                if (!response.ok) throw new Error("API request failed");
-                
-                const result = await response.json();
-                outputElement.textContent = JSON.stringify(result, null, 2);
-                
-            } catch (error) {
-                outputElement.textContent = `Error: ${error.message}`;
-                console.error("Execution error:", error);
-            }
+    const selectedCells = Array.from(
+        document.getElementById("cellSelect").selectedOptions
+    ).map(opt => opt.value);
+    
+    if (selectedCells.length === 0) {
+        alert("Please select at least one cell!");
+        return;
+    }
+    
+    const outputElement = document.getElementById("apiOutput");
+    outputElement.textContent = "Processing...";
+    
+    try {
+        const inputData = JSON.parse(
+            document.getElementById("inputData").value || "{}"
+        );
+        
+        // Validate input data structure
+        const missingInputs = selectedCells.filter(cell => !inputData[cell]);
+        if (missingInputs.length > 0) {
+            throw new Error(`Missing input data for: ${missingInputs.join(', ')}`);
         }
+        
+        const response = await fetch(`${API_BASE}/ai-api`, {
+            method: "POST",
+            headers: { 
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            },
+            body: JSON.stringify({
+                cells: selectedCells,
+                data: inputData  // Properly nested structure
+            })
+        });
+        
+        console.log("Full response:", response);
+        
+        if (!response.ok) {
+            let errorDetails = {};
+            try {
+                errorDetails = await response.json();
+            } catch (e) {
+                console.warn("Couldn't parse error response");
+            }
+            
+            throw new Error(
+                errorDetails.error || 
+                `Server Error ${response.status}`
+            );
+        }
+        
+        const result = await response.json();
+        outputElement.textContent = JSON.stringify(result, null, 2);
+        
+    } catch (error) {
+        outputElement.textContent = `Error: ${error.message}`;
+        console.error("Full error details:", {
+            error: error,
+            stack: error.stack,
+            timestamp: new Date().toISOString()
+        });
+    }
+}
         
         // Initialize
         document.getElementById("runButton").addEventListener("click", executeCells);
