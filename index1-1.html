@@ -528,12 +528,6 @@
             }
         }
 
-        // DEBUG: Log the complete request payload
-        console.log("Request payload:", {
-            cells: [cellId],
-            data: inputData
-        });
-
         const response = await fetch(API_URL, {
             method: 'POST',
             headers: { 
@@ -546,6 +540,12 @@
             })
         });
 
+        // DEBUG: Log the complete request payload
+        console.log("Request payload:", {
+            cells: [cellId],
+            data: inputData
+        });
+        
         // DEBUG: Log raw response
         console.log("Raw response:", response);
 
