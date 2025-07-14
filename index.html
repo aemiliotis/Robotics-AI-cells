@@ -156,9 +156,9 @@
                 const cellSelect = document.getElementById("cellSelect");
                 cellSelect.innerHTML = "";
 
-                console.log("Available cells:", data.available_cells);
+                console.log("Available cells:", data);
                 
-                data.available_cells.forEach(cell => {
+                data.forEach(cell => {
                     const option = document.createElement("option");
                     option.value = cell;
                     option.textContent = cell;
