@@ -663,6 +663,22 @@
                 }
             }
         }
+        
+        
+        document.addEventListener('DOMContentLoaded', function() {
+    // ... all your existing code ...
+
+    // ▼ REPLACE your current button binding with this ▼
+    document.addEventListener('click', function(e) {
+        const btn = e.target.closest('.cell-card button');
+        if (btn) {
+            const cellId = btn.closest('.cell-card').dataset.cellId;
+            console.log('Execute clicked for:', cellId);
+            executeCell(cellId);
+        }
+    });
+    // ▲ This will work even for dynamically created cards ▲
+});
     </script>
 </body>
 </html>
