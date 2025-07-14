@@ -5,34 +5,55 @@ from flask_cors import CORS
 
 
 app = Flask(__name__)
-CORS(app, resources={r"/*": {"origins": "*"}})  # Enable CORS for all routes  # NEW
-
+CORS(app, resources={
+    r"/ai-api": {
+        "origins": ["https://aemiliotis.github.com", "http://localhost:*"],
+        "methods": ["POST", "OPTIONS"],
+        "allow_headers": ["Content-Type"]
+    },
+    r"/list-cells": {
+        "origins": "*",  # More open for listing
+        "methods": ["GET", "OPTIONS"]
+    }
+})
 # Load cells
 CELLS_DIR = os.path.join(os.path.dirname(__file__), "cells")
 ai_cells = load_cells(CELLS_DIR)
 
-@app.route('/ai-api', methods=['POST', 'OPTIONS'])  # Added OPTIONS
+@app.route('/ai-api', methods=['POST', 'OPTIONS'])
 def handle_request():
     if request.method == 'OPTIONS':
-        return _build_cors_preflight_response()  # NEW
+        return _build_cors_preflight_response()
     
     try:
         data = request.json
+        if not data or 'cells' not in data:
+            raise ValueError("Missing 'cells' in request")
+            
+        # NEW: Structured input handling
+        input_data = data.get('data', {})
         results = {}
         
-        for cell_name in data.get("cells", []):
-            if cell_name in ai_cells:
-                results[cell_name] = ai_cells[cell_name](data)
+        for cell_name in data["cells"]:
+            if cell_name not in ai_cells:
+                raise ValueError(f"Invalid cell: {cell_name}")
+                
+            # NEW: Pass only relevant data to each cell
+            cell_input = input_data.get(cell_name, {})
+            results[cell_name] = ai_cells[cell_name](cell_input)
         
-        return _corsify_response(jsonify({  # NEW
+        return _corsify_response(jsonify({
             "success": True,
             "results": results
         }))
     
     except Exception as e:
-        return _corsify_response(jsonify({  # NEW
+        # Enhanced error logging
+        app.logger.error(f"API Error: {str(e)}")
+        return _corsify_response(jsonify({
             "success": False,
-            "error": str(e)
+            "error": str(e),
+            "request_data": request.json  # For debugging
         })), 500
 
 # NEW CORS support functions
