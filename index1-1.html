@@ -545,6 +545,8 @@
                     })
                 });
 
+                console.log(`Response ${cellId}`);
+        
                 if (!response.ok) {
                     const errorData = await response.json().catch(() => ({}));
                     throw new Error(errorData.error || `API request failed with status ${response.status}`);
