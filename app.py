@@ -7,7 +7,7 @@ from flask_cors import CORS
 app = Flask(__name__)
 CORS(app, resources={
     r"/ai-api": {
-        "origins": ["https://aemiliotis.github.com", "http://localhost:*"],
+        "origins": ["https://aemiliotis.github.io/Robotics-AI-cells", "http://localhost:*"],
         "methods": ["POST", "OPTIONS"],
         "allow_headers": ["Content-Type"]
     },
