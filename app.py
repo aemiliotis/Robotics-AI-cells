@@ -20,28 +20,35 @@ CORS(app, resources={
 CELLS_DIR = os.path.join(os.path.dirname(__file__), "cells")
 ai_cells = load_cells(CELLS_DIR)
 
-@app.route('/ai-api', methods=['POST', 'OPTIONS'])  # Added OPTIONS
+@app.route('/ai-api', methods=['POST', 'OPTIONS'])
 def handle_request():
     if request.method == 'OPTIONS':
-        return _build_cors_preflight_response()  # NEW
+        return _build_cors_preflight_response()
     
     try:
-        data = request.json
+        request_data = request.json
+        cell_names = request_data.get("cells", [])
+        input_data = request_data.get("data", {})  # Changed from direct data access
+        
         results = {}
         
-        for cell_name in data.get("cells", []):
+        for cell_name in cell_names:
             if cell_name in ai_cells:
-                results[cell_name] = ai_cells[cell_name](data)
+                # Pass only the relevant portion of input data
+                cell_input = input_data.get(cell_name, {})
+                results[cell_name] = ai_cells[cell_name](cell_input)  # Changed from passing full data
         
-        return _corsify_response(jsonify({  # NEW
+        return _corsify_response(jsonify({
             "success": True,
             "results": results
         }))
     
     except Exception as e:
-        return _corsify_response(jsonify({  # NEW
+        app.logger.error(f"API Error: {str(e)}")  # Added logging
+        return _corsify_response(jsonify({
             "success": False,
-            "error": str(e)
+            "error": str(e),
+            "received_data": request_data  # For debugging
         })), 500
 
 # NEW CORS support functions
