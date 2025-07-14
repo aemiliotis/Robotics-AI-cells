@@ -629,9 +629,30 @@
           break;
       }
     }
-
-    // Enhanced API Call
     const response = await fetch(API_URL, {
+            method: 'POST',
+            mode: 'cors', // explicitly request CORS
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                cells: cells,
+                ...inputData
+            })
+        });
+        
+        if (!response.ok) {
+            const error = await response.json().catch(() => ({}));
+            throw new Error(error.message || `HTTP ${response.status}`);
+        }
+        
+        return await response.json();
+    } catch (error) {
+        console.error('API Error:', error);
+        throw error;
+    }
+    // Enhanced API Call
+    /*const response = await fetch(API_URL, {
       method: 'POST',
       mode: 'cors', // Explicitly enable CORS mode
       headers: { 
@@ -672,7 +693,7 @@
     }
   } finally {
     button.disabled = false;
-  }
+  }*/
 }
 
         function switchTab(tabId) {
