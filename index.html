@@ -206,6 +206,8 @@
                     })
                 });
                 
+                console.log("Response:", response);
+                
                 if (!response.ok) throw new Error("API request failed");
                 
                 const result = await response.json();
