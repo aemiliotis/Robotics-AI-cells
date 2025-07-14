@@ -20,40 +20,28 @@ CORS(app, resources={
 CELLS_DIR = os.path.join(os.path.dirname(__file__), "cells")
 ai_cells = load_cells(CELLS_DIR)
 
-@app.route('/ai-api', methods=['POST', 'OPTIONS'])
+@app.route('/ai-api', methods=['POST', 'OPTIONS'])  # Added OPTIONS
 def handle_request():
     if request.method == 'OPTIONS':
-        return _build_cors_preflight_response()
+        return _build_cors_preflight_response()  # NEW
     
     try:
         data = request.json
-        if not data or 'cells' not in data:
-            raise ValueError("Missing 'cells' in request")
-            
-        # NEW: Structured input handling
-        input_data = data.get('data', {})
         results = {}
         
-        for cell_name in data["cells"]:
-            if cell_name not in ai_cells:
-                raise ValueError(f"Invalid cell: {cell_name}")
-                
-            # NEW: Pass only relevant data to each cell
-            cell_input = input_data.get(cell_name, {})
-            results[cell_name] = ai_cells[cell_name](cell_input)
+        for cell_name in data.get("cells", []):
+            if cell_name in ai_cells:
+                results[cell_name] = ai_cells[cell_name](data)
         
-        return _corsify_response(jsonify({
+        return _corsify_response(jsonify({  # NEW
             "success": True,
             "results": results
         }))
     
     except Exception as e:
-        # Enhanced error logging
-        app.logger.error(f"API Error: {str(e)}")
-        return _corsify_response(jsonify({
+        return _corsify_response(jsonify({  # NEW
             "success": False,
-            "error": str(e),
-            "request_data": request.json  # For debugging
+            "error": str(e)
         })), 500
 
 # NEW CORS support functions
