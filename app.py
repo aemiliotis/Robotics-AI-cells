@@ -48,7 +48,7 @@ def handle_request():
     if request.method == 'OPTIONS':
         # Handle preflight request
         response = jsonify({"status": "preflight"})
-        response.headers.add('Access-Control-Allow-Origin', 'https://aemiliotis.github.io')
+        response.headers.add('Access-Control-Allow-Origin', 'https://aemiliotis.github.io/Robotics-AI-cells')
         response.headers.add('Access-Control-Allow-Methods', 'POST, OPTIONS')
         response.headers.add('Access-Control-Allow-Headers', 'Content-Type')
         return response
