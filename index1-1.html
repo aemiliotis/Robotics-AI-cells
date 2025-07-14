@@ -492,90 +492,87 @@
         }
 
         async function executeCell(cellId) {
-            const cell = CELLS.find(c => c.id === cellId);
-            console.log("Cell id:", cellId, cell);
-            if (!cell) return;
+    console.log('Execute clicked for:', cellId);
+    const cell = CELLS.find(c => c.id === cellId);
+    if (!cell) return;
 
-            const responseElement = document.getElementById(`${cellId}_response`);
-            const button = document.querySelector(`.cell-card[data-cell-id="${cellId}"] button`);
+    const responseElement = document.getElementById(`${cellId}_response`);
+    const button = document.querySelector(`.cell-card[data-cell-id="${cellId}"] button`);
+    
+    // Reset UI
+    responseElement.className = 'response loading';
+    responseElement.textContent = 'Processing...';
+    button.disabled = true;
+
+    try {
+        // Prepare input data - MODIFIED THIS SECTION
+        const inputData = {};
+        for (const input of cell.inputs) {
+            const inputElement = document.getElementById(`${cellId}_${input.id}`);
+            const value = inputElement.value.trim();
             
-            // Reset UI
-            responseElement.className = 'response loading';
-            responseElement.textContent = 'Processing...';
-            button.disabled = true;
-
-            try {
-                // Prepare input data
-                const inputData = {};
-                for (const input of cell.inputs) {
-                    const inputElement = document.getElementById(`${cellId}_${input.id}`);
-                    const value = inputElement.value.trim();
-                    
-                    switch(input.type) {
-                        case 'number':
-                            inputData[input.id] = parseFloat(value);
-                            if (isNaN(inputData[input.id])) throw new Error(`Invalid number for ${input.label}`);
-                            break;
-                        case 'text':
-                        case 'select':
-                            inputData[input.id] = value;
-                            break;
-                        case 'json':
-                            inputData[input.id] = value ? JSON.parse(value) : null;
-                            break;
+            switch(input.type) {
+                case 'number':
+                    inputData[input.id] = parseFloat(value);
+                    if (isNaN(inputData[input.id])) {
+                        throw new Error(`Invalid number for ${input.label}`);
                     }
-                }
-
-                // Special handling for PID controller
-                if (cellId === 'pid_controller') {
-                    // Convert to fixed-point compatible values
-                    inputData.error = parseFloat(inputData.error);
-                    inputData.integral = parseFloat(inputData.integral);
-                    inputData.last_error = parseFloat(inputData.last_error);
-                }
-
-                const response = await fetch(API_URL, {
-                    method: 'POST',
-                    headers: { 
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        cells: [cellId],
-                        data: inputData
-                    })
-                });
-
-                console.log("Response:", response);
-        
-                if (!response.ok) {
-                    const errorData = await response.json().catch(() => ({}));
-                    throw new Error(errorData.error || `API request failed with status ${response.status}`);
-                }
-
-                const result = await response.json();
-                
-                if (!result.success) {
-                    throw new Error(result.error || 'Unknown API error');
-                }
-
-                // Display results
-                responseElement.textContent = JSON.stringify(result.results[cellId], null, 2);
-                responseElement.className = 'response success';
-                
-                updateLastUpdate();
-
-            } catch (error) {
-                console.error('Execution error:', error);
-                responseElement.textContent = `Error: ${error.message}`;
-                responseElement.className = 'response error';
-                
-                if (error instanceof SyntaxError) {
-                    responseElement.textContent += '\n(Invalid JSON in input or response)';
-                }
-            } finally {
-                button.disabled = false;
+                    break;
+                case 'text':
+                case 'select':
+                    inputData[input.id] = value;
+                    break;
+                case 'json':
+                    inputData[input.id] = value ? JSON.parse(value) : null;
+                    break;
             }
+        }
+
+        // DEBUG: Log the complete request payload
+        console.log("Request payload:", {
+            cells: [cellId],
+            data: inputData
+        });
+
+        const response = await fetch(API_URL, {
+            method: 'POST',
+            headers: { 
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({
+                cells: [cellId],
+                data: inputData  // This structure matches your Flask backend
+            })
+        });
+
+        // DEBUG: Log raw response
+        console.log("Raw response:", response);
+
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.error || `API request failed with status ${response.status}`);
+        }
+
+        const result = await response.json();
+        
+        if (!result.success) {
+            throw new Error(result.error || 'Unknown API error');
+        }
+
+        // Display results
+        responseElement.textContent = JSON.stringify(result.results[cellId], null, 2);
+        responseElement.className = 'response success';
+        
+        updateLastUpdate();
+
+    } catch (error) {
+        console.error('Full execution error:', error);
+        responseElement.textContent = `Error: ${error.message}`;
+        responseElement.className = 'response error';
+    } finally {
+        button.disabled = false;
+    }
         }
 
         function switchTab(tabId) {
