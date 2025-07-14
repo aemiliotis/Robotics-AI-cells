@@ -493,7 +493,7 @@
 
         async function executeCell(cellId) {
             const cell = CELLS.find(c => c.id === cellId);
-            console.log(`Cell id ${cellId}`);
+            console.log("Cell id:", cellId, cell);
             if (!cell) return;
 
             const responseElement = document.getElementById(`${cellId}_response`);
