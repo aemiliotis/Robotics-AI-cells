@@ -649,8 +649,25 @@
         }
         
         return await response.json();
+
+
+        // Display results
+        responseElement.textContent = JSON.stringify(data.results[cellId], null, 2);
+        responseElement.className = 'response success';
+
     } catch (error) {
         console.error('API Error:', error);
+        console.error('Execution error:', error);
+        responseElement.textContent = `Error: ${error.message}`;
+        responseElement.className = 'response error';
+    
+        // Additional error logging
+        if (error instanceof SyntaxError) {
+            responseElement.textContent += '\n(Invalid JSON response)';
+        }
+     } finally {
+           button.disabled = false;
+     }
         throw error;
     }
     // Enhanced API Call
