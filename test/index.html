@@ -1,1 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Robotics AI Hub</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Robotics AI Hub</h1>
+            <p>Control panel for all 25 robotic AI cells</p>
+        </header>
+        
+        <div class="status-bar">
+            <div>
+                <span id="api-status" class="api-status offline"></span>
+                <span id="api-url">Connecting to API...</span>
+            </div>
+            <div id="last-update">Last updated: Never</div>
+        </div>
+        
+        <div class="tabs">
+            <div class="tab active" data-tab="all">All Cells</div>
+            <div class="tab" data-tab="motion">Motion Control</div>
+            <div class="tab" data-tab="perception">Perception</div>
+            <div class="tab" data-tab="power">Power</div>
+            <div class="tab" data-tab="utils">Utilities</div>
+            <div class="tab" data-tab="api">API Management</div>
+        </div>
+        
+        <div class="tab-content active" id="all-tab">
+            <div class="cell-grid" id="all-cells">
+                <!-- All cells will be loaded here -->
+            </div>
+        </div>
+        
+        <div class="tab-content" id="motion-tab">
+            <div class="cell-grid" id="motion-cells">
+                <!-- Motion cells will be loaded here -->
+            </div>
+        </div>
+        
+        <div class="tab-content" id="perception-tab">
+            <div class="cell-grid" id="perception-cells">
+                <!-- Perception cells will be loaded here -->
+            </div>
+        </div>
+        
+        <div class="tab-content" id="power-tab">
+            <div class="cell-grid" id="power-cells">
+                <!-- Power cells will be loaded here -->
+            </div>
+        </div>
+        
+        <div class="tab-content" id="utils-tab">
+            <div class="cell-grid" id="utils-cells">
+                <!-- Utility cells will be loaded here -->
+            </div>
+        </div>
+        
+        <div class="tab-content" id="api-tab">
+            <div class="cell-card">
+                <h2>API Key Management</h2>
+                
+                <div id="login-section" style="display: none;">
+                    <h3>Login Required</h3>
+                    <div class="form-group">
+                        <label for="login-email">Email</label>
+                        <input type="email" id="login-email" placeholder="your@email.com">
+                    </div>
+                    <div class="form-group">
+                        <label for="login-password">Password</label>
+                        <input type="password" id="login-password" placeholder="Password">
+                    </div>
+                    <button id="login-btn" class="primary">Login</button>
+                    <button id="register-btn">Register</button>
+                </div>
+                
+                <div id="api-key-form" style="display: none;">
+                    <h3>Create New API Key</h3>
+                    <div class="form-group">
+                        <label for="api-key-name">Name</label>
+                        <input type="text" id="api-key-name" placeholder="My Application">
+                    </div>
+                    <div class="form-group">
+                        <label for="api-key-desc">Description</label>
+                        <textarea id="api-key-desc" rows="2" placeholder="What will this key be used for?"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Allowed Cells</label>
+                        <div id="cell-selection" style="max-height: 200px; overflow-y: auto; border: 1px solid #ddd; padding: 10px;">
+                            <!-- Cells will be populated here -->
+                        </div>
+                    </div>
+                    <button id="generate-api-key" class="primary">Generate API Key</button>
+                </div>
+                
+                <div id="api-key-result" style="display: none; margin-top: 20px;">
+                    <h3>Your New API Key</h3>
+                    <div class="alert alert-warning">
+                        <strong>Important:</strong> Copy these keys now. They won't be shown again.
+                    </div>
+                    <div class="form-group">
+                        <label>API Key</label>
+                        <input type="text" id="new-api-key" readonly class="code">
+                    </div>
+                    <div class="form-group">
+                        <label>Secret Key</label>
+                        <input type="text" id="new-secret-key" readonly class="code">
+                    </div>
+                    <div class="form-group">
+                        <label>Example Usage</label>
+                        <pre id="api-example" class="code"></pre>
+                    </div>
+                </div>
+                
+                <div id="api-keys-list" style="margin-top: 30px; display: none;">
+                    <h3>Your API Keys</h3>
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Created</th>
+                                <th>Last Used</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="keys-table-body">
+                            <!-- Keys will be populated here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
 
+    <script src="script.js"></script>
+</body>
+</html>
