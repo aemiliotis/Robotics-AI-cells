@@ -250,7 +250,7 @@
 
     <script>
         // Configuration
-        const API_URL = "https://your-project-name.onrender.com/ai-api";
+        const API_URL = "https://robotics-ai-cells.onrender.com/ai-api";
         const CELLS = [
             // 1. Core Mathematical Cells
             {
@@ -787,402 +787,70 @@
                 
                 return await response.json();
             } catch (error) {
-// State management
-        let apiStatus = false;
-        let lastResponse = null;
-
-        // Initialize the application
-        document.addEventListener('DOMContentLoaded', function() {
-            // Set API URL display
-            document.getElementById('api-url').textContent = API_URL;
-            
-            // Create all cell cards
-            renderAllCells();
-            
-            // Set up tab switching
-            document.querySelectorAll('.tab').forEach(tab => {
-                tab.addEventListener('click', () => switchTab(tab.dataset.tab));
-            });
-            
-            // Check API status
-            checkApiStatus();
-        });
-
-        function renderAllCells() {
-            const containers = {
-                'all': document.getElementById('all-cells'),
-                'math': document.getElementById('math-cells'),
-                'motion': document.getElementById('motion-cells'),
-                'perception': document.getElementById('perception-cells'),
-                'power': document.getElementById('power-cells'),
-                'comms': document.getElementById('comms-cells')
-            };
-            
-            // Clear existing content
-            Object.values(containers).forEach(container => {
-                container.innerHTML = '';
-            });
-            
-            // Create and place all cells
-            CELLS.forEach(cell => {
-                const card = createCellCard(cell);
-                containers['all'].appendChild(card.cloneNode(true));
-                if (containers[cell.category]) {
-                    containers[cell.category].appendChild(card);
-                }
-            });
-        }
-
-        function createCellCard(cell) {
-            const card = document.createElement('div');
-            card.className = 'cell-card';
-            card.dataset.cellId = cell.id;
-            
-            // Header
-            const header = document.createElement('div');
-            header.className = 'cell-header';
-            
-            const title = document.createElement('div');
-            title.className = 'cell-title';
-            title.textContent = cell.name;
-            
-            header.appendChild(title);
-            card.appendChild(header);
-            
-            // Description
-            const desc = document.createElement('p');
-            desc.textContent = cell.description;
-            desc.style.fontSize = '0.9em';
-            desc.style.color = '#666';
-            card.appendChild(desc);
-            
-            // Controls
-            const controls = document.createElement('div');
-            controls.className = 'cell-controls';
-            
-            cell.inputs.forEach(input => {
-                const label = document.createElement('label');
-                label.textContent = input.label;
-                label.style.display = 'block';
-                label.style.marginTop = '10px';
-                label.style.fontWeight = '500';
-                controls.appendChild(label);
-                
-                let inputElement;
-                
-                switch(input.type) {
-                    case 'number':
-                        inputElement = document.createElement('input');
-                        inputElement.type = 'number';
-                        inputElement.value = input.value;
-                        if (input.min !== undefined) inputElement.min = input.min;
-                        if (input.max !== undefined) inputElement.max = input.max;
-                        break;
-                        
-                    case 'text':
-                        inputElement = document.createElement('input');
-                        inputElement.type = 'text';
-                        inputElement.value = input.value;
-                        break;
-                        
-                    case 'select':
-                        inputElement = document.createElement('select');
-                        input.options.forEach(option => {
-                            const optElement = document.createElement('option');
-                            optElement.value = option;
-                            optElement.textContent = option;
-                            if (option === input.value) optElement.selected = true;
-                            inputElement.appendChild(optElement);
-                        });
-                        break;
-                        
-                    case 'json':
-                        inputElement = document.createElement('textarea');
-                        inputElement.value = typeof input.value === 'string' ? input.value : JSON.stringify(input.value, null, 2);
-                        inputElement.rows = 3;
-                        break;
-                }
-                
-                inputElement.id = `${cell.id}_${input.id}`;
-                inputElement.style.width = '100%';
-                controls.appendChild(inputElement);
-            });
-            
-            const button = document.createElement('button');
-            button.textContent = 'Execute';
-            button.addEventListener('click', () => executeCell(cell.id));
-            controls.appendChild(button);
-            
-            card.appendChild(controls);
-            
-            // Response area
-            const response = document.createElement('div');
-            response.className = 'response';
-            response.id = `${cell.id}_response`;
-            response.textContent = 'Response will appear here...';
-            card.appendChild(response);
-            
-            return card;
-        }
-
-        async function executeCell(cellId) {
-    const cell = CELLS.find(c => c.id === cellId);
-    if (!cell) return;
-
-    const responseElement = document.getElementById(`${cellId}_response`);
-    const button = document.querySelector(`.cell-card[data-cell-id="${cellId}"] button`);
-    
-    // Reset UI
-    responseElement.className = 'response loading';
-    responseElement.textContent = 'Processing...';
-    button.disabled = true;
-
-    try {
-        // Prepare input data - STRUCTURE CHANGED TO MATCH BACKEND
-        const cellInputData = {};
-        for (const input of cell.inputs) {
-            const inputElement = document.getElementById(`${cellId}_${input.id}`);
-            const value = inputElement.value.trim();
-            
-            switch(input.type) {
-                case 'number':
-                    cellInputData[input.id] = parseFloat(value);
-                    if (isNaN(cellInputData[input.id])) throw new Error('Invalid number');
-                    break;
-                case 'text':
-                case 'select':
-                    cellInputData[input.id] = value;
-                    break;
-                case 'json':
-                    cellInputData[input.id] = value ? JSON.parse(value) : null;
-                    break;
+                console.error('API Error:', error);
+                throw error;
             }
         }
-
-        // Structure data to match backend expectations
-        const requestData = {
-            cells: [cellId],
-            data: {
-                [cellId]: cellInputData  // Nest input data under cell ID
-            }
-        };
-
-        console.log("Sending request:", requestData);  // Debug log
-
-        const response = await fetch(API_URL, {
-            method: 'POST',
-            headers: { 
-                'Content-Type': 'application/json',
-                'Accept': 'application/json'
-            },
-            body: JSON.stringify(requestData)
-        });
-
-        const result = await response.json();
-        console.log("API Response:", result);  // Debug log
-        
-        if (!response.ok || !result.success) {
-            throw new Error(result.error || `API request failed with status ${response.status}`);
-        }
-
-        // Handle backend response format
-        if (result.results && result.results[cellId]) {
-            responseElement.textContent = JSON.stringify(result.results[cellId], null, 2);
-            responseElement.className = 'response success';
-        } else {
-            throw new Error('API did not return results for this cell');
-        }
-        
-        updateLastUpdate();
-
-    } catch (error) {
-        console.error('Execution error:', error);
-        responseElement.textContent = `Error: ${error.message}`;
-        responseElement.className = 'response error';
-    } finally {
-        button.disabled = false;
-    }
-}
-        
-        /*async function executeCell(cellId) {
-  const cell = CELLS.find(c => c.id === cellId);
-  if (!cell) return;
-
-  const responseElement = document.getElementById(`${cellId}_response`);
-  const button = document.querySelector(`.cell-card[data-cell-id="${cellId}"] button`);
-  
-  // Reset UI
-  responseElement.className = 'response loading';
-  responseElement.textContent = 'Processing...';
-  button.disabled = true;
-
-  try {
-    // Prepare input data
-    const inputData = {};
-    for (const input of cell.inputs) {
-      const inputElement = document.getElementById(`${cellId}_${input.id}`);
-      const value = inputElement.value.trim();
-      
-      switch(input.type) {
-        case 'number':
-          inputData[input.id] = parseFloat(value);
-          if (isNaN(inputData[input.id])) throw new Error('Invalid number');
-          break;
-        case 'text':
-        case 'select':
-          inputData[input.id] = value;
-          break;
-        case 'json':
-          inputData[input.id] = value ? JSON.parse(value) : null;
-          break;
-      }
-    }
-    const response = await fetch(API_URL, {
-            method: 'POST',
-            mode: 'cors', // explicitly request CORS
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                cells: cell,
-                data: inputData
-            })
-        });
-
-        console.log("Full response:", response);
-        
-        if (!response.ok) {
-            const error = await response.json().catch(() => ({}));
-            throw new Error(error.message || `HTTP ${response.status}`);
-        }
-        
-        return await response.json();
-
-
-        // Display results
-        responseElement.textContent = JSON.stringify(data.results[cellId], null, 2);
-        responseElement.className = 'response success';
-
-    } catch (error) {
-        console.error('API Error:', error);
-        console.error('Execution error:', error);
-        responseElement.textContent = `Error: ${error.message}`;
-        responseElement.className = 'response error';
-    
-        // Additional error logging
-        if (error instanceof SyntaxError) {
-            responseElement.textContent += '\n(Invalid JSON response)';
-        }
-     } finally {
-           button.disabled = false;
-     }
-        throw error;
-   }*/
 
         function switchTab(tabId) {
             // Update active tab
-            document.querySelectorAll('.tab').forEach(tab => {
-                tab.classList.toggle('active', tab.dataset.tab === tabId);
+            tabs.forEach(tab => {
+                if (tab.dataset.tab === tabId) {
+                    tab.classList.add('active');
+                } else {
+                    tab.classList.remove('active');
+                }
             });
             
             // Show corresponding content
-            document.querySelectorAll('.tab-content').forEach(content => {
-                content.classList.toggle('active', content.id === `${tabId}-tab`);
+            tabContents.forEach(content => {
+                if (content.id === `${tabId}-tab`) {
+                    content.classList.add('active');
+                } else {
+                    content.classList.remove('active');
+                }
             });
         }
 
         async function checkApiStatus() {
-  const statusElement = document.getElementById('api-status');
-  statusElement.className = 'api-status checking';
-  
-  try {
-    const response = await fetch(PING_URL, {
-      method: 'GET',
-      mode: 'cors',
-      credentials: 'omit'
-    });
-    
-    apiStatus = response.ok;
-    statusElement.className = `api-status ${apiStatus ? 'online' : 'offline'}`;
-    
-    if (apiStatus) {
-      const data = await response.json();
-      console.log("API Status:", data.status);
-    }
-  } catch (e) {
-    apiStatus = false;
-    statusElement.className = 'api-status offline';
-    console.error("API Status Check Failed:", e);
-  }
-  
-  setTimeout(checkApiStatus, 30000);
-}
+            try {
+                apiStatusElement.classList.add('loading');
+                const response = await fetch(API_URL.replace('/ai-api', '/ping'), {
+                    method: 'GET',
+                    timeout: 3000
+                });
+                
+                apiStatus = response.ok;
+                if (apiStatus) {
+                    const data = await response.json();
+                    console.log("API Status:", data.status);
+                }
+            } catch (e) {
+                apiStatus = false;
+                console.error("API Status Check Failed:", e);
+            } finally {
+                apiStatusElement.classList.remove('loading');
+                updateApiStatusDisplay();
+                
+                // Check every 30 seconds
+                setTimeout(checkApiStatus, 30000);
+            }
+        }
+
+        function updateApiStatusDisplay() {
+            if (apiStatus) {
+                apiStatusElement.className = 'api-status online';
+                apiStatusElement.title = 'API Online';
+            } else {
+                apiStatusElement.className = 'api-status offline';
+                apiStatusElement.title = 'API Offline';
+            }
+        }
 
         function updateLastUpdate() {
             const now = new Date();
-            document.getElementById('last-update').textContent = 
-                `Last updated: ${now.toLocaleTimeString()}`;
+            lastUpdateElement.textContent = `Last updated: ${now.toLocaleTimeString()}`;
         }
-        // Add this at the bottom of your script
-window.debugExecute = function(cellId) {
-  console.log(`Debug executing ${cellId}`);
-  const cell = CELLS.find(c => c.id === cellId);
-  if (!cell) return console.error('Cell not found');
-  
-  console.group(`Cell: ${cell.name}`);
-  console.log('Inputs:', cell.inputs);
-  executeCell(cellId);
-  console.groupEnd();
-};
-        // Function to parse URL parameters
-function getUrlParams() {
-  const params = new URLSearchParams(window.location.search);
-  return {
-    cell: params.get('cell'),
-    ...Object.fromEntries(params.entries())
-  };
-}
-
-// Function to auto-execute a cell from URL parameters
-function executeFromUrl() {
-  const params = getUrlParams();
-  if (params.cell) {
-    const cellId = params.cell;
-    const cell = CELLS.find(c => c.id === cellId);
-    
-    if (cell) {
-      // Set input values from URL params
-      cell.inputs.forEach(input => {
-        const paramValue = params[input.id];
-        if (paramValue !== undefined) {
-          const inputElement = document.getElementById(`${cellId}_${input.id}`);
-          if (inputElement) {
-            inputElement.value = paramValue;
-          }
-        }
-      });
-      
-      // Execute the cell after a short delay to ensure DOM is ready
-      setTimeout(() => executeCell(cellId), 300);
-    }
-  }
-}
-
-// Call this when page loads
-document.addEventListener('DOMContentLoaded', function() {
-    // ... all your existing code ...
-
-    // ▼ REPLACE your current button binding with this ▼
-    document.addEventListener('click', function(e) {
-        const btn = e.target.closest('.cell-card button');
-        if (btn) {
-            const cellId = btn.closest('.cell-card').dataset.cellId;
-            console.log('Execute clicked for:', cellId);
-            executeCell(cellId);
-        }
-    });
-  executeFromUrl();
-});
     </script>
 </body>
 </html>
