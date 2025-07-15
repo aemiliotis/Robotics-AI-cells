@@ -597,6 +597,80 @@
         }
 
         async function executeCell(cellId) {
+    const cell = CELLS.find(c => c.id === cellId);
+    if (!cell) return;
+
+    const responseElement = document.getElementById(`${cellId}_response`);
+    const button = document.querySelector(`.cell-card[data-cell-id="${cellId}"] button`);
+    
+    // Reset UI
+    responseElement.className = 'response loading';
+    responseElement.textContent = 'Processing...';
+    button.disabled = true;
+
+    try {
+        // Prepare input data
+        const inputData = {};
+        for (const input of cell.inputs) {
+            const inputElement = document.getElementById(`${cellId}_${input.id}`);
+            const value = inputElement.value.trim();
+            
+            switch(input.type) {
+                case 'number':
+                    inputData[input.id] = parseFloat(value);
+                    if (isNaN(inputData[input.id])) throw new Error('Invalid number');
+                    break;
+                case 'text':
+                case 'select':
+                    inputData[input.id] = value;
+                    break;
+                case 'json':
+                    inputData[input.id] = value ? JSON.parse(value) : null;
+                    break;
+            }
+        }
+
+        const response = await fetch(API_URL, {
+            method: 'POST',
+            headers: { 
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                cells: [cellId],  // Note: Changed from `cell` to `[cellId]`
+                data: inputData
+            })
+        });
+
+        console.log("Full response:", response);
+        
+        if (!response.ok) {
+            const error = await response.json().catch(() => ({}));
+            throw new Error(error.message || `HTTP ${response.status}`);
+        }
+        
+        const result = await response.json();
+        console.log("API Response:", result);  // Debug log
+        
+        // Display results - THIS WAS MISSING
+        if (result.results && result.results[cellId]) {
+            responseElement.textContent = JSON.stringify(result.results[cellId], null, 2);
+            responseElement.className = 'response success';
+        } else {
+            throw new Error('Unexpected response format from API');
+        }
+        
+        updateLastUpdate();
+
+    } catch (error) {
+        console.error('Execution error:', error);
+        responseElement.textContent = `Error: ${error.message}`;
+        responseElement.className = 'response error';
+    } finally {
+        button.disabled = false;
+    }
+}
+        
+        /*async function executeCell(cellId) {
   const cell = CELLS.find(c => c.id === cellId);
   if (!cell) return;
 
@@ -669,51 +743,7 @@
            button.disabled = false;
      }
         throw error;
-   }
-    // Enhanced API Call
-    /*const response = await fetch(API_URL, {
-      method: 'POST',
-      mode: 'cors', // Explicitly enable CORS mode
-      headers: { 
-        'Content-Type': 'application/json',
-        'Accept': 'application/json'
-      },
-      body: JSON.stringify({
-        cells: [cellId],
-        ...inputData
-      }),
-      credentials: 'omit' // Explicitly disable credentials
-    });
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    const data = await response.json();
-    
-    if (!data.success) {
-      throw new Error(data.error || 'Unknown API error');
-    }
-
-    // Display results
-    responseElement.textContent = JSON.stringify(data.results[cellId], null, 2);
-    responseElement.className = 'response success';
-    
-    updateLastUpdate();
-
-  } catch (error) {
-    console.error('Execution error:', error);
-    responseElement.textContent = `Error: ${error.message}`;
-    responseElement.className = 'response error';
-    
-    // Additional error logging
-    if (error instanceof SyntaxError) {
-      responseElement.textContent += '\n(Invalid JSON response)';
-    }
-  } finally {
-    button.disabled = false;
-  }
-}*/
+   }*/
 
         function switchTab(tabId) {
             // Update active tab
