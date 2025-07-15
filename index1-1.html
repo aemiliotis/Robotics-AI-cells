@@ -249,8 +249,11 @@
     </div>
 
     <script>
-        // Configuration
+        // Configuration - VERIFY THIS IS CORRECT
         const API_URL = "https://robotics-ai-cells.onrender.com/ai-api";
+        const PING_URL = "https://robotics-ai-cells.onrender.com/ping";
+        
+        // All 25 cells configuration
         const CELLS = [
             // 1. Core Mathematical Cells
             {
@@ -546,27 +549,20 @@
             }
         ];
 
-        // State management
+    // State management
         let apiStatus = false;
         let lastResponse = null;
 
-        // DOM Elements
-        const apiStatusElement = document.getElementById('api-status');
-        const apiUrlElement = document.getElementById('api-url');
-        const lastUpdateElement = document.getElementById('last-update');
-        const tabs = document.querySelectorAll('.tab');
-        const tabContents = document.querySelectorAll('.tab-content');
-
-        // Initialize the UI
+        // Initialize the application
         document.addEventListener('DOMContentLoaded', function() {
             // Set API URL display
-            apiUrlElement.textContent = API_URL;
+            document.getElementById('api-url').textContent = API_URL;
             
             // Create all cell cards
             renderAllCells();
             
             // Set up tab switching
-            tabs.forEach(tab => {
+            document.querySelectorAll('.tab').forEach(tab => {
                 tab.addEventListener('click', () => switchTab(tab.dataset.tab));
             });
             
@@ -575,37 +571,26 @@
         });
 
         function renderAllCells() {
-            const allCellsContainer = document.getElementById('all-cells');
-            const motionContainer = document.getElementById('motion-cells');
-            const perceptionContainer = document.getElementById('perception-cells');
-            const powerContainer = document.getElementById('power-cells');
-            const utilsContainer = document.getElementById('utils-cells');
+            const containers = {
+                'all': document.getElementById('all-cells'),
+                'math': document.getElementById('math-cells'),
+                'motion': document.getElementById('motion-cells'),
+                'perception': document.getElementById('perception-cells'),
+                'power': document.getElementById('power-cells'),
+                'comms': document.getElementById('comms-cells')
+            };
             
             // Clear existing content
-            allCellsContainer.innerHTML = '';
-            motionContainer.innerHTML = '';
-            perceptionContainer.innerHTML = '';
-            powerContainer.innerHTML = '';
-            utilsContainer.innerHTML = '';
+            Object.values(containers).forEach(container => {
+                container.innerHTML = '';
+            });
             
+            // Create and place all cells
             CELLS.forEach(cell => {
                 const card = createCellCard(cell);
-                allCellsContainer.appendChild(card.cloneNode(true));
-                
-                // Add to category-specific containers
-                switch(cell.category) {
-                    case 'motion':
-                        motionContainer.appendChild(card);
-                        break;
-                    case 'perception':
-                        perceptionContainer.appendChild(card);
-                        break;
-                    case 'power':
-                        powerContainer.appendChild(card);
-                        break;
-                    case 'utils':
-                        utilsContainer.appendChild(card);
-                        break;
+                containers['all'].appendChild(card.cloneNode(true));
+                if (containers[cell.category]) {
+                    containers[cell.category].appendChild(card);
                 }
             });
         }
@@ -652,8 +637,8 @@
                         inputElement = document.createElement('input');
                         inputElement.type = 'number';
                         inputElement.value = input.value;
-                        if (input.min) inputElement.min = input.min;
-                        if (input.max) inputElement.max = input.max;
+                        if (input.min !== undefined) inputElement.min = input.min;
+                        if (input.max !== undefined) inputElement.max = input.max;
                         break;
                         
                     case 'text':
@@ -703,154 +688,263 @@
         }
 
         async function executeCell(cellId) {
-            const cell = CELLS.find(c => c.id === cellId);
-            if (!cell) return;
+    const cell = CELLS.find(c => c.id === cellId);
+    if (!cell) return;
+
+    const responseElement = document.getElementById(`${cellId}_response`);
+    const button = document.querySelector(`.cell-card[data-cell-id="${cellId}"] button`);
+    
+    // Reset UI
+    responseElement.className = 'response loading';
+    responseElement.textContent = 'Processing...';
+    button.disabled = true;
+
+    try {
+        // Prepare input data - STRUCTURE CHANGED TO MATCH BACKEND
+        const cellInputData = {};
+        for (const input of cell.inputs) {
+            const inputElement = document.getElementById(`${cellId}_${input.id}`);
+            const value = inputElement.value.trim();
             
-            const responseElement = document.getElementById(`${cellId}_response`);
-            const button = document.querySelector(`.cell-card[data-cell-id="${cellId}"] button`);
-            
-            // Clear previous state
-            responseElement.className = 'response';
-            responseElement.textContent = 'Processing...';
-            button.disabled = true;
-            
-            try {
-                // Prepare input data
-                const inputData = {};
-                for (const input of cell.inputs) {
-                    const inputElement = document.getElementById(`${cellId}_${input.id}`);
-                    
-                    switch(input.type) {
-                        case 'number':
-                            inputData[input.id] = parseFloat(inputElement.value);
-                            break;
-                        case 'text':
-                        case 'select':
-                            inputData[input.id] = inputElement.value;
-                            break;
-                        case 'json':
-                            try {
-                                inputData[input.id] = JSON.parse(inputElement.value);
-                            } catch (e) {
-                                throw new Error(`Invalid JSON in ${input.label}: ${e.message}`);
-                            }
-                            break;
-                    }
-                }
-                
-                // Call API
-                const response = await callApi([cellId], inputData);
-                
-                if (response.error) {
-                    throw new Error(response.error);
-                }
-                
-                if (!response.results || !response.results[cellId]) {
-                    throw new Error("No results returned from API");
-                }
-                
-                // Display success
-                responseElement.textContent = JSON.stringify(response.results[cellId], null, 2);
-                responseElement.classList.add('success');
-                lastResponse = response;
-                updateLastUpdate();
-                
-            } catch (error) {
-                // Display error
-                responseElement.textContent = error.message;
-                responseElement.classList.add('error');
-                console.error(`Error executing ${cellId}:`, error);
-            } finally {
-                button.disabled = false;
+            switch(input.type) {
+                case 'number':
+                    cellInputData[input.id] = parseFloat(value);
+                    if (isNaN(cellInputData[input.id])) throw new Error('Invalid number');
+                    break;
+                case 'text':
+                case 'select':
+                    cellInputData[input.id] = value;
+                    break;
+                case 'json':
+                    cellInputData[input.id] = value ? JSON.parse(value) : null;
+                    break;
             }
         }
 
-        async function callApi(cells, inputData) {
-            const payload = {
-                cells: cells,
-                ...inputData
-            };
-            
-            try {
-                const response = await fetch(API_URL, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(payload)
-                });
-                
-                if (!response.ok) {
-                    const errorData = await response.json().catch(() => ({}));
-                    throw new Error(errorData.error || `HTTP ${response.status}`);
-                }
-                
-                return await response.json();
-            } catch (error) {
-                console.error('API Error:', error);
-                throw error;
+        // Structure data to match backend expectations
+        const requestData = {
+            cells: [cellId],
+            data: {
+                [cellId]: cellInputData  // Nest input data under cell ID
             }
+        };
+
+        console.log("Sending request:", requestData);  // Debug log
+
+        const response = await fetch(API_URL, {
+            method: 'POST',
+            headers: { 
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify(requestData)
+        });
+
+        const result = await response.json();
+        console.log("API Response:", result);  // Debug log
+        
+        if (!response.ok || !result.success) {
+            throw new Error(result.error || `API request failed with status ${response.status}`);
         }
+
+        // Handle backend response format
+        if (result.results && result.results[cellId]) {
+            responseElement.textContent = JSON.stringify(result.results[cellId], null, 2);
+            responseElement.className = 'response success';
+        } else {
+            throw new Error('API did not return results for this cell');
+        }
+        
+        updateLastUpdate();
+
+    } catch (error) {
+        console.error('Execution error:', error);
+        responseElement.textContent = `Error: ${error.message}`;
+        responseElement.className = 'response error';
+    } finally {
+        button.disabled = false;
+    }
+}
+        
+        /*async function executeCell(cellId) {
+  const cell = CELLS.find(c => c.id === cellId);
+  if (!cell) return;
+
+  const responseElement = document.getElementById(`${cellId}_response`);
+  const button = document.querySelector(`.cell-card[data-cell-id="${cellId}"] button`);
+  
+  // Reset UI
+  responseElement.className = 'response loading';
+  responseElement.textContent = 'Processing...';
+  button.disabled = true;
+
+  try {
+    // Prepare input data
+    const inputData = {};
+    for (const input of cell.inputs) {
+      const inputElement = document.getElementById(`${cellId}_${input.id}`);
+      const value = inputElement.value.trim();
+      
+      switch(input.type) {
+        case 'number':
+          inputData[input.id] = parseFloat(value);
+          if (isNaN(inputData[input.id])) throw new Error('Invalid number');
+          break;
+        case 'text':
+        case 'select':
+          inputData[input.id] = value;
+          break;
+        case 'json':
+          inputData[input.id] = value ? JSON.parse(value) : null;
+          break;
+      }
+    }
+    const response = await fetch(API_URL, {
+            method: 'POST',
+            mode: 'cors', // explicitly request CORS
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                cells: cell,
+                data: inputData
+            })
+        });
+
+        console.log("Full response:", response);
+        
+        if (!response.ok) {
+            const error = await response.json().catch(() => ({}));
+            throw new Error(error.message || `HTTP ${response.status}`);
+        }
+        
+        return await response.json();
+
+
+        // Display results
+        responseElement.textContent = JSON.stringify(data.results[cellId], null, 2);
+        responseElement.className = 'response success';
+
+    } catch (error) {
+        console.error('API Error:', error);
+        console.error('Execution error:', error);
+        responseElement.textContent = `Error: ${error.message}`;
+        responseElement.className = 'response error';
+    
+        // Additional error logging
+        if (error instanceof SyntaxError) {
+            responseElement.textContent += '\n(Invalid JSON response)';
+        }
+     } finally {
+           button.disabled = false;
+     }
+        throw error;
+   }*/
 
         function switchTab(tabId) {
             // Update active tab
-            tabs.forEach(tab => {
-                if (tab.dataset.tab === tabId) {
-                    tab.classList.add('active');
-                } else {
-                    tab.classList.remove('active');
-                }
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.toggle('active', tab.dataset.tab === tabId);
             });
             
             // Show corresponding content
-            tabContents.forEach(content => {
-                if (content.id === `${tabId}-tab`) {
-                    content.classList.add('active');
-                } else {
-                    content.classList.remove('active');
-                }
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.toggle('active', content.id === `${tabId}-tab`);
             });
         }
 
         async function checkApiStatus() {
-            try {
-                apiStatusElement.classList.add('loading');
-                const response = await fetch(API_URL.replace('/ai-api', '/ping'), {
-                    method: 'GET',
-                    timeout: 3000
-                });
-                
-                apiStatus = response.ok;
-                if (apiStatus) {
-                    const data = await response.json();
-                    console.log("API Status:", data.status);
-                }
-            } catch (e) {
-                apiStatus = false;
-                console.error("API Status Check Failed:", e);
-            } finally {
-                apiStatusElement.classList.remove('loading');
-                updateApiStatusDisplay();
-                
-                // Check every 30 seconds
-                setTimeout(checkApiStatus, 30000);
-            }
-        }
-
-        function updateApiStatusDisplay() {
-            if (apiStatus) {
-                apiStatusElement.className = 'api-status online';
-                apiStatusElement.title = 'API Online';
-            } else {
-                apiStatusElement.className = 'api-status offline';
-                apiStatusElement.title = 'API Offline';
-            }
-        }
+  const statusElement = document.getElementById('api-status');
+  statusElement.className = 'api-status checking';
+  
+  try {
+    const response = await fetch(PING_URL, {
+      method: 'GET',
+      mode: 'cors',
+      credentials: 'omit'
+    });
+    
+    apiStatus = response.ok;
+    statusElement.className = `api-status ${apiStatus ? 'online' : 'offline'}`;
+    
+    if (apiStatus) {
+      const data = await response.json();
+      console.log("API Status:", data.status);
+    }
+  } catch (e) {
+    apiStatus = false;
+    statusElement.className = 'api-status offline';
+    console.error("API Status Check Failed:", e);
+  }
+  
+  setTimeout(checkApiStatus, 30000);
+}
 
         function updateLastUpdate() {
             const now = new Date();
-            lastUpdateElement.textContent = `Last updated: ${now.toLocaleTimeString()}`;
+            document.getElementById('last-update').textContent = 
+                `Last updated: ${now.toLocaleTimeString()}`;
         }
+        // Add this at the bottom of your script
+window.debugExecute = function(cellId) {
+  console.log(`Debug executing ${cellId}`);
+  const cell = CELLS.find(c => c.id === cellId);
+  if (!cell) return console.error('Cell not found');
+  
+  console.group(`Cell: ${cell.name}`);
+  console.log('Inputs:', cell.inputs);
+  executeCell(cellId);
+  console.groupEnd();
+};
+        // Function to parse URL parameters
+function getUrlParams() {
+  const params = new URLSearchParams(window.location.search);
+  return {
+    cell: params.get('cell'),
+    ...Object.fromEntries(params.entries())
+  };
+}
+
+// Function to auto-execute a cell from URL parameters
+function executeFromUrl() {
+  const params = getUrlParams();
+  if (params.cell) {
+    const cellId = params.cell;
+    const cell = CELLS.find(c => c.id === cellId);
+    
+    if (cell) {
+      // Set input values from URL params
+      cell.inputs.forEach(input => {
+        const paramValue = params[input.id];
+        if (paramValue !== undefined) {
+          const inputElement = document.getElementById(`${cellId}_${input.id}`);
+          if (inputElement) {
+            inputElement.value = paramValue;
+          }
+        }
+      });
+      
+      // Execute the cell after a short delay to ensure DOM is ready
+      setTimeout(() => executeCell(cellId), 300);
+    }
+  }
+}
+
+// Call this when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    // ... all your existing code ...
+
+    // ▼ REPLACE your current button binding with this ▼
+    document.addEventListener('click', function(e) {
+        const btn = e.target.closest('.cell-card button');
+        if (btn) {
+            const cellId = btn.closest('.cell-card').dataset.cellId;
+            console.log('Execute clicked for:', cellId);
+            executeCell(cellId);
+        }
+    });
+  executeFromUrl();
+});
     </script>
 </body>
 </html>
