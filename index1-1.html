@@ -571,26 +571,37 @@
         });
 
         function renderAllCells() {
-            const containers = {
-                'all': document.getElementById('all-cells'),
-                'math': document.getElementById('math-cells'),
-                'motion': document.getElementById('motion-cells'),
-                'perception': document.getElementById('perception-cells'),
-                'power': document.getElementById('power-cells'),
-                'comms': document.getElementById('comms-cells')
-            };
+            const allCellsContainer = document.getElementById('all-cells');
+            const motionContainer = document.getElementById('motion-cells');
+            const perceptionContainer = document.getElementById('perception-cells');
+            const powerContainer = document.getElementById('power-cells');
+            const utilsContainer = document.getElementById('utils-cells');
             
             // Clear existing content
-            Object.values(containers).forEach(container => {
-                container.innerHTML = '';
-            });
+            allCellsContainer.innerHTML = '';
+            motionContainer.innerHTML = '';
+            perceptionContainer.innerHTML = '';
+            powerContainer.innerHTML = '';
+            utilsContainer.innerHTML = '';
             
-            // Create and place all cells
             CELLS.forEach(cell => {
                 const card = createCellCard(cell);
-                containers['all'].appendChild(card.cloneNode(true));
-                if (containers[cell.category]) {
-                    containers[cell.category].appendChild(card);
+                allCellsContainer.appendChild(card.cloneNode(true));
+                
+                // Add to category-specific containers
+                switch(cell.category) {
+                    case 'motion':
+                        motionContainer.appendChild(card);
+                        break;
+                    case 'perception':
+                        perceptionContainer.appendChild(card);
+                        break;
+                    case 'power':
+                        powerContainer.appendChild(card);
+                        break;
+                    case 'utils':
+                        utilsContainer.appendChild(card);
+                        break;
                 }
             });
         }
