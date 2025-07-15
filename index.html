@@ -609,54 +609,59 @@
     button.disabled = true;
 
     try {
-        // Prepare input data
-        const inputData = {};
+        // Prepare input data - STRUCTURE CHANGED TO MATCH BACKEND
+        const cellInputData = {};
         for (const input of cell.inputs) {
             const inputElement = document.getElementById(`${cellId}_${input.id}`);
             const value = inputElement.value.trim();
             
             switch(input.type) {
                 case 'number':
-                    inputData[input.id] = parseFloat(value);
-                    if (isNaN(inputData[input.id])) throw new Error('Invalid number');
+                    cellInputData[input.id] = parseFloat(value);
+                    if (isNaN(cellInputData[input.id])) throw new Error('Invalid number');
                     break;
                 case 'text':
                 case 'select':
-                    inputData[input.id] = value;
+                    cellInputData[input.id] = value;
                     break;
                 case 'json':
-                    inputData[input.id] = value ? JSON.parse(value) : null;
+                    cellInputData[input.id] = value ? JSON.parse(value) : null;
                     break;
             }
         }
+
+        // Structure data to match backend expectations
+        const requestData = {
+            cells: [cellId],
+            data: {
+                [cellId]: cellInputData  // Nest input data under cell ID
+            }
+        };
+
+        console.log("Sending request:", requestData);  // Debug log
 
         const response = await fetch(API_URL, {
             method: 'POST',
             headers: { 
                 'Content-Type': 'application/json',
+                'Accept': 'application/json'
             },
-            body: JSON.stringify({
-                cells: cell,
-                data: inputData
-            })
+            body: JSON.stringify(requestData)
         });
 
-        console.log("Full response:", response);
-        
-        if (!response.ok) {
-            const error = await response.json().catch(() => ({}));
-            throw new Error(error.message || `HTTP ${response.status}`);
-        }
-        
         const result = await response.json();
         console.log("API Response:", result);  // Debug log
         
-        // Display results - THIS WAS MISSING
+        if (!response.ok || !result.success) {
+            throw new Error(result.error || `API request failed with status ${response.status}`);
+        }
+
+        // Handle backend response format
         if (result.results && result.results[cellId]) {
             responseElement.textContent = JSON.stringify(result.results[cellId], null, 2);
             responseElement.className = 'response success';
         } else {
-            throw new Error('Unexpected response format from API');
+            throw new Error('API did not return results for this cell');
         }
         
         updateLastUpdate();
