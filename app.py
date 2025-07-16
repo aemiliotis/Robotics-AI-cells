@@ -10,12 +10,12 @@ import secrets
 app = Flask(__name__)
 CORS(app, resources={
     r"/ai-api": {
-        "origins": ["https://aemiliotis.github.io/Robotics-AI-cells", "http://localhost:*"],
+        "origins": ["https://aemiliotis.github.io", "http://localhost:*"],
         "methods": ["POST", "OPTIONS"],
         "allow_headers": ["Content-Type"]
     },
     r"/api/*": {  # Add this for all API management routes
-        "origins": ["https://aemiliotis.github.io/Robotics-AI-cells", "http://localhost:*"],
+        "origins": ["https://aemiliotis.github.io", "http://localhost:*"],
         "methods": ["GET", "POST", "OPTIONS"],
         "allow_headers": ["Content-Type", "X-API-KEY", "X-SECRET-KEY"]
     },
