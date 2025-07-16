@@ -5,27 +5,37 @@ import datetime
 
 api_management = Blueprint('api_management', __name__)
 
-@api_management.route('/register', methods=['POST'])
+@api_management.route('/register', methods=['POST', 'OPTIONS'])
 def register():
-    data = request.json
-    email = data.get('email')
-    password = data.get('password')
+    if request.method == 'OPTIONS':
+        return _build_cors_preflight_response()
     
-    if not email or not password:
-        return jsonify({"success": False, "error": "Email and password required"}), 400
+    try:
+        data = request.json
+        email = data.get('email')
+        password = data.get('password')
+        
+        if not email or not password:
+            return _corsify_response(jsonify({"success": False, "error": "Email and password required"})), 400
+        
+        if User.query.filter_by(email=email).first():
+            return _corsify_response(jsonify({"success": False, "error": "Email already registered"})), 400
+        
+        user = User(email=email)
+        user.set_password(password)
+        db.session.add(user)
+        db.session.commit()
+        
+        return _corsify_response(jsonify({
+            "success": True,
+            "message": "User registered successfully"
+        }))
     
-    if User.query.filter_by(email=email).first():
-        return jsonify({"success": False, "error": "Email already registered"}), 400
-    
-    user = User(email=email)
-    user.set_password(password)
-    db.session.add(user)
-    db.session.commit()
-    
-    return jsonify({
-        "success": True,
-        "message": "User registered successfully"
-    })
+    except Exception as e:
+        return _corsify_response(jsonify({
+            "success": False,
+            "error": str(e)
+        })), 500
 
 @api_management.route('/login', methods=['POST'])
 def login():
