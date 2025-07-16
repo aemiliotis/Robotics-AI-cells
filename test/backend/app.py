@@ -10,15 +10,25 @@ import secrets
 app = Flask(__name__)
 CORS(app, resources={
     r"/ai-api": {
-        "origins": ["https://aemiliotis.github.io/Robotics-AI-cells/test", "http://localhost:*"],
+        "origins": ["https://aemiliotis.github.io/Robotics-AI-cells", "http://localhost:*"],
         "methods": ["POST", "OPTIONS"],
         "allow_headers": ["Content-Type"]
+    },
+    r"/api/*": {  # Add this for all API management routes
+        "origins": ["https://aemiliotis.github.io/Robotics-AI-cells", "http://localhost:*"],
+        "methods": ["GET", "POST", "OPTIONS"],
+        "allow_headers": ["Content-Type", "X-API-KEY", "X-SECRET-KEY"]
     },
     r"/list-cells": {
         "origins": "*",
         "methods": ["GET", "OPTIONS"]
+    },
+    r"/ping": {
+        "origins": "*",
+        "methods": ["GET"]
     }
 })
+
 
 # Database configuration
 app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'sqlite:///api_keys.db')
@@ -110,6 +120,38 @@ def _corsify_response(response):
 @app.before_first_request
 def create_tables():
     db.create_all()
+
+@api_management.route('/register', methods=['POST', 'OPTIONS'])
+def register():
+    if request.method == 'OPTIONS':
+        return _build_cors_preflight_response()
+    
+    try:
+        data = request.json
+        email = data.get('email')
+        password = data.get('password')
+        
+        if not email or not password:
+            return _corsify_response(jsonify({"success": False, "error": "Email and password required"})), 400
+        
+        if User.query.filter_by(email=email).first():
+            return _corsify_response(jsonify({"success": False, "error": "Email already registered"})), 400
+        
+        user = User(email=email)
+        user.set_password(password)
+        db.session.add(user)
+        db.session.commit()
+        
+        return _corsify_response(jsonify({
+            "success": True,
+            "message": "User registered successfully"
+        }))
+    
+    except Exception as e:
+        return _corsify_response(jsonify({
+            "success": False,
+            "error": str(e)
+        })), 500
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
