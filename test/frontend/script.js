@@ -708,8 +708,10 @@ async function handleRegister() {
     try {
         const response = await fetch(`${API_URL}/api/register`, {
             method: 'POST',
+            mode: 'cors',  // Explicitly request CORS
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
             },
             body: JSON.stringify({
                 email,
