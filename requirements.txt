@@ -5,7 +5,7 @@ werkzeug==2.2.3  # Pinned for Flask 2.2.5 compatibility
 jinja2==3.0.3
 itsdangerous==2.0.1
 click==8.0.4
-flask-sqlalchemy==2.5.1
+flask-sqlalchemy==3.0.3
 
 # Server & ASGI
 gunicorn==20.1.0
