@@ -49,7 +49,7 @@ tqdm==4.65.0  # Progress bars
 loguru==0.7.0  # Enhanced logging
 
 # Database & Storage
-sqlalchemy==2.0.21
+#sqlalchemy==2.0.21
 redis==4.5.5  # Caching
 pymongo==4.3.3  # MongoDB driver
 
