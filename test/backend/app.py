@@ -121,37 +121,5 @@ def _corsify_response(response):
 def create_tables():
     db.create_all()
 
-@api_management.route('/register', methods=['POST', 'OPTIONS'])
-def register():
-    if request.method == 'OPTIONS':
-        return _build_cors_preflight_response()
-    
-    try:
-        data = request.json
-        email = data.get('email')
-        password = data.get('password')
-        
-        if not email or not password:
-            return _corsify_response(jsonify({"success": False, "error": "Email and password required"})), 400
-        
-        if User.query.filter_by(email=email).first():
-            return _corsify_response(jsonify({"success": False, "error": "Email already registered"})), 400
-        
-        user = User(email=email)
-        user.set_password(password)
-        db.session.add(user)
-        db.session.commit()
-        
-        return _corsify_response(jsonify({
-            "success": True,
-            "message": "User registered successfully"
-        }))
-    
-    except Exception as e:
-        return _corsify_response(jsonify({
-            "success": False,
-            "error": str(e)
-        })), 500
-
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
