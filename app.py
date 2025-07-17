@@ -99,11 +99,8 @@ def _corsify_response(response):
     return response
     
 # Authentication endpoints
-@app.route('/auth/register', methods=['POST', 'OPTIONS'])
+@app.route('/auth/register', methods=['POST'])
 def register():
-    if request.method == 'OPTIONS':
-        return _build_cors_preflight_response()
-    
     try:
         data = request.get_json()
         if not data:
@@ -121,7 +118,14 @@ def register():
                 "error": "Email and password are required"
             }), 400
         
-        # Check if user already exists
+        # Validate email format
+        if not re.match(r"[^@]+@[^@]+\.[^@]+", email):
+            return jsonify({
+                "success": False,
+                "error": "Invalid email format"
+            }), 400
+            
+        # Check if user exists
         existing_user = get_user_by_email(email)
         if existing_user:
             return jsonify({
@@ -129,37 +133,46 @@ def register():
                 "error": "Email already registered"
             }), 409
         
-        # Create new user
-        user = create_user(email, password)
-        if not user:
+        # Create new user - add error handling here
+        try:
+            user = create_user(email, password)
+            if not user:
+                return jsonify({
+                    "success": False,
+                    "error": "Failed to create user"
+                }), 500
+        except Exception as e:
+            app.logger.error(f"User creation error: {str(e)}")
             return jsonify({
                 "success": False,
-                "error": "Failed to create user"
+                "error": "User creation failed"
             }), 500
         
-        # Create initial API key
-        api_key = create_api_key(user['id'], "Default Key")
+        # Create API key
+        try:
+            api_key = create_api_key(user['id'], "Default Key")
+        except Exception as e:
+            app.logger.error(f"API key creation error: {str(e)}")
+            return jsonify({
+                "success": False,
+                "error": "API key creation failed"
+            }), 500
         
         # Set session
         session['user_id'] = user['id']
         session['email'] = user['email']
         
-        response = jsonify({
+        return jsonify({
             "success": True,
             "user": {
                 "id": user['id'],
                 "email": user['email']
             },
-            "api_key": {
-                "api_key": api_key['api_key'],
-                "secret_key": api_key['secret_key']
-            }
+            "api_key": api_key
         })
         
-        return _corsify_response(response)
-    
     except Exception as e:
-        app.logger.error(f"Registration error: {str(e)}")
+        app.logger.error(f"Registration endpoint error: {str(e)}")
         return jsonify({
             "success": False,
             "error": "Internal server error"
