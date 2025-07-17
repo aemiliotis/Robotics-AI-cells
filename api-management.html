@@ -487,55 +487,53 @@ fetch(apiUrl, {
         });
         
         // Register Form
-        document.getElementById('register-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            const email = document.getElementById('register-email').value;
-            const password = document.getElementById('register-password').value;
-            const confirmPassword = document.getElementById('register-confirm-password').value;
-            const alertElement = document.getElementById('register-alert');
-            
-            // Validate passwords match
-            if (password !== confirmPassword) {
-                showAlert(alertElement, 'Passwords do not match.', 'error');
-                return;
-            }
-            
-            try {
-                const response = await fetch(`${API_BASE_URL}/auth/register`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ email, password }),
-                    credentials: 'include'
-                });
-                
-                const data = await response.json();
-                
-                if (data.success) {
-                    // Registration successful
-                    showAlert(alertElement, 'Registration successful!', 'success');
-                    
-                    // Show the newly created API key
-                    document.getElementById('new-api-key').textContent = data.api_key.api_key;
-                    document.getElementById('new-secret-key').textContent = data.api_key.secret_key;
-                    
-                    setTimeout(() => {
-                        showUserInterface(data.user);
-                        
-                        // Show the API key creation success message
-                        document.getElementById('api-key-created-container').classList.remove('hidden');
-                    }, 1000);
-                } else {
-                    // Registration failed
-                    showAlert(alertElement, data.error || 'Registration failed. Please try again.', 'error');
-                }
-            } catch (error) {
-                showAlert(alertElement, 'An error occurred. Please try again.', 'error');
-                console.error('Registration error:', error);
-            }
-        });
+        // Reusable API function
+async function registerUser(email, password) {
+    const response = await fetch(`${API_BASE_URL}/auth/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+        credentials: 'include'
+    });
+    
+    if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Registration failed');
+    }
+    
+    return await response.json();
+}
+
+// Form handler
+document.getElementById('register-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const email = document.getElementById('register-email').value;
+    const password = document.getElementById('register-password').value;
+    const confirmPassword = document.getElementById('register-confirm-password').value;
+    const alertElement = document.getElementById('register-alert');
+    
+    if (password !== confirmPassword) {
+        showAlert(alertElement, 'Passwords do not match.', 'error');
+        return;
+    }
+    
+    try {
+        const data = await registerUser(email, password);
+        
+        showAlert(alertElement, 'Registration successful!', 'success');
+        document.getElementById('new-api-key').textContent = data.api_key.api_key;
+        document.getElementById('new-secret-key').textContent = data.api_key.secret_key;
+        
+        setTimeout(() => {
+            showUserInterface(data.user);
+            document.getElementById('api-key-created-container').classList.remove('hidden');
+        }, 1000);
+    } catch (error) {
+        showAlert(alertElement, error.message || 'An error occurred. Please try again.', 'error');
+        console.error('Registration error:', error);
+    }
+});
         
         // Logout Button
         document.getElementById('logout-btn').addEventListener('click', async () => {
