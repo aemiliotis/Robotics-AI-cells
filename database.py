@@ -1,27 +1,40 @@
-
 import sqlite3
 import os
 import uuid
 import hashlib
 import secrets
 from datetime import datetime, timedelta
+import psycopg2
+from psycopg2.extras import RealDictCursor
 
 # Database setup
 DB_PATH = os.environ.get('DATABASE_URL', 'robotics_ai_hub.db')
-USE_SQLITE = not DB_PATH.startswith('postgres://')
+
+# Improved detection of PostgreSQL connection strings
+def is_postgres_url(url):
+    return url.startswith('postgresql://') or url.startswith('postgres://')
 
 def get_db_connection():
-    if USE_SQLITE:
-        conn = sqlite3.connect(DB_PATH)
-        conn.row_factory = sqlite3.Row
-        return conn
-    else:
-        # Handle both postgres:// and postgresql:// formats
+    """Get database connection based on environment"""
+    if is_postgres_url(DB_PATH):
+        # For PostgreSQL (Neon.tech)
         db_url = DB_PATH
+        # Handle both postgres:// and postgresql:// formats
         if db_url.startswith('postgres://'):
             db_url = db_url.replace('postgres://', 'postgresql://', 1)
+        
         conn = psycopg2.connect(db_url)
         conn.cursor_factory = RealDictCursor
+        return conn
+    else:
+        # For SQLite (local development)
+        # Ensure the directory exists
+        db_dir = os.path.dirname(os.path.abspath(DB_PATH))
+        if not os.path.exists(db_dir):
+            os.makedirs(db_dir)
+            
+        conn = sqlite3.connect(DB_PATH)
+        conn.row_factory = sqlite3.Row
         return conn
 
 def init_db():
