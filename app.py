@@ -104,51 +104,67 @@ def register():
     if request.method == 'OPTIONS':
         return _build_cors_preflight_response()
     
-    data = request.json
-    email = data.get('email')
-    password = data.get('password')
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({
+                "success": False,
+                "error": "No JSON data provided"
+            }), 400
+            
+        email = data.get('email')
+        password = data.get('password')
+        
+        if not email or not password:
+            return jsonify({
+                "success": False,
+                "error": "Email and password are required"
+            }), 400
+        
+        # Check if user already exists
+        existing_user = get_user_by_email(email)
+        if existing_user:
+            return jsonify({
+                "success": False,
+                "error": "Email already registered"
+            }), 409
+        
+        # Create new user
+        user = create_user(email, password)
+        if not user:
+            return jsonify({
+                "success": False,
+                "error": "Failed to create user"
+            }), 500
+        
+        # Create initial API key
+        api_key = create_api_key(user['id'], "Default Key")
+        
+        # Set session
+        session['user_id'] = user['id']
+        session['email'] = user['email']
+        
+        response = jsonify({
+            "success": True,
+            "user": {
+                "id": user['id'],
+                "email": user['email']
+            },
+            "api_key": {
+                "api_key": api_key['api_key'],
+                "secret_key": api_key['secret_key']
+            }
+        })
+        
+        return _corsify_response(response)
     
-    if not email or not password:
-        return _corsify_response(jsonify({
+    except Exception as e:
+        app.logger.error(f"Registration error: {str(e)}")
+        return jsonify({
             "success": False,
-            "error": "Email and password are required"
-        })), 400
-    
-    # Check if user already exists
-    existing_user = get_user_by_email(email)
-    if existing_user:
-        return _corsify_response(jsonify({
-            "success": False,
-            "error": "Email already registered"
-        })), 409
-    
-    # Create new user
-    user = create_user(email, password)
-    if not user:
-        return _corsify_response(jsonify({
-            "success": False,
-            "error": "Failed to create user"
-        })), 500
-    
-    # Create initial API key
-    api_key = create_api_key(user['id'], "Default Key")
-    
-    # Set session
-    session['user_id'] = user['id']
-    session['email'] = user['email']
-    
-    return _corsify_response(jsonify({
-        "success": True,
-        "user": {
-            "id": user['id'],
-            "email": user['email']
-        },
-        "api_key": {
-            "api_key": api_key['api_key'],
-            "secret_key": api_key['secret_key']
-        }
-    }))
-
+            "error": "Internal server error"
+        }), 500
+        
 @app.route('/auth/login', methods=['POST', 'OPTIONS'])
 def login():
     if request.method == 'OPTIONS':
