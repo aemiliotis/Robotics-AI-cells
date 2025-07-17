@@ -63,7 +63,7 @@ def init_db():
         name TEXT,
         created_at TIMESTAMP NOT NULL,
         last_used TIMESTAMP,
-        is_active BOOLEAN NOT NULL DEFAULT 1,
+        is_active BOOLEAN NOT NULL DEFAULT TRUE,
         FOREIGN KEY (user_id) REFERENCES users (id)
     )
     ''')
