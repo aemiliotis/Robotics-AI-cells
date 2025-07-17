@@ -74,15 +74,30 @@ def api_key_required(f):
 # CORS support functions
 def _build_cors_preflight_response():
     response = jsonify({"message": "Preflight Accepted"})
-    response.headers.add("Access-Control-Allow-Origin", "*")
-    response.headers.add("Access-Control-Allow-Headers", "*")
-    response.headers.add("Access-Control-Allow-Methods", "*")
+    request_origin = request.headers.get('Origin')
+    if request_origin in [
+        "https://aemiliotis.github.io",
+        "http://localhost:*",
+        "https://aemiliotis.github.io/Robotics-AI-cells"
+    ]:
+        response.headers.add("Access-Control-Allow-Origin", request_origin)
+        response.headers.add("Access-Control-Allow-Credentials", "true")
+    response.headers.add("Access-Control-Allow-Headers", "Content-Type, Authorization")
+    response.headers.add("Access-Control-Allow-Methods", "GET, POST, OPTIONS, DELETE")
     return response
 
 def _corsify_response(response):
-    response.headers.add("Access-Control-Allow-Origin", "*")
+    # Get the origin from the request
+    request_origin = request.headers.get('Origin')
+    if request_origin in [
+        "https://aemiliotis.github.io",
+        "http://localhost:*",
+        "https://aemiliotis.github.io/Robotics-AI-cells"
+    ]:
+        response.headers.add("Access-Control-Allow-Origin", request_origin)
+        response.headers.add("Access-Control-Allow-Credentials", "true")
     return response
-
+    
 # Authentication endpoints
 @app.route('/auth/register', methods=['POST', 'OPTIONS'])
 def register():
