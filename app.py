@@ -101,82 +101,62 @@ def _corsify_response(response):
 # Authentication endpoints
 @app.route('/auth/register', methods=['POST'])
 def register():
+    print("\n--- NEW REGISTRATION ATTEMPT ---")
     try:
+        # 1. Validate JSON
+        print("1️⃣ Checking request data...")
+        if not request.is_json:
+            print("❌ No JSON data received")
+            return jsonify({"error": "Invalid request format"}), 400
+
         data = request.get_json()
-        if not data:
-            return jsonify({
-                "success": False,
-                "error": "No JSON data provided"
-            }), 400
-            
         email = data.get('email')
         password = data.get('password')
-        
+
+        # 2. Validate fields
+        print("2️⃣ Validating email/password...")
         if not email or not password:
-            return jsonify({
-                "success": False,
-                "error": "Email and password are required"
-            }), 400
-        
-        # Validate email format
-        if not re.match(r"[^@]+@[^@]+\.[^@]+", email):
-            return jsonify({
-                "success": False,
-                "error": "Invalid email format"
-            }), 400
-            
-        # Check if user exists
-        existing_user = get_user_by_email(email)
-        if existing_user:
-            return jsonify({
-                "success": False,
-                "error": "Email already registered"
-            }), 409
-        
-        # Create new user - add error handling here
-        try:
-            user = create_user(email, password)
-            if not user:
-                return jsonify({
-                    "success": False,
-                    "error": "Failed to create user"
-                }), 500
-        except Exception as e:
-            app.logger.error(f"User creation error: {str(e)}")
-            return jsonify({
-                "success": False,
-                "error": "User creation failed"
-            }), 500
-        
-        # Create API key
-        try:
-            api_key = create_api_key(user['id'], "Default Key")
-        except Exception as e:
-            app.logger.error(f"API key creation error: {str(e)}")
-            return jsonify({
-                "success": False,
-                "error": "API key creation failed"
-            }), 500
-        
-        # Set session
+            print("❌ Missing email/password")
+            return jsonify({"error": "Email and password required"}), 400
+
+        # 3. Check existing user
+        print("3️⃣ Checking if user exists...")
+        if get_user_by_email(email):
+            print("❌ User already exists")
+            return jsonify({"error": "Email already registered"}), 409
+
+        # 4. Create user
+        print("4️⃣ Creating user...")
+        user = create_user(email, password)
+        if not user:
+            print("❌ User creation failed")
+            return jsonify({"error": "User creation failed"}), 500
+        print(f"🆔 User created with ID: {user['id']}")
+
+        # 5. Create API key
+        print("5️⃣ Generating API key...")
+        api_key = create_api_key(user['id'], "Default Key")
+        if not api_key:
+            print("❌ API key creation failed")
+            return jsonify({"error": "API key generation failed"}), 500
+        print(f"🔑 API key created: {api_key['api_key']}")
+
+        # 6. Set session
+        print("6️⃣ Setting session...")
         session['user_id'] = user['id']
         session['email'] = user['email']
-        
+        print("✅ Registration complete!")
+
         return jsonify({
             "success": True,
-            "user": {
-                "id": user['id'],
-                "email": user['email']
-            },
+            "user": user,
             "api_key": api_key
         })
-        
+
     except Exception as e:
-        app.logger.error(f"Registration endpoint error: {str(e)}")
-        return jsonify({
-            "success": False,
-            "error": "Internal server error"
-        }), 500
+        print(f"🔥 CRITICAL ERROR: {str(e)}")
+        traceback.print_exc()  # Prints full stack trace
+        return jsonify({"error": "Internal server error"}), 500
         
 @app.route('/auth/login', methods=['POST', 'OPTIONS'])
 def login():
