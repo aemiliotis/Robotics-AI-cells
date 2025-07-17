@@ -10,8 +10,7 @@ from datetime import datetime, timedelta
 DB_PATH = os.environ.get('DATABASE_URL', 'robotics_ai_hub.db')
 USE_SQLITE = not DB_PATH.startswith('postgres://')
 
-if USE_SQLITE:
-    def get_db_connection():
+def get_db_connection():
     if USE_SQLITE:
         conn = sqlite3.connect(DB_PATH)
         conn.row_factory = sqlite3.Row
