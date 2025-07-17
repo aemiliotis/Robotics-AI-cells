@@ -52,6 +52,7 @@ loguru==0.7.0  # Enhanced logging
 #sqlalchemy==2.0.21
 redis==4.5.5  # Caching
 pymongo==4.3.3  # MongoDB driver
+psycopg2-binary==2.9.5
 
 # Testing & Debugging
 pytest==7.2.2
