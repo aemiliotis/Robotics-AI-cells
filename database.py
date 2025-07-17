@@ -12,16 +12,16 @@ USE_SQLITE = not DB_PATH.startswith('postgres://')
 
 if USE_SQLITE:
     def get_db_connection():
+    if USE_SQLITE:
         conn = sqlite3.connect(DB_PATH)
         conn.row_factory = sqlite3.Row
         return conn
-else:
-    # For production with PostgreSQL on Render.com
-    import psycopg2
-    from psycopg2.extras import RealDictCursor
-    
-    def get_db_connection():
-        conn = psycopg2.connect(DB_PATH)
+    else:
+        # Handle both postgres:// and postgresql:// formats
+        db_url = DB_PATH
+        if db_url.startswith('postgres://'):
+            db_url = db_url.replace('postgres://', 'postgresql://', 1)
+        conn = psycopg2.connect(db_url)
         conn.cursor_factory = RealDictCursor
         return conn
 
