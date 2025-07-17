@@ -488,21 +488,47 @@ fetch(apiUrl, {
         
         // Register Form
         // Reusable API function
+
 async function registerUser(email, password) {
-    const response = await fetch(`${API_BASE_URL}/auth/register`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
-        credentials: 'include'
-    });
-    
-    if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Registration failed');
+    try {
+        console.log("1️⃣ Starting registration...");
+        
+        // 1. Make the API request
+        console.log("2️⃣ Sending request to server...");
+        const response = await fetch(`${API_BASE_URL}/auth/register`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password }),
+            credentials: 'include'
+        });
+
+        // 2. Check if response is OK
+        console.log("3️⃣ Server responded, checking status...");
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            console.error("❌ Server error:", errorData.error || "Unknown error");
+            throw new Error(errorData.error || "Registration failed");
+        }
+
+        // 3. Parse response
+        console.log("4️⃣ Parsing response...");
+        const data = await response.json();
+        
+        // 4. Verify API key exists
+        console.log("5️⃣ Verifying API key...");
+        if (!data.api_key) {
+            throw new Error("No API key returned");
+        }
+
+        console.log("✅ Registration successful!");
+        return data;
+
+    } catch (error) {
+        console.error("🔴 Registration failed at step:", error.message);
+        throw error;
     }
-    
-    return await response.json();
-}
+}        
+
 
 // Form handler
 document.getElementById('register-form').addEventListener('submit', async (e) => {
