@@ -17,7 +17,7 @@ app.secret_key = os.environ.get('SECRET_KEY', 'dev_secret_key')  # Change in pro
 # Configure CORS
 CORS(app, resources={
     r"/ai-api": {
-        "origins": ["https://aemiliotis.github.io/Robotics-AI-cells", "http://localhost:*"],
+        "origins": ["https://aemiliotis.github.io", "https://aemiliotis.github.io/Robotics-AI-cells", "http://localhost:*"],
         "methods": ["POST", "OPTIONS"],
         "allow_headers": ["Content-Type", "Authorization"]
     },
@@ -26,13 +26,13 @@ CORS(app, resources={
         "methods": ["GET", "OPTIONS"]
     },
     r"/auth/*": {
-        "origins": ["https://aemiliotis.github.io/Robotics-AI-cells", "http://localhost:*"],
+        "origins": ["https://aemiliotis.github.io", "https://aemiliotis.github.io/Robotics-AI-cells", "http://localhost:*"],
         "methods": ["GET", "POST", "OPTIONS"],
         "allow_headers": ["Content-Type", "Authorization"],
         "supports_credentials": True
     },
     r"/api-keys/*": {
-        "origins": ["https://aemiliotis.github.io/Robotics-AI-cells", "http://localhost:*"],
+        "origins": ["https://aemiliotis.github.io", "https://aemiliotis.github.io/Robotics-AI-cells", "http://localhost:*"],
         "methods": ["GET", "POST", "DELETE", "OPTIONS"],
         "allow_headers": ["Content-Type", "Authorization"],
         "supports_credentials": True
