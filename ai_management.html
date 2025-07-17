@@ -578,4 +578,227 @@ fetch(apiUrl, {
                 if (data.success) {
                     // API key created successfully
                     document.getElementById('new-api-key-container').classList.add('hidden');
-                    document.getElementById('api-key-created-container').classLis
+                    document.getElementById('api-key-created-container').classList.remove('hidden');
+                    
+                    document.getElementById('new-api-key').textContent = data.api_key.api_key;
+                    document.getElementById('new-secret-key').textContent = data.api_key.secret_key;
+                    
+                    // Refresh API key list
+                    loadApiKeys();
+                } else {
+                    showAlert(alertElement, data.error || 'Failed to create API key.', 'error');
+                }
+            } catch (error) {
+                showAlert(alertElement, 'An error occurred. Please try again.', 'error');
+                console.error('API key creation error:', error);
+            }
+        });
+        
+        // Copy Keys Button
+        document.getElementById('copy-keys-btn').addEventListener('click', () => {
+            const apiKey = document.getElementById('new-api-key').textContent;
+            const secretKey = document.getElementById('new-secret-key').textContent;
+            
+            const textToCopy = `API Key: ${apiKey}\
+Secret Key: ${secretKey}`;
+            
+            navigator.clipboard.writeText(textToCopy)
+                .then(() => {
+                    alert('API key and Secret key copied to clipboard!');
+                })
+                .catch(err => {
+                    console.error('Failed to copy keys:', err);
+                });
+        });
+        
+        // Done Button
+        document.getElementById('done-btn').addEventListener('click', () => {
+            document.getElementById('api-key-created-container').classList.add('hidden');
+            document.getElementById('create-api-key-btn').classList.remove('hidden');
+        });
+        
+        // Helper Functions
+        function showAlert(element, message, type) {
+            element.textContent = message;
+            element.className = `alert alert-${type}`;
+        }
+        
+        function showUserInterface(user) {
+            // Hide auth container, show API keys container
+            authContainer.classList.add('hidden');
+            apiKeysContainer.classList.remove('hidden');
+            userInfoContainer.classList.remove('hidden');
+            
+            // Set user email
+            userEmailSpan.textContent = user.email;
+            
+            // Load API keys
+            loadApiKeys();
+        }
+        
+        function showLoginForm() {
+            // Hide API keys container, show auth container
+            authContainer.classList.remove('hidden');
+            apiKeysContainer.classList.add('hidden');
+            userInfoContainer.classList.add('hidden');
+            
+            // Reset forms
+            document.getElementById('login-form').reset();
+            document.getElementById('register-form').reset();
+            
+            // Hide alerts
+            document.querySelectorAll('.alert').forEach(alert => {
+                alert.classList.add('hidden');
+            });
+            
+            // Reset API key creation form
+            document.getElementById('new-api-key-container').classList.add('hidden');
+            document.getElementById('api-key-created-container').classList.add('hidden');
+            document.getElementById('create-api-key-btn').classList.remove('hidden');
+        }
+        
+        async function loadApiKeys() {
+            const keyListElement = document.getElementById('api-key-list');
+            const alertElement = document.getElementById('api-keys-alert');
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/api-keys`, {
+                    method: 'GET',
+                    credentials: 'include'
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    // Clear existing list
+                    keyListElement.innerHTML = '';
+                    
+                    if (data.api_keys.length === 0) {
+                        keyListElement.innerHTML = '<li class="api-key-item">No API keys found. Create one to get started.</li>';
+                        return;
+                    }
+                    
+                    // Add each API key to the list
+                    data.api_keys.forEach(key => {
+                        const keyItem = document.createElement('li');
+                        keyItem.className = 'api-key-item';
+                        
+                        const keyDetails = document.createElement('div');
+                        keyDetails.className = 'api-key-details';
+                        
+                        const keyName = document.createElement('div');
+                        keyName.className = 'api-key-name';
+                        keyName.textContent = key.name || 'API Key';
+                        
+                        const keyValue = document.createElement('div');
+                        keyValue.className = 'api-key-value';
+                        keyValue.textContent = key.api_key;
+                        
+                        const keyCreated = document.createElement('div');
+                        keyCreated.className = 'api-key-created';
+                        keyCreated.textContent = `Created: ${new Date(key.created_at).toLocaleString()}`;
+                        
+                        keyDetails.appendChild(keyName);
+                        keyDetails.appendChild(keyValue);
+                        keyDetails.appendChild(keyCreated);
+                        
+                        const keyActions = document.createElement('div');
+                        keyActions.className = 'api-key-actions';
+                        
+                        const copyBtn = document.createElement('button');
+                        copyBtn.className = 'copy-btn';
+                        copyBtn.textContent = 'Copy';
+                        copyBtn.addEventListener('click', () => {
+                            navigator.clipboard.writeText(key.api_key)
+                                .then(() => {
+                                    copyBtn.textContent = 'Copied!';
+                                    setTimeout(() => {
+                                        copyBtn.textContent = 'Copy';
+                                    }, 2000);
+                                })
+                                .catch(err => {
+                                    console.error('Failed to copy API key:', err);
+                                });
+                        });
+                        
+                        const deleteBtn = document.createElement('button');
+                        deleteBtn.className = 'delete-btn';
+                        deleteBtn.textContent = 'Delete';
+                        deleteBtn.addEventListener('click', async () => {
+                            if (confirm('Are you sure you want to delete this API key? This action cannot be undone.')) {
+                                try {
+                                    const response = await fetch(`${API_BASE_URL}/api-keys/${key.id}`, {
+                                        method: 'DELETE',
+                                        credentials: 'include'
+                                    });
+                                    
+                                    const data = await response.json();
+                                    
+                                    if (data.success) {
+                                        // Remove key from list
+                                        keyItem.remove();
+                                        
+                                        // Show success message
+                                        showAlert(alertElement, 'API key deleted successfully.', 'success');
+                                        
+                                        // If no keys left, show message
+                                        if (keyListElement.children.length === 0) {
+                                            keyListElement.innerHTML = '<li class="api-key-item">No API keys found. Create one to get started.</li>';
+                                        }
+                                    } else {
+                                        showAlert(alertElement, data.error || 'Failed to delete API key.', 'error');
+                                    }
+                                } catch (error) {
+                                    showAlert(alertElement, 'An error occurred. Please try again.', 'error');
+                                    console.error('API key deletion error:', error);
+                                }
+                            }
+                        });
+                        
+                        keyActions.appendChild(copyBtn);
+                        keyActions.appendChild(deleteBtn);
+                        
+                        keyItem.appendChild(keyDetails);
+                        keyItem.appendChild(keyActions);
+                        
+                        keyListElement.appendChild(keyItem);
+                    });
+                } else {
+                    showAlert(alertElement, data.error || 'Failed to load API keys.', 'error');
+                }
+            } catch (error) {
+                showAlert(alertElement, 'An error occurred. Please try again.', 'error');
+                console.error('API keys loading error:', error);
+            }
+        }
+        
+        // Check authentication status on page load
+        async function checkAuthStatus() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/auth/status`, {
+                    method: 'GET',
+                    credentials: 'include'
+                });
+                
+                const data = await response.json();
+                
+                if (data.success && data.authenticated) {
+                    // User is authenticated
+                    showUserInterface(data.user);
+                } else {
+                    // User is not authenticated
+                    showLoginForm();
+                }
+            } catch (error) {
+                console.error('Auth status check error:', error);
+                showLoginForm();
+            }
+        }
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            checkAuthStatus();
+        });
+    </script>
+</body>
+</html>
