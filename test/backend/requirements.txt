@@ -1,5 +1,0 @@
-flask==2.0.1
-flask-cors==3.0.10
-flask-sqlalchemy==2.5.1
-python-dotenv==0.19.0
-werkzeug==2.0.1
