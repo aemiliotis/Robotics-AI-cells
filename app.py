@@ -114,25 +114,34 @@ def register():
         if not email or not password:
             return jsonify({"error": "Email and password required"}), 400
         
+        # Check existing user
         if get_user_by_email(email):
             return jsonify({"error": "Email already registered"}), 409
         
+        # Create user
         user = create_user(email, password)
+        
+        # Create initial API key
+        api_key = create_api_key(user['id'], "Default Key")
+        
+        # Set session
+        session['user_id'] = user['id']
+        session['email'] = user['email']
         
         return jsonify({
             "success": True,
             "user": {
                 "id": user['id'],
                 "email": user['email']
+            },
+            "api_key": {  # Include API key data
+                "key": api_key['api_key'],
+                "secret": api_key['secret_key']
             }
         })
         
-    except psycopg2.Error as e:
-        app.logger.error(f"Database error: {str(e)}")
-        return jsonify({"error": "Database operation failed"}), 500
     except Exception as e:
         app.logger.error(f"Registration error: {str(e)}")
-        traceback.print_exc()
         return jsonify({"error": "Registration failed"}), 500
         
 @app.route('/auth/login', methods=['POST', 'OPTIONS'])
