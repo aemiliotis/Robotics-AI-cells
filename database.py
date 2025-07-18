@@ -77,9 +77,12 @@ def get_db_connection():
 def get_user_by_email(email):
     conn = get_db_connection()
     try:
-        cursor = conn.cursor()
+        cursor = conn.cursor(cursor_factory=RealDictCursor)  # This returns dictionaries
         cursor.execute("SELECT * FROM users WHERE email = %s", (email,))
         return cursor.fetchone()
+    except Exception as e:
+        app.logger.error(f"Database error in get_user_by_email: {str(e)}")
+        return None
     finally:
         conn.close()
 
