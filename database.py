@@ -16,29 +16,6 @@ USE_SQLITE = False  # Set to True if using SQLite, False for PostgreSQL
 def is_postgres_url(url):
     return url.startswith('postgresql://') or url.startswith('postgres://')
 
-def get_db_connection():
-    """Get database connection based on environment"""
-    if is_postgres_url(DB_PATH):
-        # For PostgreSQL (Neon.tech)
-        db_url = DB_PATH
-        # Handle both postgres:// and postgresql:// formats
-        if db_url.startswith('postgres://'):
-            db_url = db_url.replace('postgres://', 'postgresql://', 1)
-        
-        conn = psycopg2.connect(db_url)
-        conn.cursor_factory = RealDictCursor
-        return conn
-    else:
-        # For SQLite (local development)
-        # Ensure the directory exists
-        db_dir = os.path.dirname(os.path.abspath(DB_PATH))
-        if not os.path.exists(db_dir):
-            os.makedirs(db_dir)
-            
-        conn = sqlite3.connect(DB_PATH)
-        conn.row_factory = sqlite3.Row
-        return conn
-
 def init_db():
     """Initialize the database with required tables"""
     conn = get_db_connection()
@@ -88,8 +65,18 @@ def init_db():
     conn.commit()
     conn.close()
 
-# User management functions
-# Change from SQLite to PostgreSQL syntax
+def get_db_connection():
+    return psycopg2.connect(os.environ['DATABASE_URL'])
+
+def get_user_by_email(email):
+    conn = get_db_connection()
+    try:
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM users WHERE email = %s", (email,))
+        return cursor.fetchone()
+    finally:
+        conn.close()
+
 def create_user(email, password):
     password_hash = generate_password_hash(password)
     conn = get_db_connection()
@@ -102,22 +89,11 @@ def create_user(email, password):
         user = cursor.fetchone()
         conn.commit()
         return {'id': user[0], 'email': user[1]}
-    except psycopg2.Error as e:
+    except Exception as e:
         conn.rollback()
         raise e
     finally:
         conn.close()
-
-def get_user_by_email(email):
-    """Get user by email"""
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    
-    cursor.execute("SELECT * FROM users WHERE email = %s", (email,))
-    user = cursor.fetchone()
-    conn.close()
-    
-    return dict(user) if user else None
 
 def verify_password(stored_hash, password):
     """Verify a password against its hash"""
