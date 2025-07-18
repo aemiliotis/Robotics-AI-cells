@@ -13,7 +13,7 @@ uvicorn==0.22.0  # ASGI server
 python-multipart==0.0.6  # Form data handling
 
 # Machine Learning Core
-tensorflow==2.8.0
+tensorflow==2.10.1
 tflite-runtime==2.10.0
 protobuf==3.19.6  # TF-compatible version
 onnxruntime==1.15.1  # Alternative inference engine
