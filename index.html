@@ -255,7 +255,298 @@
         
         // All 25 cells configuration (same as before)
         const CELLS = [
-            // ... (keep all your existing CELLS configuration exactly as is)
+            // 1. Core Mathematical Cells
+            {
+                id: "fast_math",
+                name: "Fast Trigonometry",
+                category: "utils",
+                description: "High-speed sin/cos calculations",
+                inputs: [
+                    { id: "angle", label: "Angle (degrees)", type: "number", value: 45 }
+                ]
+            },
+            {
+                id: "pid_controller",
+                name: "PID Controller",
+                category: "motion",
+                description: "Motor control loop",
+                inputs: [
+                    { id: "error", label: "Error", type: "number", value: 0.5 },
+                    { id: "integral", label: "Integral", type: "number", value: 0 },
+                    { id: "last_error", label: "Last Error", type: "number", value: 0 }
+                ]
+            },
+            
+            // 2. Motion Control Cells
+            {
+                id: "arm_ik",
+                name: "Arm IK Solver",
+                category: "motion",
+                description: "3DOF inverse kinematics",
+                inputs: [
+                    { id: "target_x", label: "Target X", type: "number", value: 0.5 },
+                    { id: "target_y", label: "Target Y", type: "number", value: 0.2 },
+                    { id: "target_z", label: "Target Z", type: "number", value: 0.8 }
+                ]
+            },
+            {
+                id: "hexapod_gait",
+                name: "Hexapod Gait",
+                category: "motion",
+                description: "Leg coordination patterns",
+                inputs: [
+                    { id: "gait", label: "Gait Pattern", type: "select", options: ["tripod", "wave", "ripple"], value: "tripod" },
+                    { id: "step_count", label: "Step Count", type: "number", value: 0 }
+                ]
+            },
+            
+            // 3. Perception Cells
+            {
+                id: "lidar_compress",
+                name: "LIDAR Compression",
+                category: "perception",
+                description: "Scan data optimization",
+                inputs: [
+                    { id: "scan", label: "LIDAR Scan", type: "json", value: "[1.2, 1.21, 1.19, 5.3, 5.31, 5.29]" }
+                ]
+            },
+            {
+                id: "visual_odometry",
+                name: "Visual Odometry",
+                category: "perception",
+                description: "Camera-based movement tracking",
+                inputs: [
+                    { id: "prev_gray", label: "Previous Frame", type: "json", value: "[[120, 125], [130, 135]]" },
+                    { id: "curr_gray", label: "Current Frame", type: "json", value: "[[125, 130], [135, 140]]" },
+                    { id: "prev_keypoints", label: "Keypoints", type: "json", value: "[[10,20], [30,40]]" }
+                ]
+            },
+            
+            // 4. Power Management Cells
+            {
+                id: "motor_model",
+                name: "Motor Model",
+                category: "power",
+                description: "Current/power estimation",
+                inputs: [
+                    { id: "motor_type", label: "Motor Type", type: "select", options: ["maxon_ec45", "tmotor_5010"], value: "maxon_ec45" },
+                    { id: "voltage", label: "Voltage (V)", type: "number", value: 12.6 },
+                    { id: "rpm", label: "RPM", type: "number", value: 3500 }
+                ]
+            },
+            {
+                id: "solar_planner",
+                name: "Solar Planner",
+                category: "power",
+                description: "Energy harvesting optimization",
+                inputs: [
+                    { id: "month", label: "Month (1-12)", type: "number", min: 1, max: 12, value: 7 },
+                    { id: "lat", label: "Latitude", type: "number", min: -90, max: 90, value: 37.7 },
+                    { id: "panel_w", label: "Panel Watts", type: "number", value: 100 }
+                ]
+            },
+            
+            // 5. AI/ML Cells
+            {
+                id: "tinyml_classify",
+                name: "TinyML Classifier",
+                category: "perception",
+                description: "On-device object detection",
+                inputs: [
+                    { id: "image_data", label: "Image", type: "json", value: "[[[120, 110, 100], [121, 111, 101]], [[122, 112, 102], [123, 113, 103]]]" }
+                ]
+            },
+            {
+                id: "gesture_ml",
+                name: "Gesture Recognition",
+                category: "perception",
+                description: "IMU-based gesture detection",
+                inputs: [
+                    { id: "accel_x", label: "Accel X", type: "number", value: 0.12 },
+                    { id: "accel_y", label: "Accel Y", type: "number", value: 9.81 },
+                    { id: "accel_z", label: "Accel Z", type: "number", value: 0.33 },
+                    { id: "gyro_z", label: "Gyro Z", type: "number", value: 0.01 }
+                ]
+            },
+            
+            // 6. Communication Cells
+            {
+                id: "lora_packer",
+                name: "LoRa Packer",
+                category: "utils",
+                description: "IoT message compression",
+                inputs: [
+                    { id: "temp", label: "Temperature", type: "number", value: 25.3 },
+                    { id: "humidity", label: "Humidity", type: "number", value: 45 },
+                    { id: "accel_x", label: "Accel X", type: "number", value: 0.12 },
+                    { id: "battery", label: "Battery %", type: "number", value: 78.5 }
+                ]
+            },
+            {
+                id: "ros2_adapter",
+                name: "ROS2 Adapter",
+                category: "utils",
+                description: "ROS message conversion",
+                inputs: [
+                    { id: "vel_x", label: "Velocity X", type: "number", value: 0.5 },
+                    { id: "ang_vel", label: "Angular Vel", type: "number", value: 0.2 },
+                    { id: "frame", label: "Frame ID", type: "text", value: "base_link" }
+                ]
+            },
+            
+            // 7. Utility Cells
+            {
+                id: "error_handler",
+                name: "Error Handler",
+                category: "utils",
+                description: "Fault recovery system",
+                inputs: [
+                    { id: "error_code", label: "Error Code", type: "text", value: "0x21" }
+                ]
+            },
+            {
+                id: "micro_logger",
+                name: "Micro Logger",
+                category: "utils",
+                description: "Data recording",
+                inputs: [
+                    { id: "event", label: "Event Name", type: "text", value: "obstacle_detected" },
+                    { id: "value", label: "Value", type: "number", value: 1.75 }
+                ]
+            },
+            
+            // 8. Sensor Fusion
+            {
+                id: "sensor_fusion",
+                name: "Sensor Fusion",
+                category: "perception",
+                description: "IMU + GPS + LIDAR",
+                inputs: [
+                    { id: "accel_x", label: "Accel X", type: "number", value: 0.1 },
+                    { id: "accel_y", label: "Accel Y", type: "number", value: 0.02 },
+                    { id: "accel_z", label: "Accel Z", type: "number", value: 9.8 },
+                    { id: "gps_lat", label: "GPS Lat", type: "number", value: 37.7749 },
+                    { id: "gps_lon", label: "GPS Lon", type: "number", value: -122.4194 }
+                ]
+            },
+            
+            // 9. Path Planning
+            {
+                id: "path_optimization",
+                name: "Path Optimization",
+                category: "motion",
+                description: "Energy-efficient navigation",
+                inputs: [
+                    { id: "waypoints", label: "Waypoints", type: "json", value: "[[0,0], [1,1], [2,0], [3,1]]" },
+                    { id: "terrain", label: "Terrain Factor", type: "number", value: 1.2 }
+                ]
+            },
+            
+            // 10. Battery Optimization
+            {
+                id: "battery_optimization",
+                name: "Battery Optimization",
+                category: "power",
+                description: "Power management",
+                inputs: [
+                    { id: "charge_cycles", label: "Charge Cycles", type: "number", value: 150 },
+                    { id: "avg_dod", label: "Avg DoD %", type: "number", value: 80 },
+                    { id: "avg_temp", label: "Avg Temp °C", type: "number", value: 35 }
+                ]
+            },
+            
+            // 11. Computer Vision
+            {
+                id: "vision_optimized",
+                name: "Vision Optimized",
+                category: "perception",
+                description: "Lightweight image processing",
+                inputs: [
+                    { id: "image_data", label: "Image", type: "json", value: "[[[120, 120, 120], [125, 125, 125]], [[130, 130, 130], [135, 135, 135]]]" }
+                ]
+            },
+            
+            // 12. Shared Memory
+            {
+                id: "shared_memory",
+                name: "Shared Memory",
+                category: "utils",
+                description: "Inter-process communication",
+                inputs: [
+                    { id: "key", label: "Key", type: "text", value: "last_position" },
+                    { id: "value", label: "Value", type: "json", value: "[1.2, 3.4, 0.8]" }
+                ]
+            },
+            
+            // 13. Math Utilities
+            {
+                id: "math_utils",
+                name: "Math Utilities",
+                category: "utils",
+                description: "Optimized calculations",
+                inputs: [
+                    { id: "x", label: "Input Value", type: "number", value: 42 }
+                ]
+            },
+            
+            // 14. Precision Scaling
+            {
+                id: "precision_scaling",
+                name: "Precision Scaling",
+                category: "utils",
+                description: "Data compression",
+                inputs: [
+                    { id: "arr", label: "Array", type: "json", value: "[1.23, 4.56, 7.89]" },
+                    { id: "factor", label: "Scale Factor", type: "number", value: 100 }
+                ]
+            },
+            
+            // 15. Timed Process
+            {
+                id: "timed_process",
+                name: "Timed Process",
+                category: "utils",
+                description: "Execution monitoring",
+                inputs: [
+                    { id: "data", label: "Input Data", type: "json", value: "{\"sensor\": \"temp\", \"value\": 27.3}" }
+                ]
+            },
+            
+            // 16. Data Logger
+            {
+                id: "data_logger",
+                name: "Data Logger",
+                category: "utils",
+                description: "System telemetry",
+                inputs: [
+                    { id: "timestamp", label: "Timestamp", type: "number", value: 1625097600 },
+                    { id: "readings", label: "Readings", type: "json", value: "{\"current\": 1.2, \"voltage\": 12.3}" }
+                ]
+            },
+            
+            // 17. Network Optimizer
+            {
+                id: "network_optimizer",
+                name: "Network Optimizer",
+                category: "utils",
+                description: "Communication tuning",
+                inputs: [
+                    { id: "packet_size", label: "Packet Size", type: "number", value: 128 },
+                    { id: "signal_strength", label: "Signal dBm", type: "number", value: -67 }
+                ]
+            },
+            
+            // 18. Safety Monitor
+            {
+                id: "safety_monitor",
+                name: "Safety Monitor",
+                category: "utils",
+                description: "Joint limit checking",
+                inputs: [
+                    { id: "joint_angles", label: "Joint Angles", type: "json", value: "[0.1, 0.5, 1.2]" },
+                    { id: "limits", label: "Limits", type: "json", value: "[1.0, 1.0, 1.5]" }
+                ]
+            }
         ];
 
         // State management
@@ -560,4 +851,4 @@
         }
     </script>
 </body>
-  </html>
+</html>
