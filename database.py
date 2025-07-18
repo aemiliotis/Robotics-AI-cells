@@ -82,16 +82,17 @@ def create_user(email, password):
     conn = get_db_connection()
     try:
         cursor = conn.cursor()
+        # Let PostgreSQL generate the ID
         cursor.execute(
-            "INSERT INTO users (email, password_hash, created_at) VALUES (%s, %s, %s) RETURNING id, email",
-            (email, password_hash, datetime.utcnow())
-        )
+            "INSERT INTO users (email, password_hash) VALUES (%s, %s) RETURNING id, email",
+            (email, password_hash)
         user = cursor.fetchone()
         conn.commit()
         return {'id': user[0], 'email': user[1]}
-    except Exception as e:
+    except psycopg2.Error as e:
         conn.rollback()
-        raise e
+        app.logger.error(f"Database error: {e.pgerror}")
+        raise
     finally:
         conn.close()
 
