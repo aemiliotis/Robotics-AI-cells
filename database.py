@@ -75,16 +75,30 @@ def get_db_connection():
         raise
         
 def get_user_by_email(email):
-    conn = get_db_connection()
+    """Retrieve user by email with proper error handling"""
+    conn = None
     try:
-        cursor = conn.cursor(cursor_factory=RealDictCursor)  # This returns dictionaries
-        cursor.execute("SELECT * FROM users WHERE email = %s", (email,))
-        return cursor.fetchone()
+        conn = get_db_connection()
+        with conn.cursor(cursor_factory=RealDictCursor) as cursor:
+            cursor.execute(
+                "SELECT id, email, password_hash FROM users WHERE email = %s",
+                (email,)
+            )
+            user = cursor.fetchone()
+            
+            if not user:
+                app.logger.debug(f"No user found for email: {email}")
+                return None
+                
+            app.logger.debug(f"Retrieved user: {user}")
+            return user
+            
     except Exception as e:
         app.logger.error(f"Database error in get_user_by_email: {str(e)}")
         return None
     finally:
-        conn.close()
+        if conn:
+            conn.close()
 
 def verify_password(stored_hash, password):
     """Consistent password verification"""
