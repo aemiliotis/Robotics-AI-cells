@@ -159,54 +159,80 @@ def login():
         return _build_cors_preflight_response()
     
     try:
-        data = request.get_json()
-        email = data.get('email')
-        password = data.get('password')
-        
-        if not email or not password:
+        # Validate request format
+        if not request.is_json:
+            app.logger.error("Login attempt with non-JSON request")
             return _corsify_response(jsonify({
                 "success": False,
-                "error": "Email and password required"
+                "error": "Request must be JSON"
             })), 400
 
+        data = request.get_json()
+        email = data.get('email', '').strip()
+        password = data.get('password', '')
+
+        # Validate inputs
+        if not email or not password:
+            app.logger.warning(f"Missing credentials in login attempt (email: {bool(email)}, password: {bool(password)})")
+            return _corsify_response(jsonify({
+                "success": False,
+                "error": "Email and password are required"
+            })), 400
+
+        # Debug logging
+        app.logger.info(f"Login attempt for email: {email}")
+
+        # Get user from database
         user = get_user_by_email(email)
         if not user:
+            app.logger.warning(f"No user found for email: {email}")
             return _corsify_response(jsonify({
                 "success": False,
                 "error": "Invalid credentials"
             })), 401
 
-        password_hash = user.get('password_hash') if isinstance(user, dict) else user[2]
-        if not verify_password(password_hash, password):
+        # Handle both tuple and dict responses
+        if isinstance(user, dict):
+            user_id = user.get('id')
+            password_hash = user.get('password_hash')
+            user_email = user.get('email')
+        else:  # Assume tuple
+            user_id = user[0]
+            password_hash = user[2]  # Adjust index based on your schema
+            user_email = user[1]
+
+        # Verify password
+        if not password_hash or not verify_password(password_hash, password):
+            app.logger.warning(f"Password verification failed for user: {email}")
             return _corsify_response(jsonify({
                 "success": False,
                 "error": "Invalid credentials"
             })), 401
 
-        # Clear and set new session
+        # Establish session
         session.clear()
-        session['user_id'] = user['id'] if isinstance(user, dict) else user[0]
-        session['email'] = email
+        session['user_id'] = user_id
+        session['email'] = user_email
         session.permanent = True
-        update_last_login(session['user_id'])
+        update_last_login(user_id)
+
+        app.logger.info(f"Successful login for user: {email}")
 
         response = _corsify_response(jsonify({
             "success": True,
             "user": {
-                "id": session['user_id'],
-                "email": email
+                "id": user_id,
+                "email": user_email
             }
         }))
         
-        # Explicitly set cookie headers
-        response.headers.add('Access-Control-Allow-Credentials', 'true')
         return response
 
     except Exception as e:
-        app.logger.error(f"Login error: {str(e)}")
+        app.logger.error(f"Critical login error: {str(e)}\n{traceback.format_exc()}")
         return _corsify_response(jsonify({
             "success": False,
-            "error": "Login failed"
+            "error": "An unexpected error occurred"
         })), 500
 
 @app.route('/auth/logout', methods=['POST', 'OPTIONS'])
