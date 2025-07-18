@@ -111,7 +111,7 @@ def update_last_login(user_id):
     cursor = conn.cursor()
     
     cursor.execute(
-        "UPDATE users SET last_login = ? WHERE id = ?",
+        "UPDATE users SET last_login = %s WHERE id = %s",
         (datetime.now().isoformat(), user_id)
     )
     conn.commit()
@@ -163,7 +163,7 @@ def get_api_keys_by_user(user_id):
     cursor = conn.cursor()
     
     cursor.execute(
-        "SELECT id, api_key, name, created_at, last_used, is_active FROM api_keys WHERE user_id = ?",
+        "SELECT id, api_key, name, created_at, last_used, is_active FROM api_keys WHERE user_id = %s",
         (user_id,)
     )
     keys = cursor.fetchall()
@@ -177,7 +177,7 @@ def get_api_key_details(api_key):
     cursor = conn.cursor()
     
     cursor.execute(
-        "SELECT * FROM api_keys WHERE api_key = ? AND is_active = 1",
+        "SELECT * FROM api_keys WHERE api_key = %s AND is_active = 1",
         (api_key,)
     )
     key = cursor.fetchone()
@@ -191,7 +191,7 @@ def update_api_key_usage(api_key_id):
     cursor = conn.cursor()
     
     cursor.execute(
-        "UPDATE api_keys SET last_used = ? WHERE id = ?",
+        "UPDATE api_keys SET last_used = %s WHERE id = %s",
         (datetime.now().isoformat(), api_key_id)
     )
     conn.commit()
@@ -203,7 +203,7 @@ def deactivate_api_key(api_key_id, user_id):
     cursor = conn.cursor()
     
     cursor.execute(
-        "UPDATE api_keys SET is_active = 0 WHERE id = ? AND user_id = ?",
+        "UPDATE api_keys SET is_active = 0 WHERE id = %s AND user_id = %s",
         (api_key_id, user_id)
     )
     affected = cursor.rowcount
@@ -224,7 +224,7 @@ def log_api_usage(api_key_id, endpoint, request_data, response_data, execution_t
     cursor.execute(
         """INSERT INTO api_usage 
            (id, api_key_id, endpoint, request_data, response_data, timestamp, execution_time_ms, status_code) 
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
+           VALUES (%s, %s, %s, %s, %s, %s, %s, %s)""",
         (log_id, api_key_id, endpoint, request_data, response_data, timestamp, execution_time_ms, status_code)
     )
     conn.commit()
@@ -244,7 +244,7 @@ def get_api_usage_stats(api_key_id, days=30):
            COUNT(CASE WHEN status_code >= 200 AND status_code < 300 THEN 1 END) as successful_requests,
            COUNT(CASE WHEN status_code >= 400 THEN 1 END) as failed_requests
            FROM api_usage 
-           WHERE api_key_id = ? AND timestamp > ?""",
+           WHERE api_key_id = %s AND timestamp > %s""",
         (api_key_id, since_date)
     )
     stats = cursor.fetchone()
