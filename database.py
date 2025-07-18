@@ -133,28 +133,34 @@ def generate_secret_key():
 
 def create_api_key(user_id, name=None):
     """Create a new API key for a user"""
-    api_key_id = str(uuid.uuid4())
-    api_key = generate_api_key()
-    secret_key = generate_secret_key()
-    created_at = datetime.now().isoformat()
+    api_key = secrets.token_urlsafe(32)
+    secret_key = secrets.token_hex(32)
     
     conn = get_db_connection()
-    cursor = conn.cursor()
-    
-    cursor.execute(
-        "INSERT INTO api_keys (id, user_id, api_key, secret_key, name, created_at) VALUES (?, ?, ?, ?, ?, ?)",
-        (api_key_id, user_id, api_key, secret_key, name, created_at)
-    )
-    conn.commit()
-    conn.close()
-    
-    return {
-        "id": api_key_id,
-        "api_key": api_key,
-        "secret_key": secret_key,
-        "name": name,
-        "created_at": created_at
-    }
+    try:
+        cursor = conn.cursor()
+        
+        # Use %s for PostgreSQL instead of ?
+        cursor.execute(
+            """INSERT INTO api_keys 
+               (user_id, api_key, secret_key, name, created_at) 
+               VALUES (%s, %s, %s, %s, %s) 
+               RETURNING api_key, secret_key""",
+            (user_id, api_key, secret_key, name, datetime.now().isoformat())
+        )
+        
+        result = cursor.fetchone()
+        conn.commit()
+        
+        return {
+            'api_key': result[0],
+            'secret_key': result[1]
+        }
+    except Exception as e:
+        conn.rollback()
+        raise
+    finally:
+        conn.close()
 
 def get_api_keys_by_user(user_id):
     """Get all API keys for a user"""
