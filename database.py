@@ -6,6 +6,7 @@ import secrets
 from datetime import datetime, timedelta
 import psycopg2
 from psycopg2.extras import RealDictCursor
+from werkzeug.security import generate_password_hash, check_password_hash
 
 # Database setup
 DB_PATH = os.environ.get('DATABASE_URL', 'robotics_ai_hub.db')
