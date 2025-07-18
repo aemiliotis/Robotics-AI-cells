@@ -66,8 +66,14 @@ def init_db():
     conn.close()
 
 def get_db_connection():
-    return psycopg2.connect(os.environ['DATABASE_URL'])
-
+    try:
+        conn = psycopg2.connect(os.environ['DATABASE_URL'])
+        conn.autocommit = False
+        return conn
+    except Exception as e:
+        app.logger.error(f"Database connection failed: {str(e)}")
+        raise
+        
 def get_user_by_email(email):
     conn = get_db_connection()
     try:
