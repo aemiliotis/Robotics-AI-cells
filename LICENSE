@@ -1,60 +1,55 @@
-Open-Commercial Innovation License (OCIL)
-Version 1.0
+Open-Commercial Innovation License (OCIL) v1.1
+**Copyright (c) 2025 ETION TEAM**  
 
-Copyright (c) 2025 ETION TEAM
+#### **PREAMBLE**  
+This license promotes open innovation while ensuring fair commercial use. **By using this software, you agree to these legally binding terms.**  
 
-PREAMBLE:
-This license is designed to promote open innovation while creating commercial 
-opportunities. You are free to use this work, but we encourage partnerships
-for serious commercial applications.
+---
 
-TERMS:
+### **TERMS**  
 
-1. GRANT OF RIGHTS
-   a) You may use, modify, and distribute this software for any purpose,
-      including commercial applications.
-   b) You may incorporate this work into proprietary systems without
-      requiring disclosure of your entire codebase.
+#### **1. GRANT OF RIGHTS**  
+   a) You may use, modify, and distribute this software **only if you comply with all terms below.**  
+   b) **Incorporation into proprietary systems is permitted, but derivative works (modifications to core functionality) must be open-sourced under OCIL.** *(Semi-copyleft protection)*  
 
-2. REQUIREMENTS
-   a) Attribution:
-      - Include this license file in all distributions
-      - Display prominent credit in documentation/UIs:
-        "Includes technology from [PROJECT NAME] (github.com/aemiliotis/Robotics-AI-cells)"
-   
-   b) Commercial Use Notice:
-      - Companies using this in products/services must add:
-        "Utilizes Ronotics AI cells components" in product documentation
-        or marketing materials.
+#### **2. REQUIREMENTS**  
+   a) **Attribution (Mandatory):**  
+      - Include this license file in all distributions.  
+      - **Display in UI/documentation:**  
+        > *"This product uses [Project Name] (github.com/aemiliotis/Robotics-AI-cells)."*  
+      - **Failure to comply voids all usage rights.**  
 
-3. COMMERCIAL PARTNERSHIPS
-   While this software is open, the authors welcome:
-   - Licensing agreements for proprietary versions
-   - Sponsored development of custom features
-   - Commercial acquisition opportunities
-   Contact: etion.prosfores@gmail.com
+   b) **Commercial Use Notice (Enforceable):**  
+      - **Companies using this in revenue-generating products must:**  
+        1. Notify the licensor via email within 30 days of deployment.  
+        2. **Include in documentation/marketing:**  
+           > *"Powered by Robotics AI Cells technology."*  
+        3. **If annual revenue exceeds $1M from the product using this software:**  
+           - **Negotiate a revenue-sharing agreement (5% suggested) or purchase a commercial license.** *(Now binding)*  
 
-4. LIMITATIONS
-   a) No Patent Claims:
-      Users waive rights to patent any derivative work.
-   b) No Warranty:
-      This software is provided "as-is" without liability.
-   c) No Trademark Use:
-      Cannot use project names/logos without permission.
+#### **3. COMMERCIAL PARTNERSHIPS**  
+   - **Commercial licensing options are available for proprietary use without open-source requirements.** Contact: [your-email].  
+   - **Unauthorized commercial use beyond these terms may result in legal action.** *(Strong deterrent)*  
 
-5. SPECIAL PROVISIONS
-   For companies generating over $1M annually using this software:
-   - We request notification via email
-   - We encourage (but don't require) a revenue-sharing agreement
-   - Priority access to premium support options
+#### **4. LIMITATIONS**  
+   a) **No Patent Claims:**  
+      - **Users irrevocably waive rights to patent any derivative work.**  
+   b) **No Warranty/Liability:**  
+      - Software is provided "as-is"; licensor not liable for damages.  
+   c) **No Trademark Use:**  
+      - **Project names/logos cannot be used without written permission.**  
 
-NOTICE TO COMPANIES:
-This project represents significant R&D investment. While free to use,
-we actively seek commercial partners for:
-- Custom implementations
-- Enterprise support contracts
-- Technology transfer opportunities
+#### **5. ENFORCEMENT & TERMINATION**  
+   a) **Violations automatically terminate all rights granted.**  
+   b) **30-day cure period** for unintentional breaches (e.g., missing attribution).  
+   c) **Jurisdiction:** Disputes resolved under **[Your Country]’s laws]** in **[Courts of Your City].** *(Prevents forum-shopping)*  
 
-For serious inquiries, contact: etion.prosfores@gmail.com
+#### **6. SPECIAL PROVISIONS**  
+   - **Enterprises (>500 employees or >$10M revenue) must contact the licensor before use.** *(Catches big players early)*  
+   - **Revenue-sharing exemptions available for startups (<$1M revenue).**  
+
+For serious inquiries, contact: 
+Apostolos Miliotis
+etion.prosfores@gmail.com
 
 END OF LICENSE
