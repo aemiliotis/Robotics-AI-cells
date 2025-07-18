@@ -86,6 +86,7 @@ def create_user(email, password):
         cursor.execute(
             "INSERT INTO users (email, password_hash) VALUES (%s, %s) RETURNING id, email",
             (email, password_hash)
+        )
         user = cursor.fetchone()
         conn.commit()
         return {'id': user[0], 'email': user[1]}
