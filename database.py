@@ -82,17 +82,21 @@ def create_user(email, password):
     conn = get_db_connection()
     try:
         cursor = conn.cursor()
-        # Let PostgreSQL generate the ID
+        user_id = str(uuid.uuid4())
+        created_at = datetime.now().isoformat()
+        
         cursor.execute(
-            "INSERT INTO users (email, password_hash) VALUES (%s, %s) RETURNING id, email",
-            (email, password_hash)
+            "INSERT INTO users (id, email, password_hash, created_at) VALUES (%s, %s, %s, %s) RETURNING id, email",
+            (user_id, email, password_hash, created_at)
         )
         user = cursor.fetchone()
         conn.commit()
         return {'id': user[0], 'email': user[1]}
-    except psycopg2.Error as e:
+    except psycopg2.IntegrityError as e:
         conn.rollback()
-        app.logger.error(f"Database error: {e.pgerror}")
+        raise ValueError("Email already exists") from e
+    except Exception as e:
+        conn.rollback()
         raise
     finally:
         conn.close()
