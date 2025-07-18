@@ -86,33 +86,34 @@ def get_user_by_email(email):
     finally:
         conn.close()
 
+def verify_password(stored_hash, password):
+    """Consistent password verification"""
+    return check_password_hash(stored_hash, password)
+
+def hash_password(password):
+    """Consistent password hashing"""
+    return generate_password_hash(password)
+
+# Update user creation to use consistent hashing:
 def create_user(email, password):
-    password_hash = generate_password_hash(password)
     conn = get_db_connection()
     try:
         cursor = conn.cursor()
-        # Remove ID from INSERT - let PostgreSQL generate it
+        password_hash = hash_password(password)
         cursor.execute(
-            "INSERT INTO users (email, password_hash) VALUES (%s, %s) RETURNING id, email",
-            (email, password_hash)
+            """INSERT INTO users (email, password_hash, created_at)
+               VALUES (%s, %s, %s) RETURNING id, email""",
+            (email, password_hash, datetime.now())
         )
         user = cursor.fetchone()
         conn.commit()
         return {'id': user[0], 'email': user[1]}
     except Exception as e:
         conn.rollback()
+        app.logger.error(f"User creation failed: {str(e)}")
         raise
     finally:
         conn.close()
-
-def verify_password(stored_hash, password):
-    """Verify a password against its hash"""
-    password_hash = hashlib.sha256(password.encode()).hexdigest()
-    return password_hash == stored_hash
-
-def hash_password(password):
-    """Hash a password for storage"""
-    return hashlib.sha256(password.encode()).hexdigest()
 
 def update_last_login(user_id):
     """Update user's last login timestamp"""
