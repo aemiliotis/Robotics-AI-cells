@@ -218,25 +218,22 @@ def logout():
         "success": True
     }))
 
-@app.route('/auth/status', methods=['GET', 'OPTIONS'])
+@app.route('/auth/status', methods=['GET'])
 def status():
-    if request.method == 'OPTIONS':
-        return _build_cors_preflight_response()
-    
-    if 'user_id' in session:
-        return _corsify_response(jsonify({
-            "success": True,
-            "authenticated": True,
-            "user": {
-                "id": session['user_id'],
-                "email": session['email']
-            }
-        }))
-    else:
+    if 'user_id' not in session:
         return _corsify_response(jsonify({
             "success": True,
             "authenticated": False
         }))
+    
+    return _corsify_response(jsonify({
+        "success": True,
+        "authenticated": True,
+        "user": {
+            "id": session['user_id'],
+            "email": session.get('email')
+        }
+    }))
 
 # API key management endpoints
 @app.route('/api-keys', methods=['GET', 'OPTIONS'])
