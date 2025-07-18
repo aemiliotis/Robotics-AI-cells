@@ -4,6 +4,7 @@ from cell_loader import load_cells
 import os
 import time
 import json
+import traceback
 from functools import wraps
 from database import (
     get_user_by_email, create_user, verify_password, update_last_login,
