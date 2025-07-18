@@ -6,6 +6,7 @@ import time
 import json
 import traceback
 import psycopg2
+from datetime import timedelta
 from functools import wraps
 from database import (
     get_user_by_email, create_user, verify_password, update_last_login,
@@ -41,6 +42,13 @@ CORS(app, resources={
     }
 })
 
+# Session configuration
+app.config.update(
+    SESSION_COOKIE_SECURE=True,
+    SESSION_COOKIE_HTTPONLY=True,
+    SESSION_COOKIE_SAMESITE='Lax',
+    PERMANENT_SESSION_LIFETIME=timedelta(days=1)
+    
 # Load cells
 CELLS_DIR = os.path.join(os.path.dirname(__file__), "cells")
 ai_cells = load_cells(CELLS_DIR)
