@@ -5,6 +5,7 @@ import os
 import time
 import json
 import traceback
+import psycopg2
 from functools import wraps
 from database import (
     get_user_by_email, create_user, verify_password, update_last_login,
@@ -102,62 +103,37 @@ def _corsify_response(response):
 # Authentication endpoints
 @app.route('/auth/register', methods=['POST'])
 def register():
-    print("\n--- NEW REGISTRATION ATTEMPT ---")
     try:
-        # 1. Validate JSON
-        print("1️⃣ Checking request data...")
         if not request.is_json:
-            print("❌ No JSON data received")
-            return jsonify({"error": "Invalid request format"}), 400
-
+            return jsonify({"error": "JSON required"}), 400
+            
         data = request.get_json()
         email = data.get('email')
         password = data.get('password')
-
-        # 2. Validate fields
-        print("2️⃣ Validating email/password...")
+        
         if not email or not password:
-            print("❌ Missing email/password")
             return jsonify({"error": "Email and password required"}), 400
-
-        # 3. Check existing user
-        print("3️⃣ Checking if user exists...")
+        
         if get_user_by_email(email):
-            print("❌ User already exists")
             return jsonify({"error": "Email already registered"}), 409
-
-        # 4. Create user
-        print("4️⃣ Creating user...")
+        
         user = create_user(email, password)
-        if not user:
-            print("❌ User creation failed")
-            return jsonify({"error": "User creation failed"}), 500
-        print(f"🆔 User created with ID: {user['id']}")
-
-        # 5. Create API key
-        print("5️⃣ Generating API key...")
-        api_key = create_api_key(user['id'], "Default Key")
-        if not api_key:
-            print("❌ API key creation failed")
-            return jsonify({"error": "API key generation failed"}), 500
-        print(f"🔑 API key created: {api_key['api_key']}")
-
-        # 6. Set session
-        print("6️⃣ Setting session...")
-        session['user_id'] = user['id']
-        session['email'] = user['email']
-        print("✅ Registration complete!")
-
+        
         return jsonify({
             "success": True,
-            "user": user,
-            "api_key": api_key
+            "user": {
+                "id": user['id'],
+                "email": user['email']
+            }
         })
-
+        
+    except psycopg2.Error as e:
+        app.logger.error(f"Database error: {str(e)}")
+        return jsonify({"error": "Database operation failed"}), 500
     except Exception as e:
-        print(f"🔥 CRITICAL ERROR: {str(e)}")
-        traceback.print_exc()  # Prints full stack trace
-        return jsonify({"error": "Internal server error"}), 500
+        app.logger.error(f"Registration error: {str(e)}")
+        traceback.print_exc()
+        return jsonify({"error": "Registration failed"}), 500
         
 @app.route('/auth/login', methods=['POST', 'OPTIONS'])
 def login():
