@@ -157,38 +157,56 @@ def login():
     if request.method == 'OPTIONS':
         return _build_cors_preflight_response()
     
-    data = request.json
-    email = data.get('email')
-    password = data.get('password')
-    
-    if not email or not password:
+    try:
+        data = request.get_json()
+        email = data.get('email')
+        password = data.get('password')
+        
+        if not email or not password:
+            return _corsify_response(jsonify({
+                "success": False,
+                "error": "Email and password required"
+            })), 400
+
+        user = get_user_by_email(email)
+        if not user:
+            return _corsify_response(jsonify({
+                "success": False,
+                "error": "Invalid credentials"
+            })), 401
+
+        password_hash = user.get('password_hash') if isinstance(user, dict) else user[2]
+        if not verify_password(password_hash, password):
+            return _corsify_response(jsonify({
+                "success": False,
+                "error": "Invalid credentials"
+            })), 401
+
+        # Clear and set new session
+        session.clear()
+        session['user_id'] = user['id'] if isinstance(user, dict) else user[0]
+        session['email'] = email
+        session.permanent = True
+        update_last_login(session['user_id'])
+
+        response = _corsify_response(jsonify({
+            "success": True,
+            "user": {
+                "id": session['user_id'],
+                "email": email
+            }
+        }))
+        
+        # Explicitly set cookie headers
+        response.headers.add('Access-Control-Allow-Credentials', 'true')
+        return response
+
+    except Exception as e:
+        app.logger.error(f"Login error: {str(e)}")
         return _corsify_response(jsonify({
             "success": False,
-            "error": "Email and password are required"
-        })), 400
-    
-    # Check if user exists
-    user = get_user_by_email(email)
-    if not user or not verify_password(user['password_hash'], password):
-        return _corsify_response(jsonify({
-            "success": False,
-            "error": "Invalid email or password"
-        })), 401
-    
-    # Update last login
-    update_last_login(user['id'])
-    
-    # Set session
-    session['user_id'] = user['id']
-    session['email'] = user['email']
-    
-    return _corsify_response(jsonify({
-        "success": True,
-        "user": {
-            "id": user['id'],
-            "email": user['email']
-        }
-    }))
+            "error": "Login failed"
+        })), 500
 
 @app.route('/auth/logout', methods=['POST', 'OPTIONS'])
 def logout():
