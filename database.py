@@ -9,6 +9,7 @@ from psycopg2.extras import RealDictCursor
 
 # Database setup
 DB_PATH = os.environ.get('DATABASE_URL', 'robotics_ai_hub.db')
+USE_SQLITE = False  # Set to True if using SQLite, False for PostgreSQL
 
 # Improved detection of PostgreSQL connection strings
 def is_postgres_url(url):
@@ -87,24 +88,22 @@ def init_db():
     conn.close()
 
 # User management functions
+# Change from SQLite to PostgreSQL syntax
 def create_user(email, password):
-    """Create a new user account"""
-    user_id = str(uuid.uuid4())
-    password_hash = hash_password(password)
-    created_at = datetime.now().isoformat()
-    
+    password_hash = generate_password_hash(password)
     conn = get_db_connection()
-    cursor = conn.cursor()
-    
     try:
+        cursor = conn.cursor()
         cursor.execute(
-            "INSERT INTO users (id, email, password_hash, created_at) VALUES (?, ?, ?, ?)",
-            (user_id, email, password_hash, created_at)
+            "INSERT INTO users (email, password_hash, created_at) VALUES (%s, %s, %s) RETURNING id, email",
+            (email, password_hash, datetime.utcnow())
         )
+        user = cursor.fetchone()
         conn.commit()
-        return {"id": user_id, "email": email, "created_at": created_at}
-    except (sqlite3.IntegrityError, psycopg2.errors.UniqueViolation) if not USE_SQLITE else sqlite3.IntegrityError:
-        return None
+        return {'id': user[0], 'email': user[1]}
+    except psycopg2.Error as e:
+        conn.rollback()
+        raise e
     finally:
         conn.close()
 
