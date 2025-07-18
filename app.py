@@ -48,6 +48,7 @@ app.config.update(
     SESSION_COOKIE_HTTPONLY=True,
     SESSION_COOKIE_SAMESITE='Lax',
     PERMANENT_SESSION_LIFETIME=timedelta(days=1)
+)
     
 # Load cells
 CELLS_DIR = os.path.join(os.path.dirname(__file__), "cells")
