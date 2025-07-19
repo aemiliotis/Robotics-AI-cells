@@ -22,42 +22,71 @@ class RoboticsAIHub {
     }
     
     async loadAllCells() {
-        try {
-            // Fetch directory listing
-            const response = await fetch('cells/');
-            const html = await response.text();
-            
-            // Parse HTML to extract JS files
-            const parser = new DOMParser();
-            const doc = parser.parseFromString(html, 'text/html');
-            const links = Array.from(doc.querySelectorAll('a'));
-            
-            // Filter and process cell files
-            const cellFiles = links
-                .map(a => a.href)
-                .filter(href => href.includes('/cells/') && href.endsWith('.js'))
-                .map(href => href.split('/').pop());
-            
-            // Load each cell module
-            for (const file of cellFiles) {
-                const cellName = file.replace('.js', '');
-                try {
-                    const module = await import(`./cells/${file}`);
-                    this.cells[cellName] = module;
-                    this.cellSelector.add(new Option(
-                        module.config.name, 
-                        cellName
-                    ));
-                } catch (error) {
-                    console.error(`Error loading cell ${cellName}:`, error);
-                }
+    try {
+        // Try both possible paths for GitHub Pages
+        const pathsToTry = [
+            '/Robotics-AI-cells/cells/',  // GitHub Pages path
+            'cells/'                      // Local development path
+        ];
+        
+        let cellFiles = [];
+        
+        for (const path of pathsToTry) {
+            try {
+                const response = await fetch(path);
+                if (!response.ok) continue;
+                
+                const html = await response.text();
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+                const links = Array.from(doc.querySelectorAll('a'));
+                
+                cellFiles = links
+                    .map(a => a.href)
+                    .filter(href => href.endsWith('.js'))
+                    .map(href => {
+                        // Extract filename from either GitHub Pages or local path
+                        const segments = href.split('/');
+                        return segments[segments.length - 1];
+                    });
+                
+                if (cellFiles.length > 0) break;
+            } catch (error) {
+                console.warn(`Failed to load from ${path}:`, error);
             }
-        } catch (error) {
-            console.error('Error loading cells:', error);
-            // Fallback to hardcoded list if dynamic loading fails
-            this.loadFallbackCells();
         }
+        
+        // Fallback if no cells found
+        if (cellFiles.length === 0) {
+            console.warn('No cells found dynamically, using fallback list');
+            cellFiles = [
+                'fast_math.js',
+                'pid_controller.js',
+                'arm_ik.js',
+                // ... other default cells
+            ];
+        }
+        
+        // Load each cell module
+        for (const file of cellFiles) {
+            const cellName = file.replace('.js', '');
+            try {
+                const module = await import(`./cells/${file}`);
+                this.cells[cellName] = module;
+                this.cellSelector.add(new Option(
+                    module.config.name, 
+                    cellName
+                ));
+            } catch (error) {
+                console.error(`Error loading cell ${cellName}:`, error);
+            }
+        }
+    } catch (error) {
+        console.error('Error loading cells:', error);
+        this.loadFallbackCells();
     }
+ }
+    
 
     loadFallbackCells() {
         const fallbackCells = [
