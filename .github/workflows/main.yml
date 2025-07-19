@@ -27,6 +27,7 @@ jobs:
       run: |
         nohup python app.py > server.log 2>&1 &
         echo "Server started"
+        sleep 300
         
     - name: Deploy to GitHub Pages
       uses: peaceiris/actions-gh-pages@v3
