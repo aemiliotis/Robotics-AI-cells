@@ -34,9 +34,9 @@ class RoboticsAIHub {
             const result = await this.executeCellFromParams(params);
             
             // Return text response
-            this.returnTextResponse(result);
+            this.returnJsonResponse(result);
         } catch (error) {
-            this.returnTextResponse({
+            this.returnJsonResponse({
                 error: error.message,
                 stack: error.stack
             }, 400);
