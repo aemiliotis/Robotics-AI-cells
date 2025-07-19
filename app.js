@@ -52,7 +52,6 @@ class RoboticsAIHub {
     }
     
     returnJsonResponse(data, statusCode = 200) {
-    returnJsonResponse(data, statusCode = 200) {
         // Clear the API container
         this.apiContainer.innerHTML = '';
         
