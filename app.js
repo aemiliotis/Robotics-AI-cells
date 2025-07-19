@@ -23,23 +23,26 @@ class RoboticsAIHub {
     
     async loadAllCells() {
         try {
-            // Dynamically load all cells from the cells directory
+            // Fetch directory listing
             const response = await fetch('cells/');
-            const parser = new DOMParser();
             const html = await response.text();
-            const doc = parser.parseFromString(html, 'text/html');
             
-            // Extract all JavaScript files
-            const cellFiles = Array.from(doc.querySelectorAll('a'))
+            // Parse HTML to extract JS files
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+            const links = Array.from(doc.querySelectorAll('a'));
+            
+            // Filter and process cell files
+            const cellFiles = links
                 .map(a => a.href)
-                .filter(href => href.endsWith('.js'))
+                .filter(href => href.includes('/cells/') && href.endsWith('.js'))
                 .map(href => href.split('/').pop());
             
             // Load each cell module
             for (const file of cellFiles) {
                 const cellName = file.replace('.js', '');
                 try {
-                    const module = await import(`../cells/${file}`);
+                    const module = await import(`./cells/${file}`);
                     this.cells[cellName] = module;
                     this.cellSelector.add(new Option(
                         module.config.name, 
@@ -51,7 +54,30 @@ class RoboticsAIHub {
             }
         } catch (error) {
             console.error('Error loading cells:', error);
+            // Fallback to hardcoded list if dynamic loading fails
+            this.loadFallbackCells();
         }
+    }
+
+    loadFallbackCells() {
+        const fallbackCells = [
+            'fast_math.js', 'pid_controller.js', 'arm_ik.js', 
+            'hexapod_gait.js', 'lidar_compress.js'
+            // Add other essential cells
+        ];
+        
+        fallbackCells.forEach(file => {
+            const cellName = file.replace('.js', '');
+            import(`./cells/${file}`)
+                .then(module => {
+                    this.cells[cellName] = module;
+                    this.cellSelector.add(new Option(
+                        module.config.name, 
+                        cellName
+                    ));
+                })
+                .catch(console.error);
+        });
     }
     
     loadCell(cellId) {
