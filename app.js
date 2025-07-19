@@ -52,16 +52,14 @@ class RoboticsAIHub {
     }
     
     returnJsonResponse(data, statusCode = 200) {
-        // Set content type
-        document.contentType = 'application/json';
+    returnJsonResponse(data, statusCode = 200) {
+        // Clear the API container
+        this.apiContainer.innerHTML = '';
         
         // Create a pre element to display the JSON
         const pre = document.createElement('pre');
         pre.textContent = JSON.stringify(data, null, 2);
         this.apiContainer.appendChild(pre);
-        
-        // If you want to make it more API-like (though browsers will still show the page)
-        // you could use document.write, but that has its own issues
     }
     
     async executeCellFromParams(params) {
