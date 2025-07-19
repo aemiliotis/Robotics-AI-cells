@@ -255,7 +255,7 @@
         
         // Precompute sine LUT for fast trigonometry
         const _sinLUT = Array.from({length: 3600}, (_, i) => 
-            Math.round(Math.sin(i * Math.PI / 1800) * 1000
+            Math.round(Math.sin(i * Math.PI / 1800) * 1000)
         );
         
         const CELL_IMPLEMENTATIONS = {
