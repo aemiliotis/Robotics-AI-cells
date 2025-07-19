@@ -24,42 +24,50 @@ class RoboticsAIHub {
     }
     
     async checkApiMode() {
-        const params = new URLSearchParams(window.location.search);
-        const apiMode = params.has('api');
-        const cellParam = params.get('cell');
-        
-        if (apiMode && cellParam) {
-            // Hide the UI for API mode
-            this.appContainer.classList.add('hidden');
-            this.apiContainer.classList.remove('hidden');
+    const params = new URLSearchParams(window.location.search);
+    const apiMode = params.has('api');
+    const cellParam = params.get('cell');
+    
+    if (apiMode && cellParam) {
+        try {
+            await this.loadAllCells();
+            const result = await this.executeCellFromParams(params);
             
-            try {
-                await this.loadAllCells();
-                const result = await this.executeCellFromParams(params);
-                
-                // Return JSON response
-                this.returnJsonResponse(result);
-            } catch (error) {
-                this.returnJsonResponse({
-                    error: error.message,
-                    stack: error.stack
-                }, 400);
-            }
-        } else {
-            // Normal UI mode
-            this.loadAllCells();
+            // Return text response
+            this.returnTextResponse(result);
+        } catch (error) {
+            this.returnTextResponse({
+                error: error.message,
+                stack: error.stack
+            }, 400);
         }
+    } else {
+        // Normal UI mode
+        this.loadAllCells();
+    }
     }
     
     returnJsonResponse(data, statusCode = 200) {
-        // Clear the API container
-        this.apiContainer.innerHTML = '';
-        
-        // Create a pre element to display the JSON
-        const pre = document.createElement('pre');
-        pre.textContent = JSON.stringify(data, null, 2);
-        this.apiContainer.appendChild(pre);
+    const params = new URLSearchParams(window.location.search);
+    const format = params.get('format') || 'text';
+    
+    // Remove all DOM elements
+    document.body.innerHTML = '';
+    
+    let output;
+    if (format === 'json') {
+        output = JSON.stringify(data, null, 2);
+        // Add JSON content type meta
+        const meta = document.createElement('meta');
+        meta.httpEquiv = "Content-Type";
+        meta.content = "application/json";
+        document.head.appendChild(meta);
+    } else {
+        output = typeof data === 'string' ? data : JSON.stringify(data);
     }
+    
+    document.body.textContent = output;
+}
     
     async executeCellFromParams(params) {
         const cellId = params.get('cell');
