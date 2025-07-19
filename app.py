@@ -6,7 +6,7 @@ from flask_cors import CORS
 app = Flask(__name__, static_folder='.', static_url_path='')
 CORS(app, resources={
     r"/ai-api": {
-        "origins": ["https://*.github.io", "http://localhost:*"],
+        "origins": ["https://*.github.io", "https://*.github.io/*", "http://localhost:5000", "http://127.0.0.1:5000"],
         "methods": ["POST", "OPTIONS"],
         "allow_headers": ["Content-Type"]
     },
@@ -14,6 +14,10 @@ CORS(app, resources={
         "origins": "*",
         "methods": ["GET", "OPTIONS"]
     }
+    r"/ping": {
+    "origins": "*",
+    "methods": ["GET"]
+}
 })
 
 # Load cells
