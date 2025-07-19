@@ -1,4 +1,12 @@
 // Main application controller
+
+if (window.location.search.includes('api')) {
+  document.write = function(content) {
+    if (typeof content === 'string' && content.startsWith('{')) {
+      console.log(content);  // For debugging
+    }
+  };
+}
 class RoboticsAIHub {
     constructor() {
         this.cells = {};
