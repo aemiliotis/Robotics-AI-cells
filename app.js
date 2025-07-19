@@ -31,7 +31,7 @@ class RoboticsAIHub {
         this.checkApiMode();
     }
     
-    async checkApiMode() {
+    /*async checkApiMode() {
     const params = new URLSearchParams(window.location.search);
     const apiMode = params.has('api');
     const cellParam = params.get('cell');
@@ -75,8 +75,52 @@ class RoboticsAIHub {
     }
     
     document.body.textContent = output;
-}
+}*/
+
+   async checkApiMode() {
+    const params = new URLSearchParams(window.location.search);
+    const apiMode = params.has('api');
+    const cellParam = params.get('cell');
     
+    if (apiMode && cellParam) {
+        try {
+            await this.loadAllCells();
+            const result = await this.executeCellFromParams(params);
+            
+            // Return pure JSON response
+            this.returnPureJsonResponse(result);
+            return; // Stop further execution
+        } catch (error) {
+            this.returnPureJsonResponse({
+                error: error.message,
+                stack: error.stack
+            }, 400);
+            return; // Stop further execution
+        }
+    }
+    
+    // Normal UI mode
+    this.loadAllCells();
+}
+
+returnPureJsonResponse(data, statusCode = 200) {
+    // Completely clear the document
+    document.documentElement.innerHTML = '';
+    
+    // Create a new simple document with just the JSON
+    const jsonString = JSON.stringify(data, null, 2);
+    document.write(`<pre>${jsonString}</pre>`);
+    
+    // Set content type meta (note: doesn't change actual headers)
+    const meta = document.createElement('meta');
+    meta.httpEquiv = "Content-Type";
+    meta.content = "application/json";
+    document.head.appendChild(meta);
+    
+    // Prevent any further rendering
+    document.close();
+}
+  
     async executeCellFromParams(params) {
         const cellId = params.get('cell');
         if (!cellId || !this.cells[cellId]) {
