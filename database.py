@@ -8,6 +8,12 @@ import psycopg2
 from psycopg2.extras import RealDictCursor
 from werkzeug.security import generate_password_hash, check_password_hash
 
+# Configure logging
+import logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+logger.info("Application starting up...")
+
 # Database setup
 DB_PATH = os.environ.get('DATABASE_URL', 'robotics_ai_hub.db')
 USE_SQLITE = False  # Set to True if using SQLite, False for PostgreSQL
@@ -69,13 +75,13 @@ def get_db_connection():
     try:
         conn = psycopg2.connect(os.environ['DATABASE_URL'])
         conn.autocommit = False
-        app.logger.debug("Database connection established")
+        logger.info("Database connection established")
         return conn
     except psycopg2.OperationalError as e:
-        app.logger.debug(f"Database connection failed: {str(e)}")
+        logger.info(f"Database connection failed: {str(e)}")
         raise
     except Exception as e:
-        app.logger.debug(f"Unexpected database error: {str(e)}")
+        logger.info(f"Unexpected database error: {str(e)}")
         raise
 
 def get_user_by_email(email):
@@ -91,14 +97,14 @@ def get_user_by_email(email):
             user = cursor.fetchone()
             
             if not user:
-                app.logger.debug(f"No user found for email: {email}")
+                logger.info(f"No user found for email: {email}")
                 return None
                 
-            app.logger.debug(f"Retrieved user: {user}")
+            logger.info(f"Retrieved user: {user}")
             return user
             
     except Exception as e:
-        app.logger.error(f"Database error in get_user_by_email: {str(e)}")
+        logger.info(f"Database error in get_user_by_email: {str(e)}")
         return None
     finally:
         if conn:
@@ -133,7 +139,7 @@ def create_user(email, password, cursor=None):
         return {'id': user[0], 'email': user[1]}
         
     except Exception as e:
-        logger.error(f"User creation failed: {str(e)}")
+        logger.info(f"User creation failed: {str(e)}")
         raise
 
 def update_last_login(user_id):
