@@ -1,505 +1,210 @@
-from flask import Flask, request, jsonify, g, session
-from flask_cors import CORS
-from cell_loader import load_cells
-import os
-import time
-import json
-import traceback
-import psycopg2
+from fastapi import FastAPI, Depends, HTTPException, Request, status
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.security import OAuth2PasswordRequestForm
+from fastapi.responses import JSONResponse, HTMLResponse
+from fastapi.staticfiles import StaticFiles
 from datetime import timedelta
-from functools import wraps
-from database import (
-    get_db_connection,          # Database connection handler
-    get_user_by_email,          # User lookup
-    create_user,                # User creation
-    verify_password,            # Password validation
-    update_last_login,          # Login tracking
-    create_api_key,             # API key generation
-    get_api_keys_by_user,       # API key management
-    get_api_key_details,        # API key validation
-    update_api_key_usage,       # Usage tracking
-    deactivate_api_key,         # Key revocation
-    log_api_usage               # Audit logging
+from typing import List, Dict, Any
+import os
+from pydantic import BaseModel
+from database import SessionLocal, User, get_db, init_db
+from auth import (
+    authenticate_user, create_access_token, 
+    get_current_user, verify_api_key, 
+    ACCESS_TOKEN_EXPIRE_MINUTES
 )
-
-app = Flask(__name__)
-app.secret_key = os.environ.get('SECRET_KEY', 'dev_secret_key')  # Change in production
-
-app.config.update(
-    SESSION_COOKIE_SECURE=True,
-    SESSION_COOKIE_HTTPONLY=True,
-    SESSION_COOKIE_SAMESITE='None',  # Changed from 'Lax'
-    PERMANENT_SESSION_LIFETIME=timedelta(days=1),
-    SESSION_COOKIE_DOMAIN='https://robotics-ai-cells-m5gy.onrender.com'  # Add your domain
-)
-
-# Configure logging
+from cell_loader import load_cells
 import logging
+
+# Initialize logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-logger.info("Application starting up...")
 
-# Configure CORS
-logger.info("Configuring CORS settings...")
-CORS(app, resources={
-    r"/ai-api": {
-        "origins": ["https://aemiliotis.github.io", "https://aemiliotis.github.io/Robotics-AI-cells", "http://localhost:*"],
-        "methods": ["POST", "OPTIONS"],
-        "allow_headers": ["Content-Type", "Authorization"]
-    },
-    r"/list-cells": {
-        "origins": "*",
-        "methods": ["GET", "OPTIONS"]
-    },
-    r"/auth/*": {
-        "origins": ["https://aemiliotis.github.io", "https://aemiliotis.github.io/Robotics-AI-cells", "http://localhost:*"],
-        "methods": ["GET", "POST", "OPTIONS"],
-        "allow_headers": ["Content-Type", "Authorization"],
-        "supports_credentials": True
-    },
-    r"/api-keys/*": {
-        "origins": ["https://aemiliotis.github.io", "https://aemiliotis.github.io/Robotics-AI-cells", "http://localhost:*"],
-        "methods": ["GET", "POST", "DELETE", "OPTIONS"],
-        "allow_headers": ["Content-Type", "Authorization"],
-        "supports_credentials": True
-    }
-})
-logger.info("CORS configuration complete")
+# Initialize database
+init_db()
 
-# Session configuration
-logger.info("Configuring session settings...")
-app.config.update(
-    SESSION_COOKIE_SECURE=True,
-    SESSION_COOKIE_HTTPONLY=True,
-    SESSION_COOKIE_SAMESITE='Lax',
-    PERMANENT_SESSION_LIFETIME=timedelta(days=1)
-)
-logger.info("Session configuration complete")
-
-# Load cells
-logger.info("Loading AI cells...")
+# Load AI cells
 CELLS_DIR = os.path.join(os.path.dirname(__file__), "cells")
 ai_cells = load_cells(CELLS_DIR)
-logger.info(f"Loaded {len(ai_cells)} AI cells")
 
-# Authentication decorator for web session (browser)
-def login_required(f):
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        logger.info(f"Checking login requirement for {request.path}")
-        if 'user_id' not in session:
-            logger.warning("Unauthorized access attempt - no user_id in session")
-            return jsonify({"success": False, "error": "Authentication required"}), 401
-        logger.info(f"User {session['user_id']} authorized for {request.path}")
-        return f(*args, **kwargs)
-    return decorated_function
+app = FastAPI(
+    title="Robotics AI Hub API",
+    description="API for managing and executing robotics AI cells",
+    version="1.0.0",
+    docs_url="/api-docs",
+    redoc_url=None
+)
 
-# API key authentication decorator
-def api_key_required(f):
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        logger.info(f"Validating API key for {request.path}")
-        api_key = request.headers.get('X-API-Key')
-        if not api_key:
-            logger.warning("API key missing from request")
-            return jsonify({"success": False, "error": "API key required"}), 401
-        
-        api_key_details = get_api_key_details(api_key)
-        if not api_key_details:
-            logger.warning(f"Invalid API key attempt: {api_key}")
-            return jsonify({"success": False, "error": "Invalid or inactive API key"}), 401
-        
-        # Store API key details for the request
-        g.api_key_id = api_key_details['id']
-        g.user_id = api_key_details['user_id']
-        logger.info(f"API key validated for user {g.user_id}")
-        
-        return f(*args, **kwargs)
-    return decorated_function
+# CORS Configuration
+origins = [
+    "https://aemiliotis.github.io",
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+]
 
-# CORS support functions
-def _build_cors_preflight_response():
-    logger.debug("Building CORS preflight response")
-    response = jsonify({"message": "Preflight Accepted"})
-    request_origin = request.headers.get('Origin')
-    if request_origin in [
-        "https://aemiliotis.github.io",
-        "http://localhost:*",
-        "https://aemiliotis.github.io/Robotics-AI-cells"
-    ]:
-        response.headers.add("Access-Control-Allow-Origin", request_origin)
-        response.headers.add("Access-Control-Allow-Credentials", "true")
-    response.headers.add("Access-Control-Allow-Headers", "Content-Type, Authorization")
-    response.headers.add("Access-Control-Allow-Methods", "GET, POST, OPTIONS, DELETE")
-    return response
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
-def _corsify_response(response):
-    logger.debug("CORSifying response")
-    request_origin = request.headers.get('Origin')
-    if request_origin in [
-        "https://aemiliotis.github.io",
-        "http://localhost:*",
-        "https://aemiliotis.github.io/Robotics-AI-cells"
-    ]:
-        response.headers.add("Access-Control-Allow-Origin", request_origin)
-        response.headers.add("Access-Control-Allow-Credentials", "true")
-    return response
-    
-# Authentication endpoints
-@app.route('/auth/register', methods=['POST'])
-def register():
-    logger.info("Registration request received")
-    conn = None
-    try:
-        if not request.is_json:
-            return jsonify({"error": "JSON required"}), 400
-            
-        data = request.get_json()
-        email = data.get('email')
-        password = data.get('password')
-        
-        if not email or not password:
-            return jsonify({"error": "Email and password required"}), 400
-        
-        # Start database transaction
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        
-        # Check existing user within transaction
-        cursor.execute("SELECT id FROM users WHERE email = %s", (email,))
-        if cursor.fetchone():
-            return jsonify({"error": "Email already registered"}), 409
-        
-        # Create user
-        user_id = str(uuid.uuid4())
-        password_hash = generate_password_hash(password)
-        cursor.execute(
-            """INSERT INTO users (id, email, password_hash, created_at)
-               VALUES (%s, %s, %s, %s) RETURNING id, email""",
-            (user_id, email, password_hash, datetime.now())
+# Models
+class Token(BaseModel):
+    access_token: str
+    token_type: str
+
+class UserCreate(BaseModel):
+    username: str
+    email: str
+    password: str
+
+class UserOut(BaseModel):
+    username: str
+    email: str
+    is_active: bool
+
+class AIRequest(BaseModel):
+    cells: List[str]
+    data: Dict[str, Any]
+
+class AIResponse(BaseModel):
+    success: bool
+    results: Dict[str, Any]
+    error: str = None
+
+class APIKeyResponse(BaseModel):
+    api_key: str
+
+# Routes
+@app.post("/token", response_model=Token)
+async def login_for_access_token(
+    form_data: OAuth2PasswordRequestForm = Depends(),
+    db: Session = Depends(get_db)
+):
+    user = authenticate_user(db, form_data.username, form_data.password)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect username or password",
+            headers={"WWW-Authenticate": "Bearer"},
         )
-        user = cursor.fetchone()
-        
-        # Create API key in same transaction
-        api_key = str(uuid.uuid4())
-        secret_key = secrets.token_hex(32)
-        cursor.execute(
-            """INSERT INTO api_keys (id, user_id, api_key, secret_key, name, created_at)
-               VALUES (%s, %s, %s, %s, %s, %s)""",
-            (str(uuid.uuid4()), user_id, api_key, secret_key, "Default Key", datetime.now())
-        )
-        
-        # Commit transaction
-        conn.commit()
-        
-        # Set session
-        session['user_id'] = user_id
-        session['email'] = email
-        
-        return jsonify({
-            "success": True,
-            "user": {"id": user_id, "email": email},
-            "api_key": {"key": api_key, "secret": secret_key}
-        })
-        
-    except Exception as e:
-        if conn:
-            conn.rollback()
-        logger.error(f"Registration error: {str(e)}")
-        return jsonify({"error": "Registration failed"}), 500
-    finally:
-        if conn:
-            conn.close()
-        
-@app.route('/auth/login', methods=['POST', 'OPTIONS'])
-def login():
-    logger.info("Login request received")
-    if request.method == 'OPTIONS':
-        logger.debug("Login OPTIONS preflight request")
-        return _build_cors_preflight_response()
-    
-    try:
-        # Validate request format
-        if not request.is_json:
-            logger.warning("Login attempt with non-JSON request")
-            return _corsify_response(jsonify({
-                "success": False,
-                "error": "Request must be JSON"
-            })), 400
-
-        data = request.get_json()
-        email = data.get('email', '').strip()
-        password = data.get('password', '')
-        logger.debug(f"Login attempt for email: {email}")
-
-        # Validate inputs
-        if not email or not password:
-            logger.warning(f"Missing credentials in login attempt (email: {bool(email)}, password: {bool(password)})")
-            return _corsify_response(jsonify({
-                "success": False,
-                "error": "Email and password are required"
-            })), 400
-
-        # Get user from database
-        logger.debug(f"Looking up user: {email}")
-        user = get_user_by_email(email)
-        if not user:
-            logger.warning(f"No user found for email: {email}")
-            return _corsify_response(jsonify({
-                "success": False,
-                "error": "Invalid credentials"
-            })), 401
-
-        # Handle both tuple and dict responses
-        if isinstance(user, dict):
-            user_id = user.get('id')
-            password_hash = user.get('password_hash')
-            user_email = user.get('email')
-        else:
-            user_id = user[0]
-            password_hash = user[2]
-            user_email = user[1]
-
-        # Verify password
-        if not password_hash or not verify_password(password_hash, password):
-            logger.warning(f"Password verification failed for user: {email}")
-            return _corsify_response(jsonify({
-                "success": False,
-                "error": "Invalid credentials"
-            })), 401
-
-        # Establish session
-        session.clear()
-        session['user_id'] = user_id
-        session['email'] = user_email
-        session.permanent = True
-        update_last_login(user_id)
-        logger.info(f"Successful login for user: {email}")
-
-        response = _corsify_response(jsonify({
-            "success": True,
-            "user": {
-                "id": user_id,
-                "email": user_email
-            }
-        }))
-        
-        return response
-
-    except Exception as e:
-        logger.error(f"Critical login error: {str(e)}\n{traceback.format_exc()}")
-        return _corsify_response(jsonify({
-            "success": False,
-            "error": "An unexpected error occurred"
-        })), 500
-
-@app.route('/auth/logout', methods=['POST', 'OPTIONS'])
-def logout():
-    logger.info("Logout request received")
-    if request.method == 'OPTIONS':
-        logger.debug("Logout OPTIONS preflight request")
-        return _build_cors_preflight_response()
-    
-    user_id = session.get('user_id', 'unknown')
-    session.clear()
-    logger.info(f"User {user_id} logged out successfully")
-    return _corsify_response(jsonify({
-        "success": True
-    }))
-
-@app.route('/auth/status', methods=['GET'])
-def status():
-    logger.info("Auth status check request received")
-    try:
-        if 'user_id' not in session:
-            logger.debug("No active session found")
-            return _corsify_response(jsonify({
-                "success": True,
-                "authenticated": False
-            }))
-        
-        logger.info(f"Active session found for user {session['user_id']}")
-        return _corsify_response(jsonify({
-            "success": True,
-            "authenticated": True,
-            "user": {
-                "id": session['user_id'],
-                "email": session.get('email')
-            }
-        }))
-    except Exception as e:
-        logger.error(f"Error checking auth status: {str(e)}\n{traceback.format_exc()}")
-        return _corsify_response(jsonify({
-            "success": False,
-            "error": "Error checking authentication status"
-        })), 500
-
-# API key management endpoints
-@app.route('/api-keys', methods=['GET', 'OPTIONS'])
-@login_required
-def get_api_keys():
-    logger.info("API keys list request received")
-    if request.method == 'OPTIONS':
-        logger.debug("API keys OPTIONS preflight request")
-        return _build_cors_preflight_response()
-    
-    user_id = session['user_id']
-    logger.debug(f"Fetching API keys for user {user_id}")
-    keys = get_api_keys_by_user(user_id)
-    logger.info(f"Found {len(keys)} API keys for user {user_id}")
-    
-    return _corsify_response(jsonify({
-        "success": True,
-        "api_keys": keys
-    }))
-
-@app.route('/api-keys', methods=['POST', 'OPTIONS'])
-@login_required
-def create_new_api_key():
-    logger.info("API key creation request received")
-    if request.method == 'OPTIONS':
-        logger.debug("API key creation OPTIONS preflight request")
-        return _build_cors_preflight_response()
-    
-    user_id = session['user_id']
-    data = request.json
-    name = data.get('name', 'API Key')
-    logger.info(f"Creating new API key for user {user_id} with name: {name}")
-    
-    api_key = create_api_key(user_id, name)
-    logger.info(f"API key created successfully for user {user_id}")
-    
-    return _corsify_response(jsonify({
-        "success": True,
-        "api_key": api_key
-    }))
-
-@app.route('/api-keys/<key_id>', methods=['DELETE', 'OPTIONS'])
-@login_required
-def delete_api_key(key_id):
-    logger.info(f"API key deletion request received for key {key_id}")
-    if request.method == 'OPTIONS':
-        logger.debug("API key deletion OPTIONS preflight request")
-        return _build_cors_preflight_response()
-    
-    user_id = session['user_id']
-    logger.info(f"Attempting to delete key {key_id} for user {user_id}")
-    success = deactivate_api_key(key_id, user_id)
-    
-    if success:
-        logger.info(f"Successfully deleted API key {key_id}")
-        return _corsify_response(jsonify({
-            "success": True
-        }))
-    else:
-        logger.warning(f"Failed to delete API key {key_id}")
-        return _corsify_response(jsonify({
-            "success": False,
-            "error": "Failed to delete API key"
-        })), 404
-
-# AI Cell API endpoints
-@app.route('/ai-api', methods=['POST', 'OPTIONS'])
-@api_key_required
-def handle_request():
-    logger.info("AI API request received")
-    start_time = time.time()
-    
-    try:
-        request_data = request.json
-        cell_names = request_data.get("cells", [])
-        input_data = request_data.get("data", {})
-        logger.debug(f"Processing request for cells: {cell_names}")
-        
-        results = {}
-        
-        for cell_name in cell_names:
-            if cell_name in ai_cells:
-                logger.debug(f"Executing cell: {cell_name}")
-                cell_input = input_data.get(cell_name, {})
-                results[cell_name] = ai_cells[cell_name](cell_input)
-            else:
-                logger.warning(f"Requested cell not found: {cell_name}")
-        
-        response_data = {
-            "success": True,
-            "results": results
-        }
-        
-        # Log API usage
-        execution_time = int((time.time() - start_time) * 1000)
-        log_api_usage(
-            g.api_key_id,
-            '/ai-api',
-            json.dumps(request_data),
-            json.dumps(response_data),
-            execution_time,
-            200
-        )
-        logger.info(f"Request processed successfully in {execution_time}ms")
-        
-        # Update API key usage timestamp
-        update_api_key_usage(g.api_key_id)
-        
-        return _corsify_response(jsonify(response_data))
-    
-    except Exception as e:
-        logger.error(f"API Error: {str(e)}\n{traceback.format_exc()}")
-        
-        response_data = {
-            "success": False,
-            "error": str(e)
-        }
-        
-        # Log API usage with error
-        execution_time = int((time.time() - start_time) * 1000)
-        log_api_usage(
-            g.api_key_id,
-            '/ai-api',
-            json.dumps(request.json if request.is_json else {}),
-            json.dumps(response_data),
-            execution_time,
-            500
-        )
-        
-        return _corsify_response(jsonify(response_data)), 500
-
-@app.route('/list-cells', methods=['GET', 'OPTIONS'])
-@api_key_required
-def list_cells():
-    logger.info("List cells request received")
-    start_time = time.time()
-    
-    response_data = {
-        "success": True,
-        "available_cells": list(ai_cells.keys())
-    }
-    
-    # Log API usage
-    execution_time = int((time.time() - start_time) * 1000)
-    log_api_usage(
-        g.api_key_id,
-        '/list-cells',
-        '',
-        json.dumps(response_data),
-        execution_time,
-        200
+    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token = create_access_token(
+        data={"sub": user.username}, expires_delta=access_token_expires
     )
-    logger.info(f"List cells request processed in {execution_time}ms")
-    
-    # Update API key usage timestamp
-    update_api_key_usage(g.api_key_id)
-    
-    return _corsify_response(jsonify(response_data))
+    return {"access_token": access_token, "token_type": "bearer"}
 
-@app.route('/ping', methods=['GET'])
-def ping():
-    logger.info("Ping request received")
-    return _corsify_response(jsonify({
-        "status": "alive",
-        "cells": list(ai_cells.keys())
-    }))
+@app.post("/register", response_model=UserOut)
+async def register_user(user: UserCreate, db: Session = Depends(get_db)):
+    db_user = db.query(User).filter(User.username == user.username).first()
+    if db_user:
+        raise HTTPException(status_code=400, detail="Username already registered")
+    
+    db_user = db.query(User).filter(User.email == user.email).first()
+    if db_user:
+        raise HTTPException(status_code=400, detail="Email already registered")
+    
+    new_user = User(
+        username=user.username,
+        email=user.email,
+    )
+    new_user.set_password(user.password)
+    db.add(new_user)
+    db.commit()
+    db.refresh(new_user)
+    return new_user
 
-if __name__ == '__main__':
-    logger.info("Starting Flask application")
-    app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)), debug=True)
+@app.post("/generate-api-key", response_model=APIKeyResponse)
+async def generate_api_key(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    api_key = current_user.generate_api_key()
+    db.commit()
+    return {"api_key": api_key}
+
+@app.get("/list-cells")
+async def list_cells():
+    """List all available AI cells"""
+    return {"available_cells": list(ai_cells.keys())}
+
+@app.post("/ai-api", response_model=AIResponse)
+async def execute_cells(
+    request: AIRequest,
+    request_obj: Request = None,
+    db: Session = Depends(get_db)
+):
+    """Execute one or more AI cells"""
+    try:
+        # Authentication
+        user = None
+        if request_obj:
+            # Check for API key in headers
+            api_key = request_obj.headers.get("x-api-key")
+            if api_key:
+                user = verify_api_key(api_key, db)
+            # Else check for Bearer token
+            elif "authorization" in request_obj.headers:
+                try:
+                    user = await get_current_user(
+                        token=request_obj.headers["authorization"].split(" ")[1],
+                        db=db
+                    )
+                except:
+                    pass
+        
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Authentication required"
+            )
+        
+        # Execute cells
+        results = {}
+        for cell_name in request.cells:
+            if cell_name not in ai_cells:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"Cell {cell_name} not found"
+                )
+            
+            cell_input = request.data.get(cell_name, {})
+            try:
+                results[cell_name] = ai_cells[cell_name](cell_input)
+            except Exception as e:
+                logger.error(f"Error executing cell {cell_name}: {str(e)}")
+                results[cell_name] = {"error": str(e)}
+        
+        # Log API call
+        log_entry = APILog(
+            user_id=user.id,
+            endpoint="/ai-api",
+            method="POST",
+            status_code=200,
+            cell_used=",".join(request.cells)
+        )
+        db.add(log_entry)
+        db.commit()
+        
+        return {"success": True, "results": results}
+    
+    except Exception as e:
+        logger.error(f"API Error: {str(e)}")
+        return JSONResponse(
+            status_code=500,
+            content={"success": False, "error": str(e)}
+        )
+
+@app.get("/ping")
+async def ping():
+    """Health check endpoint"""
+    return {"status": "alive", "cells": list(ai_cells.keys())}
+
+# Mount static files for documentation
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)
