@@ -141,53 +141,67 @@ def _corsify_response(response):
 @app.route('/auth/register', methods=['POST'])
 def register():
     logger.info("Registration request received")
+    conn = None
     try:
         if not request.is_json:
-            logger.warning("Registration attempt with non-JSON request")
             return jsonify({"error": "JSON required"}), 400
             
         data = request.get_json()
         email = data.get('email')
         password = data.get('password')
-        logger.debug(f"Registration attempt for email: {email}")
         
         if not email or not password:
-            logger.warning("Missing email or password in registration")
             return jsonify({"error": "Email and password required"}), 400
         
-        # Check existing user
-        if get_user_by_email(email):
-            logger.warning(f"Registration attempt with existing email: {email}")
+        # Start database transaction
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        # Check existing user within transaction
+        cursor.execute("SELECT id FROM users WHERE email = %s", (email,))
+        if cursor.fetchone():
             return jsonify({"error": "Email already registered"}), 409
         
         # Create user
-        logger.info(f"Creating new user: {email}")
-        user = create_user(email, password)
+        user_id = str(uuid.uuid4())
+        password_hash = generate_password_hash(password)
+        cursor.execute(
+            """INSERT INTO users (id, email, password_hash, created_at)
+               VALUES (%s, %s, %s, %s) RETURNING id, email""",
+            (user_id, email, password_hash, datetime.now())
+        )
+        user = cursor.fetchone()
         
-        # Create initial API key
-        logger.info(f"Creating API key for new user: {user['id']}")
-        api_key = create_api_key(user['id'], "Default Key")
+        # Create API key in same transaction
+        api_key = str(uuid.uuid4())
+        secret_key = secrets.token_hex(32)
+        cursor.execute(
+            """INSERT INTO api_keys (id, user_id, api_key, secret_key, name, created_at)
+               VALUES (%s, %s, %s, %s, %s, %s)""",
+            (str(uuid.uuid4()), user_id, api_key, secret_key, "Default Key", datetime.now())
+        )
+        
+        # Commit transaction
+        conn.commit()
         
         # Set session
-        session['user_id'] = user['id']
-        session['email'] = user['email']
-        logger.info(f"User {user['id']} registered and logged in successfully")
+        session['user_id'] = user_id
+        session['email'] = email
         
         return jsonify({
             "success": True,
-            "user": {
-                "id": user['id'],
-                "email": user['email']
-            },
-            "api_key": {
-                "key": api_key['api_key'],
-                "secret": api_key['secret_key']
-            }
+            "user": {"id": user_id, "email": email},
+            "api_key": {"key": api_key, "secret": secret_key}
         })
         
     except Exception as e:
-        logger.error(f"Registration error: {str(e)}\n{traceback.format_exc()}")
+        if conn:
+            conn.rollback()
+        logger.error(f"Registration error: {str(e)}")
         return jsonify({"error": "Registration failed"}), 500
+    finally:
+        if conn:
+            conn.close()
         
 @app.route('/auth/login', methods=['POST', 'OPTIONS'])
 def login():
