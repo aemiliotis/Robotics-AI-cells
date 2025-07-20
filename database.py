@@ -16,7 +16,7 @@ Base = declarative_base()
 class User(Base):
     __tablename__ = 'users'
     
-    id = Column(Integer, primary_key=True, index=True)
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     username = Column(String(50), unique=True, nullable=False)
     email = Column(String(100), unique=True, nullable=False)
     hashed_password = Column(String(255), nullable=False)
@@ -40,7 +40,7 @@ class APILog(Base):
     __tablename__ = 'api_logs'
     
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey('users.id'))
+    user_id = Column(UUID(as_uuid=True), ForeignKey('users.id'))
     endpoint = Column(String(100))
     method = Column(String(10))
     timestamp = Column(DateTime, default=datetime.utcnow)
