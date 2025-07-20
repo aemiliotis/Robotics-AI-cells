@@ -9,9 +9,17 @@ import psycopg2
 from datetime import timedelta
 from functools import wraps
 from database import (
-    get_user_by_email, create_user, verify_password, update_last_login,
-    create_api_key, get_api_keys_by_user, get_api_key_details,
-    update_api_key_usage, deactivate_api_key, log_api_usage
+    get_db_connection,          # Database connection handler
+    get_user_by_email,          # User lookup
+    create_user,                # User creation
+    verify_password,            # Password validation
+    update_last_login,          # Login tracking
+    create_api_key,             # API key generation
+    get_api_keys_by_user,       # API key management
+    get_api_key_details,        # API key validation
+    update_api_key_usage,       # Usage tracking
+    deactivate_api_key,         # Key revocation
+    log_api_usage               # Audit logging
 )
 
 app = Flask(__name__)
