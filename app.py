@@ -17,6 +17,14 @@ from database import (
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'dev_secret_key')  # Change in production
 
+app.config.update(
+    SESSION_COOKIE_SECURE=True,
+    SESSION_COOKIE_HTTPONLY=True,
+    SESSION_COOKIE_SAMESITE='None',  # Changed from 'Lax'
+    PERMANENT_SESSION_LIFETIME=timedelta(days=1),
+    SESSION_COOKIE_DOMAIN='.onrender.com'  # Add your domain
+)
+
 # Configure logging
 import logging
 logging.basicConfig(level=logging.INFO)
