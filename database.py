@@ -69,11 +69,15 @@ def get_db_connection():
     try:
         conn = psycopg2.connect(os.environ['DATABASE_URL'])
         conn.autocommit = False
+        logger.info("Database connection established")
         return conn
-    except Exception as e:
-        app.logger.error(f"Database connection failed: {str(e)}")
+    except psycopg2.OperationalError as e:
+        logger.error(f"Database connection failed: {str(e)}")
         raise
-        
+    except Exception as e:
+        logger.error(f"Unexpected database error: {str(e)}")
+        raise
+
 def get_user_by_email(email):
     """Retrieve user by email with proper error handling"""
     conn = None
@@ -109,10 +113,12 @@ def hash_password(password):
     return generate_password_hash(password)
 
 # Update user creation to use consistent hashing:
-def create_user(email, password):
-    conn = get_db_connection()
+def create_user(email, password, cursor=None):
     try:
-        cursor = conn.cursor()
+        if cursor is None:
+            conn = get_db_connection()
+            cursor = conn.cursor()
+        
         password_hash = hash_password(password)
         cursor.execute(
             """INSERT INTO users (email, password_hash, created_at)
@@ -120,14 +126,15 @@ def create_user(email, password):
             (email, password_hash, datetime.now())
         )
         user = cursor.fetchone()
-        conn.commit()
+        
+        if cursor.connection != conn:  # If using external connection
+            cursor.connection.commit()
+            
         return {'id': user[0], 'email': user[1]}
+        
     except Exception as e:
-        conn.rollback()
-        app.logger.error(f"User creation failed: {str(e)}")
+        logger.error(f"User creation failed: {str(e)}")
         raise
-    finally:
-        conn.close()
 
 def update_last_login(user_id):
     """Update user's last login timestamp"""
