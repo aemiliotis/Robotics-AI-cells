@@ -606,4 +606,683 @@
                     { id: "gps_lon", label: "GPS Lon", type: "number", value: -122.4194 }
                 ]
             },
-           
+            // 9. Path Planning
+            {
+                id: "path_optimization",
+                name: "Path Optimization",
+                category: "motion",
+                description: "Energy-efficient navigation",
+                inputs: [
+                    { id: "waypoints", label: "Waypoints", type: "json", value: "[[0,0], [1,1], [2,0], [3,1]]" },
+                    { id: "terrain", label: "Terrain Factor", type: "number", value: 1.2 }
+                ]
+            },
+            
+            // 10. Battery Optimization
+            {
+                id: "battery_optimization",
+                name: "Battery Optimization",
+                category: "power",
+                description: "Power management",
+                inputs: [
+                    { id: "charge_cycles", label: "Charge Cycles", type: "number", value: 150 },
+                    { id: "avg_dod", label: "Avg DoD %", type: "number", value: 80 },
+                    { id: "avg_temp", label: "Avg Temp °C", type: "number", value: 35 }
+                ]
+            },
+            
+            // 11. Computer Vision
+            {
+                id: "vision_optimized",
+                name: "Vision Optimized",
+                category: "perception",
+                description: "Lightweight image processing",
+                inputs: [
+                    { id: "image_data", label: "Image", type: "json", value: "[[[120, 120, 120], [125, 125, 125]], [[130, 130, 130], [135, 135, 135]]]" }
+                ]
+            },
+            
+            // 12. Shared Memory
+            {
+                id: "shared_memory",
+                name: "Shared Memory",
+                category: "utils",
+                description: "Inter-process communication",
+                inputs: [
+                    { id: "key", label: "Key", type: "text", value: "last_position" },
+                    { id: "value", label: "Value", type: "json", value: "[1.2, 3.4, 0.8]" }
+                ]
+            },
+            
+            // 13. Math Utilities
+            {
+                id: "math_utils",
+                name: "Math Utilities",
+                category: "utils",
+                description: "Optimized calculations",
+                inputs: [
+                    { id: "x", label: "Input Value", type: "number", value: 42 }
+                ]
+            },
+            
+            // 14. Precision Scaling
+            {
+                id: "precision_scaling",
+                name: "Precision Scaling",
+                category: "utils",
+                description: "Data compression",
+                inputs: [
+                    { id: "arr", label: "Array", type: "json", value: "[1.23, 4.56, 7.89]" },
+                    { id: "factor", label: "Scale Factor", type: "number", value: 100 }
+                ]
+            },
+            
+            // 15. Timed Process
+            {
+                id: "timed_process",
+                name: "Timed Process",
+                category: "utils",
+                description: "Execution monitoring",
+                inputs: [
+                    { id: "data", label: "Input Data", type: "json", value: "{\"sensor\": \"temp\", \"value\": 27.3}" }
+                ]
+            },
+            
+            // 16. Data Logger
+            {
+                id: "data_logger",
+                name: "Data Logger",
+                category: "utils",
+                description: "System telemetry",
+                inputs: [
+                    { id: "timestamp", label: "Timestamp", type: "number", value: 1625097600 },
+                    { id: "readings", label: "Readings", type: "json", value: "{\"current\": 1.2, \"voltage\": 12.3}" }
+                ]
+            },
+            
+            // 17. Network Optimizer
+            {
+                id: "network_optimizer",
+                name: "Network Optimizer",
+                category: "utils",
+                description: "Communication tuning",
+                inputs: [
+                    { id: "packet_size", label: "Packet Size", type: "number", value: 128 },
+                    { id: "signal_strength", label: "Signal dBm", type: "number", value: -67 }
+                ]
+            },
+            
+            // 18. Safety Monitor
+            {
+                id: "safety_monitor",
+                name: "Safety Monitor",
+                category: "utils",
+                description: "Joint limit checking",
+                inputs: [
+                    { id: "joint_angles", label: "Joint Angles", type: "json", value: "[0.1, 0.5, 1.2]" },
+                    { id: "limits", label: "Limits", type: "json", value: "[1.0, 1.0, 1.5]" }
+                ]
+            }
+        ];
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', function() {
+            // Set API URL display
+            document.getElementById('api-url').textContent = API_BASE_URL;
+            
+            // Create all cell cards
+            renderAllCells();
+            
+            // Set up tab switching
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.addEventListener('click', () => switchTab(tab.dataset.tab));
+            });
+            
+            // Check API status
+            checkApiStatus();
+            
+            // Check for saved token
+            const savedToken = localStorage.getItem('robotics_ai_token');
+            const savedUser = localStorage.getItem('robotics_ai_user');
+            
+            if (savedToken && savedUser) {
+                currentToken = savedToken;
+                currentUser = savedUser;
+                updateUserStatus();
+                checkApiKey();
+            }
+            
+            // Set up click handlers
+            document.addEventListener('click', function(e) {
+                const btn = e.target.closest('.cell-card button');
+                if (btn) {
+                    const cellId = btn.closest('.cell-card').dataset.cellId;
+                    executeCell(cellId);
+                }
+            });
+            
+            // Execute from URL params if needed
+            executeFromUrl();
+        });
+
+        function renderAllCells() {
+            const allCellsContainer = document.getElementById('all-cells');
+            const motionContainer = document.getElementById('motion-cells');
+            const perceptionContainer = document.getElementById('perception-cells');
+            const powerContainer = document.getElementById('power-cells');
+            const utilsContainer = document.getElementById('utils-cells');
+            
+            // Clear existing content
+            allCellsContainer.innerHTML = '';
+            motionContainer.innerHTML = '';
+            perceptionContainer.innerHTML = '';
+            powerContainer.innerHTML = '';
+            utilsContainer.innerHTML = '';
+            
+            CELLS.forEach(cell => {
+                const card = createCellCard(cell);
+                allCellsContainer.appendChild(card.cloneNode(true));
+                
+                // Add to category-specific containers
+                switch(cell.category) {
+                    case 'motion':
+                        motionContainer.appendChild(card);
+                        break;
+                    case 'perception':
+                        perceptionContainer.appendChild(card);
+                        break;
+                    case 'power':
+                        powerContainer.appendChild(card);
+                        break;
+                    case 'utils':
+                        utilsContainer.appendChild(card);
+                        break;
+                }
+            });
+        }
+
+        function createCellCard(cell) {
+            const card = document.createElement('div');
+            card.className = 'cell-card';
+            card.dataset.cellId = cell.id;
+            
+            // Header
+            const header = document.createElement('div');
+            header.className = 'cell-header';
+            
+            const title = document.createElement('div');
+            title.className = 'cell-title';
+            title.textContent = cell.name;
+            
+            header.appendChild(title);
+            card.appendChild(header);
+            
+            // Description
+            const desc = document.createElement('p');
+            desc.textContent = cell.description;
+            desc.style.fontSize = '0.9em';
+            desc.style.color = '#666';
+            card.appendChild(desc);
+            
+            // Controls
+            const controls = document.createElement('div');
+            controls.className = 'cell-controls';
+            
+            cell.inputs.forEach(input => {
+                const label = document.createElement('label');
+                label.textContent = input.label;
+                label.style.display = 'block';
+                label.style.marginTop = '10px';
+                label.style.fontWeight = '500';
+                controls.appendChild(label);
+                
+                let inputElement;
+                
+                switch(input.type) {
+                    case 'number':
+                        inputElement = document.createElement('input');
+                        inputElement.type = 'number';
+                        inputElement.value = input.value;
+                        if (input.min !== undefined) inputElement.min = input.min;
+                        if (input.max !== undefined) inputElement.max = input.max;
+                        break;
+                        
+                    case 'text':
+                        inputElement = document.createElement('input');
+                        inputElement.type = 'text';
+                        inputElement.value = input.value;
+                        break;
+                        
+                    case 'select':
+                        inputElement = document.createElement('select');
+                        input.options.forEach(option => {
+                            const optElement = document.createElement('option');
+                            optElement.value = option;
+                            optElement.textContent = option;
+                            if (option === input.value) optElement.selected = true;
+                            inputElement.appendChild(optElement);
+                        });
+                        break;
+                        
+                    case 'json':
+                        inputElement = document.createElement('textarea');
+                        inputElement.value = typeof input.value === 'string' ? input.value : JSON.stringify(input.value, null, 2);
+                        inputElement.rows = 3;
+                        break;
+                }
+                
+                inputElement.id = `${cell.id}_${input.id}`;
+                inputElement.style.width = '100%';
+                controls.appendChild(inputElement);
+            });
+            
+            const button = document.createElement('button');
+            button.textContent = 'Execute';
+            button.addEventListener('click', () => executeCell(cell.id));
+            controls.appendChild(button);
+            
+            card.appendChild(controls);
+            
+            // Response area
+            const response = document.createElement('div');
+            response.className = 'response';
+            response.id = `${cell.id}_response`;
+            response.textContent = 'Response will appear here...';
+            card.appendChild(response);
+            
+            return card;
+        }
+
+        async function executeCell(cellId) {
+            const cell = CELLS.find(c => c.id === cellId);
+            if (!cell) return;
+
+            const responseElement = document.getElementById(`${cellId}_response`);
+            const button = document.querySelector(`.cell-card[data-cell-id="${cellId}"] button`);
+            
+            // Reset UI
+            responseElement.className = 'response loading';
+            responseElement.textContent = 'Processing...';
+            button.disabled = true;
+
+            try {
+                // Prepare input data
+                const cellInputData = {};
+                for (const input of cell.inputs) {
+                    const inputElement = document.getElementById(`${cellId}_${input.id}`);
+                    const value = inputElement.value.trim();
+                    
+                    switch(input.type) {
+                        case 'number':
+                            cellInputData[input.id] = parseFloat(value);
+                            if (isNaN(cellInputData[input.id])) throw new Error('Invalid number');
+                            break;
+                        case 'text':
+                        case 'select':
+                            cellInputData[input.id] = value;
+                            break;
+                        case 'json':
+                            cellInputData[input.id] = value ? JSON.parse(value) : null;
+                            break;
+                    }
+                }
+
+                // Structure data to match backend expectations
+                const requestData = {
+                    cells: [cellId],
+                    data: {
+                        [cellId]: cellInputData
+                    }
+                };
+
+                const headers = {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                };
+                
+                if (currentToken) {
+                    headers['Authorization'] = `Bearer ${currentToken}`;
+                } else if (currentApiKey) {
+                    headers['x-api-key'] = currentApiKey;
+                }
+
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: headers,
+                    body: JSON.stringify(requestData)
+                });
+
+                const result = await response.json();
+                
+                if (!response.ok || !result.success) {
+                    throw new Error(result.error || `API request failed with status ${response.status}`);
+                }
+
+                // Handle backend response format
+                if (result.results && result.results[cellId]) {
+                    responseElement.textContent = JSON.stringify(result.results[cellId], null, 2);
+                    responseElement.className = 'response success';
+                } else {
+                    throw new Error('API did not return results for this cell');
+                }
+                
+                updateLastUpdate();
+
+            } catch (error) {
+                console.error('Execution error:', error);
+                responseElement.textContent = `Error: ${error.message}`;
+                responseElement.className = 'response error';
+            } finally {
+                button.disabled = false;
+            }
+        }
+        
+        function switchTab(tabId) {
+            // Update active tab
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.toggle('active', tab.dataset.tab === tabId);
+            });
+            
+            // Show corresponding content
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.toggle('active', content.id === `${tabId}-tab`);
+            });
+        }
+
+        async function checkApiStatus() {
+            const statusElement = document.getElementById('api-status');
+            statusElement.className = 'api-status checking';
+            
+            try {
+                const response = await fetch(PING_URL, {
+                    method: 'GET',
+                    mode: 'cors',
+                    credentials: 'omit'
+                });
+                
+                apiStatus = response.ok;
+                statusElement.className = `api-status ${apiStatus ? 'online' : 'offline'}`;
+                
+                if (apiStatus) {
+                    const data = await response.json();
+                    console.log("API Status:", data.status);
+                }
+            } catch (e) {
+                apiStatus = false;
+                statusElement.className = 'api-status offline';
+                console.error("API Status Check Failed:", e);
+            }
+            
+            setTimeout(checkApiStatus, 30000);
+        }
+
+        function updateLastUpdate() {
+            const now = new Date();
+            document.getElementById('last-update').textContent = 
+                `Last updated: ${now.toLocaleTimeString()}`;
+        }
+        
+        // Authentication functions
+        function showLogin() {
+            document.getElementById('auth-modal-title').textContent = 'Login';
+            document.getElementById('auth-form').innerHTML = `
+                <div class="form-group">
+                    <label for="login-username">Username:</label>
+                    <input type="text" id="login-username" required>
+                </div>
+                <div class="form-group">
+                    <label for="login-password">Password:</label>
+                    <input type="password" id="login-password" required>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="button-secondary" onclick="toggleAuthModal()">Cancel</button>
+                    <button type="button" class="button-success" onclick="login()">Login</button>
+                </div>
+            `;
+            toggleAuthModal();
+        }
+        
+        function showRegister() {
+            document.getElementById('auth-modal-title').textContent = 'Register';
+            document.getElementById('auth-form').innerHTML = `
+                <div class="form-group">
+                    <label for="register-username">Username:</label>
+                    <input type="text" id="register-username" required>
+                </div>
+                <div class="form-group">
+                    <label for="register-email">Email:</label>
+                    <input type="email" id="register-email" required>
+                </div>
+                <div class="form-group">
+                    <label for="register-password">Password:</label>
+                    <input type="password" id="register-password" required>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="button-secondary" onclick="toggleAuthModal()">Cancel</button>
+                    <button type="button" class="button-success" onclick="register()">Register</button>
+                </div>
+            `;
+            toggleAuthModal();
+        }
+        
+        function toggleAuthModal() {
+            const modal = document.getElementById('auth-modal');
+            modal.style.display = modal.style.display === 'flex' ? 'none' : 'flex';
+        }
+        
+        function toggleApiKeyModal() {
+            const modal = document.getElementById('api-key-modal');
+            modal.style.display = modal.style.display === 'flex' ? 'none' : 'flex';
+        }
+        
+        async function login() {
+            const username = document.getElementById('login-username').value;
+            const password = document.getElementById('login-password').value;
+            
+            try {
+                const formData = new URLSearchParams();
+                formData.append('username', username);
+                formData.append('password', password);
+                formData.append('grant_type', 'password');
+                
+                const response = await fetch(TOKEN_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: formData
+                });
+                
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.detail || 'Login failed');
+                }
+                
+                const data = await response.json();
+                currentToken = data.access_token;
+                currentUser = username;
+                
+                // Save to localStorage
+                localStorage.setItem('robotics_ai_token', currentToken);
+                localStorage.setItem('robotics_ai_user', currentUser);
+                
+                updateUserStatus();
+                toggleAuthModal();
+                checkApiKey();
+            } catch (error) {
+                alert(`Login error: ${error.message}`);
+            }
+        }
+        
+        async function register() {
+            const username = document.getElementById('register-username').value;
+            const email = document.getElementById('register-email').value;
+            const password = document.getElementById('register-password').value;
+            
+            try {
+                const response = await fetch(REGISTER_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        username,
+                        email,
+                        password
+                    })
+                });
+                
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.detail || 'Registration failed');
+                }
+                
+                alert('Registration successful! Please login.');
+                showLogin();
+            } catch (error) {
+                alert(`Registration error: ${error.message}`);
+            }
+        }
+        
+        function logout() {
+            currentToken = null;
+            currentUser = null;
+            currentApiKey = null;
+            localStorage.removeItem('robotics_ai_token');
+            localStorage.removeItem('robotics_ai_user');
+            updateUserStatus();
+        }
+        
+        function updateUserStatus() {
+            const statusElement = document.getElementById('user-status');
+            const loginBtn = document.getElementById('login-btn');
+            const registerBtn = document.getElementById('register-btn');
+            const logoutBtn = document.getElementById('logout-btn');
+            const apiKeyBtn = document.getElementById('api-key-btn');
+            
+            if (currentUser) {
+                statusElement.textContent = `Logged in as ${currentUser}`;
+                loginBtn.style.display = 'none';
+                registerBtn.style.display = 'none';
+                logoutBtn.style.display = 'inline-block';
+                apiKeyBtn.style.display = 'inline-block';
+            } else {
+                statusElement.textContent = 'Not logged in';
+                loginBtn.style.display = 'inline-block';
+                registerBtn.style.display = 'inline-block';
+                logoutBtn.style.display = 'none';
+                apiKeyBtn.style.display = 'none';
+            }
+        }
+        
+        async function checkApiKey() {
+            if (!currentToken) return;
+            
+            try {
+                const response = await fetch(API_KEY_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${currentToken}`
+                    }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    currentApiKey = data.api_key;
+                }
+            } catch (error) {
+                console.error('Failed to check API key:', error);
+            }
+        }
+        
+        async function showApiKey() {
+            if (!currentApiKey) {
+                try {
+                    const response = await fetch(API_KEY_URL, {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${currentToken}`
+                        }
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error('Failed to get API key');
+                    }
+                    
+                    const data = await response.json();
+                    currentApiKey = data.api_key;
+                } catch (error) {
+                    alert(`Error: ${error.message}`);
+                    return;
+                }
+            }
+            
+            document.getElementById('api-key-display').textContent = currentApiKey;
+            toggleApiKeyModal();
+        }
+        
+        function copyApiKey() {
+            const apiKey = document.getElementById('api-key-display').textContent;
+            navigator.clipboard.writeText(apiKey)
+                .then(() => alert('API key copied to clipboard!'))
+                .catch(err => alert('Failed to copy API key: ' + err));
+        }
+        
+        async function generateNewApiKey() {
+            try {
+                const response = await fetch(API_KEY_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${currentToken}`
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Failed to generate new API key');
+                }
+                
+                const data = await response.json();
+                currentApiKey = data.api_key;
+                document.getElementById('api-key-display').textContent = currentApiKey;
+                alert('New API key generated!');
+            } catch (error) {
+                alert(`Error: ${error.message}`);
+            }
+        }
+        
+        // Function to parse URL parameters
+        function getUrlParams() {
+            const params = new URLSearchParams(window.location.search);
+            return {
+                cell: params.get('cell'),
+                ...Object.fromEntries(params.entries())
+            };
+        }
+
+        // Function to auto-execute a cell from URL parameters
+        function executeFromUrl() {
+            const params = getUrlParams();
+            if (params.cell) {
+                const cellId = params.cell;
+                const cell = CELLS.find(c => c.id === cellId);
+                
+                if (cell) {
+                    // Set input values from URL params
+                    cell.inputs.forEach(input => {
+                        const paramValue = params[input.id];
+                        if (paramValue !== undefined) {
+                            const inputElement = document.getElementById(`${cellId}_${input.id}`);
+                            if (inputElement) {
+                                inputElement.value = paramValue;
+                            }
+                        }
+                    });
+                    
+                    // Execute the cell after a short delay to ensure DOM is ready
+                    setTimeout(() => executeCell(cellId), 300);
+                }
+            }
+        }
+    </script>
+</body>
+</html>
