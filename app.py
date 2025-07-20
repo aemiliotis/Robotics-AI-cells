@@ -22,7 +22,7 @@ app.config.update(
     SESSION_COOKIE_HTTPONLY=True,
     SESSION_COOKIE_SAMESITE='None',  # Changed from 'Lax'
     PERMANENT_SESSION_LIFETIME=timedelta(days=1),
-    SESSION_COOKIE_DOMAIN='.onrender.com'  # Add your domain
+    SESSION_COOKIE_DOMAIN='https://robotics-ai-cells-m5gy.onrender.com'  # Add your domain
 )
 
 # Configure logging
