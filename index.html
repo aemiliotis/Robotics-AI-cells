@@ -14,6 +14,7 @@
             --text: #333333;
             --success: #4CAF50;
             --error: #F44336;
+            --warning: #FF9800;
         }
         
         body {
@@ -50,6 +51,18 @@
             background-color: var(--card-bg);
             border-radius: 5px;
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            align-items: center;
+        }
+        
+        .auth-controls {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        
+        .auth-controls button {
+            padding: 5px 10px;
+            font-size: 0.9em;
         }
         
         .cell-grid {
@@ -116,6 +129,22 @@
             cursor: not-allowed;
         }
         
+        .button-secondary {
+            background-color: #6c757d;
+        }
+        
+        .button-secondary:hover {
+            background-color: #5a6268;
+        }
+        
+        .button-success {
+            background-color: var(--success);
+        }
+        
+        .button-success:hover {
+            background-color: #3d8b40;
+        }
+        
         .response {
             margin-top: 10px;
             padding: 10px;
@@ -136,6 +165,10 @@
             border-left: 4px solid var(--error);
         }
         
+        .warning {
+            border-left: 4px solid var(--warning);
+        }
+        
         .api-status {
             display: inline-block;
             width: 10px;
@@ -152,7 +185,8 @@
             background-color: var(--error);
         }
         
-        .loading {
+        .checking {
+            background-color: var(--warning);
             animation: pulse 1.5s infinite;
         }
         
@@ -160,6 +194,10 @@
             0% { opacity: 0.5; }
             50% { opacity: 1; }
             100% { opacity: 0.5; }
+        }
+        
+        .loading {
+            animation: pulse 1.5s infinite;
         }
         
         .tab-content {
@@ -187,50 +225,99 @@
             font-weight: bold;
         }
         
-        .nav-links {
-            margin-top: 10px;
+        /* Modal styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
         }
         
-        .nav-links a {
+        .modal-content {
+            background-color: white;
+            width: 400px;
+            max-width: 90%;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .modal-title {
+            font-size: 1.5em;
             color: var(--primary);
-            text-decoration: none;
-            margin: 0 10px;
-            padding: 5px 10px;
-            border: 1px solid var(--primary);
-            border-radius: 4px;
-            transition: all 0.2s;
+            margin: 0;
         }
         
-        .nav-links a:hover {
-            background-color: var(--primary);
-            color: white;
+        .close-modal {
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            cursor: pointer;
+            color: #666;
         }
         
-        .auth-status {
-            margin-top: 10px;
-            font-size: 0.9em;
+        .form-group {
+            margin-bottom: 15px;
         }
         
-        .auth-status a {
-            color: var(--primary);
-            text-decoration: none;
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
         }
         
-        .auth-status a:hover {
-            text-decoration: underline;
-        }
-        
-        .api-key-input {
-            margin-top: 10px;
-            padding: 10px;
-            background-color: #f8f9fa;
-            border-radius: 5px;
+        .form-group input {
+            width: 100%;
+            padding: 8px;
             border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        
+        .modal-footer {
+            margin-top: 20px;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+        
+        .api-key-display {
+            background-color: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: monospace;
+            word-break: break-all;
+            margin-bottom: 15px;
         }
         
         @media (max-width: 768px) {
             .cell-grid {
                 grid-template-columns: 1fr;
+            }
+            
+            .status-bar {
+                flex-direction: column;
+                gap: 10px;
+                align-items: flex-start;
+            }
+            
+            .auth-controls {
+                width: 100%;
+                justify-content: space-between;
             }
         }
     </style>
@@ -239,18 +326,7 @@
     <div class="container">
         <header>
             <h1>Robotics AI Hub</h1>
-            <p>Control panel for all 25 robotic AI cells</p>
-            <div class="nav-links">
-                <a href="api-management.html">API Key Management</a>
-            </div>
-            <div class="auth-status" id="auth-status">
-                <span id="auth-message">Not authenticated. <a href="api-management.html">Login or Register</a> to manage API keys.</span>
-            </div>
-            <div class="api-key-input" id="api-key-input">
-                <label for="api-key">API Key:</label>
-                <input type="text" id="api-key" placeholder="Enter your API key to use the cells">
-                <button id="save-api-key">Save API Key</button>
-            </div>
+            <p>Control panel for all robotic AI cells</p>
         </header>
         
         <div class="status-bar">
@@ -259,6 +335,13 @@
                 <span id="api-url">Connecting to API...</span>
             </div>
             <div id="last-update">Last updated: Never</div>
+            <div class="auth-controls">
+                <span id="user-status">Not logged in</span>
+                <button onclick="showLogin()" id="login-btn">Login</button>
+                <button onclick="showRegister()" id="register-btn">Register</button>
+                <button onclick="showApiKey()" id="api-key-btn" style="display:none;">API Key</button>
+                <button onclick="logout()" id="logout-btn" style="display:none;">Logout</button>
+            </div>
         </div>
         
         <div class="tabs">
@@ -299,16 +382,55 @@
             </div>
         </div>
     </div>
+
+    <!-- Auth Modal -->
+    <div id="auth-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title" id="auth-modal-title">Login</h2>
+                <button class="close-modal" onclick="toggleAuthModal()">&times;</button>
+            </div>
+            <div id="auth-form">
+                <!-- Form will be inserted here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- API Key Modal -->
+    <div id="api-key-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Your API Key</h2>
+                <button class="close-modal" onclick="toggleApiKeyModal()">&times;</button>
+            </div>
+            <div class="api-key-display" id="api-key-display">
+                Loading...
+            </div>
+            <p>Use this key to authenticate API requests from Python or other clients.</p>
+            <div class="modal-footer">
+                <button class="button-secondary" onclick="toggleApiKeyModal()">Close</button>
+                <button class="button-success" onclick="copyApiKey()">Copy</button>
+                <button class="button-secondary" onclick="generateNewApiKey()">Regenerate</button>
+            </div>
+        </div>
+    </div>
+
     <script>
-        // Configuration - VERIFY THIS IS CORRECT
-        const API_URL = "https://robotics-ai-cells-m5gy.onrender.com/ai-api";
-        const PING_URL = "https://robotics-ai-cells-m5gy.onrender.com/ping";
-        const AUTH_STATUS_URL = "https://robotics-ai-cells-m5gy.onrender.com/auth/status";
+        // Configuration
+        const API_BASE_URL = "https://robotics-ai-cells-m5gy.onrender.com";
+        const API_URL = `${API_BASE_URL}/ai-api`;
+        const PING_URL = `${API_BASE_URL}/ping`;
+        const TOKEN_URL = `${API_BASE_URL}/token`;
+        const REGISTER_URL = `${API_BASE_URL}/register`;
+        const API_KEY_URL = `${API_BASE_URL}/generate-api-key`;
         
-        // API Key Storage
-        let apiKey = localStorage.getItem('robotics_ai_hub_api_key') || '';
-        
-        // All 25 cells configuration
+        // State management
+        let currentToken = null;
+        let currentUser = null;
+        let currentApiKey = null;
+        let apiStatus = false;
+
+        // All 25 cells configuration (same as before)
         const CELLS = [
             // 1. Core Mathematical Cells
             {
@@ -484,496 +606,4 @@
                     { id: "gps_lon", label: "GPS Lon", type: "number", value: -122.4194 }
                 ]
             },
-            
-            // 9. Path Planning
-            {
-                id: "path_optimization",
-                name: "Path Optimization",
-                category: "motion",
-                description: "Energy-efficient navigation",
-                inputs: [
-                    { id: "waypoints", label: "Waypoints", type: "json", value: "[[0,0], [1,1], [2,0], [3,1]]" },
-                    { id: "terrain", label: "Terrain Factor", type: "number", value: 1.2 }
-                ]
-            },
-            
-            // 10. Battery Optimization
-            {
-                id: "battery_optimization",
-                name: "Battery Optimization",
-                category: "power",
-                description: "Power management",
-                inputs: [
-                    { id: "charge_cycles", label: "Charge Cycles", type: "number", value: 150 },
-                    { id: "avg_dod", label: "Avg DoD %", type: "number", value: 80 },
-                    { id: "avg_temp", label: "Avg Temp \u00b0C", type: "number", value: 35 }
-                ]
-            },
-            
-            // 11. Computer Vision
-            {
-                id: "vision_optimized",
-                name: "Vision Optimized",
-                category: "perception",
-                description: "Lightweight image processing",
-                inputs: [
-                    { id: "image_data", label: "Image", type: "json", value: "[[[120, 120, 120], [125, 125, 125]], [[130, 130, 130], [135, 135, 135]]]" }
-                ]
-            },
-            
-            // 12. Shared Memory
-            {
-                id: "shared_memory",
-                name: "Shared Memory",
-                category: "utils",
-                description: "Inter-process communication",
-                inputs: [
-                    { id: "key", label: "Key", type: "text", value: "last_position" },
-                    { id: "value", label: "Value", type: "json", value: "[1.2, 3.4, 0.8]" }
-                ]
-            },
-            
-            // 13. Math Utilities
-            {
-                id: "math_utils",
-                name: "Math Utilities",
-                category: "utils",
-                description: "Optimized calculations",
-                inputs: [
-                    { id: "x", label: "Input Value", type: "number", value: 42 }
-                ]
-            },
-            
-            // 14. Precision Scaling
-            {
-                id: "precision_scaling",
-                name: "Precision Scaling",
-                category: "utils",
-                description: "Data compression",
-                inputs: [
-                    { id: "arr", label: "Array", type: "json", value: "[1.23, 4.56, 7.89]" },
-                    { id: "factor", label: "Scale Factor", type: "number", value: 100 }
-                ]
-            },
-            
-            // 15. Timed Process
-            {
-                id: "timed_process",
-                name: "Timed Process",
-                category: "utils",
-                description: "Execution monitoring",
-                inputs: [
-                    { id: "data", label: "Input Data", type: "json", value: "{\"sensor\": \"temp\", \"value\": 27.3}" }
-                ]
-            },
-            
-            // 16. Data Logger
-            {
-                id: "data_logger",
-                name: "Data Logger",
-                category: "utils",
-                description: "System telemetry",
-                inputs: [
-                    { id: "timestamp", label: "Timestamp", type: "number", value: 1625097600 },
-                    { id: "readings", label: "Readings", type: "json", value: "{\"current\": 1.2, \"voltage\": 12.3}" }
-                ]
-            },
-            
-            // 17. Network Optimizer
-            {
-                id: "network_optimizer",
-                name: "Network Optimizer",
-                category: "utils",
-                description: "Communication tuning",
-                inputs: [
-                    { id: "packet_size", label: "Packet Size", type: "number", value: 128 },
-                    { id: "signal_strength", label: "Signal dBm", type: "number", value: -67 }
-                ]
-            },
-            
-            // 18. Safety Monitor
-            {
-                id: "safety_monitor",
-                name: "Safety Monitor",
-                category: "utils",
-                description: "Joint limit checking",
-                inputs: [
-                    { id: "joint_angles", label: "Joint Angles", type: "json", value: "[0.1, 0.5, 1.2]" },
-                    { id: "limits", label: "Limits", type: "json", value: "[1.0, 1.0, 1.5]" }
-                ]
-            }
-        ];
-    // State management
-        let apiStatus = false;
-        let lastResponse = null;
-        let isAuthenticated = false;
-        
-        // Initialize the application
-        document.addEventListener('DOMContentLoaded', function() {
-            // Set API URL display
-            document.getElementById('api-url').textContent = API_URL;
-            
-            // Create all cell cards
-            renderAllCells();
-            
-            // Set up tab switching
-            document.querySelectorAll('.tab').forEach(tab => {
-                tab.addEventListener('click', () => switchTab(tab.dataset.tab));
-            });
-            
-            // Check API status
-            checkApiStatus();
-            
-            // Check authentication status
-            checkAuthStatus();
-            
-            // Set up API key input
-            document.getElementById('api-key').value = apiKey;
-            document.getElementById('save-api-key').addEventListener('click', saveApiKey);
-        });
-        
-        function renderAllCells() {
-            const allCellsContainer = document.getElementById('all-cells');
-            const motionContainer = document.getElementById('motion-cells');
-            const perceptionContainer = document.getElementById('perception-cells');
-            const powerContainer = document.getElementById('power-cells');
-            const utilsContainer = document.getElementById('utils-cells');
-            
-            // Clear existing content
-            allCellsContainer.innerHTML = '';
-            motionContainer.innerHTML = '';
-            perceptionContainer.innerHTML = '';
-            powerContainer.innerHTML = '';
-            utilsContainer.innerHTML = '';
-            
-            CELLS.forEach(cell => {
-                const card = createCellCard(cell);
-                allCellsContainer.appendChild(card.cloneNode(true));
-                
-                // Add to category-specific containers
-                switch(cell.category) {
-                    case 'motion':
-                        motionContainer.appendChild(card);
-                        break;
-                    case 'perception':
-                        perceptionContainer.appendChild(card);
-                        break;
-                    case 'power':
-                        powerContainer.appendChild(card);
-                        break;
-                    case 'utils':
-                        utilsContainer.appendChild(card);
-                        break;
-                }
-            });
-        }
-        
-        function createCellCard(cell) {
-            const card = document.createElement('div');
-            card.className = 'cell-card';
-            card.dataset.cellId = cell.id;
-            
-            // Header
-            const header = document.createElement('div');
-            header.className = 'cell-header';
-            
-            const title = document.createElement('div');
-            title.className = 'cell-title';
-            title.textContent = cell.name;
-            
-            header.appendChild(title);
-            card.appendChild(header);
-            
-            // Description
-            const desc = document.createElement('p');
-            desc.textContent = cell.description;
-            desc.style.fontSize = '0.9em';
-            desc.style.color = '#666';
-            card.appendChild(desc);
-            
-            // Controls
-            const controls = document.createElement('div');
-            controls.className = 'cell-controls';
-            
-            cell.inputs.forEach(input => {
-                const label = document.createElement('label');
-                label.textContent = input.label;
-                label.style.display = 'block';
-                label.style.marginTop = '10px';
-                label.style.fontWeight = '500';
-                controls.appendChild(label);
-                
-                let inputElement;
-                
-                switch(input.type) {
-                    case 'number':
-                        inputElement = document.createElement('input');
-                        inputElement.type = 'number';
-                        inputElement.value = input.value;
-                        if (input.min !== undefined) inputElement.min = input.min;
-                        if (input.max !== undefined) inputElement.max = input.max;
-                        break;
-                        
-                    case 'text':
-                        inputElement = document.createElement('input');
-                        inputElement.type = 'text';
-                        inputElement.value = input.value;
-                        break;
-                        
-                    case 'select':
-                        inputElement = document.createElement('select');
-                        input.options.forEach(option => {
-                            const optElement = document.createElement('option');
-                            optElement.value = option;
-                            optElement.textContent = option;
-                            if (option === input.value) optElement.selected = true;
-                            inputElement.appendChild(optElement);
-                        });
-                        break;
-                        
-                    case 'json':
-                        inputElement = document.createElement('textarea');
-                        inputElement.value = typeof input.value === 'string' ? input.value : JSON.stringify(input.value, null, 2);
-                        inputElement.rows = 3;
-                        break;
-                }
-                
-                inputElement.id = `${cell.id}_${input.id}`;
-                inputElement.style.width = '100%';
-                controls.appendChild(inputElement);
-            });
-            
-            const button = document.createElement('button');
-            button.textContent = 'Execute';
-            button.addEventListener('click', () => executeCell(cell.id));
-            controls.appendChild(button);
-            
-            card.appendChild(controls);
-            
-            // Response area
-            const response = document.createElement('div');
-            response.className = 'response';
-            response.id = `${cell.id}_response`;
-            response.textContent = 'Response will appear here...';
-            card.appendChild(response);
-            
-            return card;
-        }
-        
-        async function executeCell(cellId) {
-            const cell = CELLS.find(c => c.id === cellId);
-            if (!cell) return;
-            
-            // Check if API key is set
-            if (!apiKey) {
-                alert('Please enter your API key to use the cells.');
-                document.getElementById('api-key').focus();
-                return;
-            }
-            
-            const responseElement = document.getElementById(`${cellId}_response`);
-            const button = document.querySelector(`.cell-card[data-cell-id="${cellId}"] button`);
-            
-            // Reset UI
-            responseElement.className = 'response loading';
-            responseElement.textContent = 'Processing...';
-            button.disabled = true;
-            
-            try {
-                // Prepare input data
-                const cellInputData = {};
-                for (const input of cell.inputs) {
-                    const inputElement = document.getElementById(`${cellId}_${input.id}`);
-                    const value = inputElement.value.trim();
-                    
-                    switch(input.type) {
-                        case 'number':
-                            cellInputData[input.id] = parseFloat(value);
-                            if (isNaN(cellInputData[input.id])) throw new Error('Invalid number');
-                            break;
-                        case 'text':
-                        case 'select':
-                            cellInputData[input.id] = value;
-                            break;
-                        case 'json':
-                            cellInputData[input.id] = value ? JSON.parse(value) : null;
-                            break;
-                    }
-                }
-                
-                // Structure data to match backend expectations
-                const requestData = {
-                    cells: [cellId],
-                    data: {
-                        [cellId]: cellInputData
-                    }
-                };
-                
-                console.log("Sending request:", requestData);
-                
-                const response = await fetch(API_URL, {
-                    method: 'POST',
-                    headers: { 
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json',
-                        'X-API-Key': apiKey
-                    },
-                    body: JSON.stringify(requestData)
-                });
-                
-                const result = await response.json();
-                console.log("API Response:", result);
-                
-                if (!response.ok || !result.success) {
-                    throw new Error(result.error || `API request failed with status ${response.status}`);
-                }
-                
-                // Handle backend response format
-                if (result.results && result.results[cellId]) {
-                    responseElement.textContent = JSON.stringify(result.results[cellId], null, 2);
-                    responseElement.className = 'response success';
-                } else {
-                    throw new Error('API did not return results for this cell');
-                }
-                
-                updateLastUpdate();
-            } catch (error) {
-                console.error('Execution error:', error);
-                responseElement.textContent = `Error: ${error.message}`;
-                responseElement.className = 'response error';
-            } finally {
-                button.disabled = false;
-            }
-        }
-        
-        function switchTab(tabId) {
-            // Update active tab
-            document.querySelectorAll('.tab').forEach(tab => {
-                tab.classList.toggle('active', tab.dataset.tab === tabId);
-            });
-            
-            // Show corresponding content
-            document.querySelectorAll('.tab-content').forEach(content => {
-                content.classList.toggle('active', content.id === `${tabId}-tab`);
-            });
-        }
-        
-        async function checkApiStatus() {
-            const statusElement = document.getElementById('api-status');
-            statusElement.className = 'api-status checking';
-            
-            try {
-                const response = await fetch(PING_URL, {
-                    method: 'GET',
-                    mode: 'cors',
-                    credentials: 'omit'
-                });
-                
-                apiStatus = response.ok;
-                statusElement.className = `api-status ${apiStatus ? 'online' : 'offline'}`;
-                
-                if (apiStatus) {
-                    const data = await response.json();
-                    console.log("API Status:", data.status);
-                }
-            } catch (e) {
-                apiStatus = false;
-                statusElement.className = 'api-status offline';
-                console.error("API Status Check Failed:", e);
-            }
-            
-            setTimeout(checkApiStatus, 30000);
-        }
-        
-        async function checkAuthStatus() {
-            try {
-                const response = await fetch(AUTH_STATUS_URL, {
-                    method: 'GET',
-                    credentials: 'include'
-                });
-                
-                const data = await response.json();
-                
-                if (data.success && data.authenticated) {
-                    // User is authenticated
-                    isAuthenticated = true;
-                    document.getElementById('auth-message').innerHTML = `Logged in as: ${data.user.email} | <a href="api-management.html">Manage API Keys</a>`;
-                } else {
-                    // User is not authenticated
-                    isAuthenticated = false;
-                }
-            } catch (error) {
-                console.error('Auth status check error:', error);
-                isAuthenticated = false;
-            }
-        }
-        
-        function saveApiKey() {
-            const newApiKey = document.getElementById('api-key').value.trim();
-            
-            if (newApiKey) {
-                apiKey = newApiKey;
-                localStorage.setItem('robotics_ai_hub_api_key', apiKey);
-                alert('API key saved successfully!');
-            } else {
-                alert('Please enter a valid API key.');
-            }
-        }
-        
-        function updateLastUpdate() {
-            const now = new Date();
-            document.getElementById('last-update').textContent = 
-                `Last updated: ${now.toLocaleTimeString()}`;
-        }
-        
-        // Function to parse URL parameters
-        function getUrlParams() {
-            const params = new URLSearchParams(window.location.search);
-            return {
-                cell: params.get('cell'),
-                ...Object.fromEntries(params.entries())
-            };
-        }
-        
-        // Function to auto-execute a cell from URL parameters
-        function executeFromUrl() {
-            const params = getUrlParams();
-            if (params.cell) {
-                const cellId = params.cell;
-                const cell = CELLS.find(c => c.id === cellId);
-                
-                if (cell) {
-                    // Set input values from URL params
-                    cell.inputs.forEach(input => {
-                        const paramValue = params[input.id];
-                        if (paramValue !== undefined) {
-                            const inputElement = document.getElementById(`${cellId}_${input.id}`);
-                            if (inputElement) {
-                                inputElement.value = paramValue;
-                            }
-                        }
-                    });
-                    
-                    // Execute the cell after a short delay to ensure DOM is ready
-                    setTimeout(() => executeCell(cellId), 300);
-                }
-            }
-        }
-        
-        // Call this when page loads
-        document.addEventListener('DOMContentLoaded', function() {
-            // Set up button binding
-            document.addEventListener('click', function(e) {
-                const btn = e.target.closest('.cell-card button');
-                if (btn) {
-                    const cellId = btn.closest('.cell-card').dataset.cellId;
-                    console.log('Execute clicked for:', cellId);
-                    executeCell(cellId);
-                }
-            });
-            
-            executeFromUrl();
-        });
-    </script>
-</body>
-</html>
+           
