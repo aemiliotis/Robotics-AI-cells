@@ -69,13 +69,13 @@ def get_db_connection():
     try:
         conn = psycopg2.connect(os.environ['DATABASE_URL'])
         conn.autocommit = False
-        logger.info("Database connection established")
+        app.logger.debug("Database connection established")
         return conn
     except psycopg2.OperationalError as e:
-        logger.error(f"Database connection failed: {str(e)}")
+        app.logger.debug(f"Database connection failed: {str(e)}")
         raise
     except Exception as e:
-        logger.error(f"Unexpected database error: {str(e)}")
+        app.logger.debug(f"Unexpected database error: {str(e)}")
         raise
 
 def get_user_by_email(email):
