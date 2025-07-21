@@ -2,7 +2,7 @@ import os
 from sqlalchemy import create_engine, Column, Integer, String, Boolean, DateTime, ForeignKey, inspect
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import sessionmaker, Session
 from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey
 from datetime import datetime
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -49,13 +49,13 @@ class APILog(Base):
     status_code = Column(Integer)
     cell_used = Column(String(50))
 
-def get_db():
+def get_db() -> Session:  # Add type annotation
     db = SessionLocal()
     try:
         yield db
     finally:
         db.close()
-
+        
 def init_db():
     # Create all tables if they don't exist
     inspector = inspect(engine)
