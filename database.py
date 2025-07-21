@@ -57,5 +57,8 @@ def get_db():
         db.close()
 
 def init_db():
-    if not engine.dialect.has_table(engine, "users"):
+    # Create all tables if they don't exist
+    inspector = inspect(engine)
+    
+    if not inspector.has_table("users"):
         Base.metadata.create_all(bind=engine)
