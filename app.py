@@ -15,6 +15,7 @@ from auth import (
 )
 from cell_loader import load_cells
 import logging
+from sqlalchemy.orm import sessionmaker, Session
 
 # Initialize logging
 logging.basicConfig(level=logging.INFO)
