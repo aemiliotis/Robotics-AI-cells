@@ -1,3 +1,4 @@
+import tensorflow as tf 
 # Quantized TensorFlow Lite model (50KB)
 _interpreter = tf.lite.Interpreter(model_path="mobilenetv2_quant.tflite")
 def process(input_data):
