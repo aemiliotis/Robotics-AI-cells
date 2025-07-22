@@ -14,7 +14,6 @@
             --text: #333333;
             --success: #4CAF50;
             --error: #F44336;
-            --warning: #FF9800;
         }
         
         body {
@@ -51,18 +50,6 @@
             background-color: var(--card-bg);
             border-radius: 5px;
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-            align-items: center;
-        }
-        
-        .auth-controls {
-            display: flex;
-            gap: 10px;
-            align-items: center;
-        }
-        
-        .auth-controls button {
-            padding: 5px 10px;
-            font-size: 0.9em;
         }
         
         .cell-grid {
@@ -129,22 +116,6 @@
             cursor: not-allowed;
         }
         
-        .button-secondary {
-            background-color: #6c757d;
-        }
-        
-        .button-secondary:hover {
-            background-color: #5a6268;
-        }
-        
-        .button-success {
-            background-color: var(--success);
-        }
-        
-        .button-success:hover {
-            background-color: #3d8b40;
-        }
-        
         .response {
             margin-top: 10px;
             padding: 10px;
@@ -165,10 +136,6 @@
             border-left: 4px solid var(--error);
         }
         
-        .warning {
-            border-left: 4px solid var(--warning);
-        }
-        
         .api-status {
             display: inline-block;
             width: 10px;
@@ -185,8 +152,7 @@
             background-color: var(--error);
         }
         
-        .checking {
-            background-color: var(--warning);
+        .loading {
             animation: pulse 1.5s infinite;
         }
         
@@ -194,10 +160,6 @@
             0% { opacity: 0.5; }
             50% { opacity: 1; }
             100% { opacity: 0.5; }
-        }
-        
-        .loading {
-            animation: pulse 1.5s infinite;
         }
         
         .tab-content {
@@ -225,99 +187,9 @@
             font-weight: bold;
         }
         
-        /* Modal styles */
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0,0,0,0.5);
-            z-index: 1000;
-            justify-content: center;
-            align-items: center;
-        }
-        
-        .modal-content {
-            background-color: white;
-            width: 400px;
-            max-width: 90%;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
-        }
-        
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-            padding-bottom: 10px;
-            border-bottom: 1px solid #eee;
-        }
-        
-        .modal-title {
-            font-size: 1.5em;
-            color: var(--primary);
-            margin: 0;
-        }
-        
-        .close-modal {
-            background: none;
-            border: none;
-            font-size: 1.5em;
-            cursor: pointer;
-            color: #666;
-        }
-        
-        .form-group {
-            margin-bottom: 15px;
-        }
-        
-        .form-group label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: 500;
-        }
-        
-        .form-group input {
-            width: 100%;
-            padding: 8px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-        }
-        
-        .modal-footer {
-            margin-top: 20px;
-            display: flex;
-            justify-content: flex-end;
-            gap: 10px;
-        }
-        
-        .api-key-display {
-            background-color: #f8f9fa;
-            padding: 10px;
-            border-radius: 4px;
-            font-family: monospace;
-            word-break: break-all;
-            margin-bottom: 15px;
-        }
-        
         @media (max-width: 768px) {
             .cell-grid {
                 grid-template-columns: 1fr;
-            }
-            
-            .status-bar {
-                flex-direction: column;
-                gap: 10px;
-                align-items: flex-start;
-            }
-            
-            .auth-controls {
-                width: 100%;
-                justify-content: space-between;
             }
         }
     </style>
@@ -326,7 +198,7 @@
     <div class="container">
         <header>
             <h1>Robotics AI Hub</h1>
-            <p>Control panel for all robotic AI cells</p>
+            <p>Control panel for all 25 robotic AI cells</p>
         </header>
         
         <div class="status-bar">
@@ -335,13 +207,6 @@
                 <span id="api-url">Connecting to API...</span>
             </div>
             <div id="last-update">Last updated: Never</div>
-            <div class="auth-controls">
-                <span id="user-status">Not logged in</span>
-                <button onclick="showLogin()" id="login-btn">Login</button>
-                <button onclick="showRegister()" id="register-btn">Register</button>
-                <button onclick="showApiKey()" id="api-key-btn" style="display:none;">API Key</button>
-                <button onclick="logout()" id="logout-btn" style="display:none;">Logout</button>
-            </div>
         </div>
         
         <div class="tabs">
@@ -383,54 +248,12 @@
         </div>
     </div>
 
-    <!-- Auth Modal -->
-    <div id="auth-modal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2 class="modal-title" id="auth-modal-title">Login</h2>
-                <button class="close-modal" onclick="toggleAuthModal()">&times;</button>
-            </div>
-            <div id="auth-form">
-                <!-- Form will be inserted here -->
-            </div>
-        </div>
-    </div>
-
-    <!-- API Key Modal -->
-    <div id="api-key-modal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2 class="modal-title">Your API Key</h2>
-                <button class="close-modal" onclick="toggleApiKeyModal()">&times;</button>
-            </div>
-            <div class="api-key-display" id="api-key-display">
-                Loading...
-            </div>
-            <p>Use this key to authenticate API requests from Python or other clients.</p>
-            <div class="modal-footer">
-                <button class="button-secondary" onclick="toggleApiKeyModal()">Close</button>
-                <button class="button-success" onclick="copyApiKey()">Copy</button>
-                <button class="button-secondary" onclick="generateNewApiKey()">Regenerate</button>
-            </div>
-        </div>
-    </div>
-
     <script>
-        // Configuration
-        const API_BASE_URL = "https://robotics-ai-cells-m5gy.onrender.com";
-        const API_URL = `${API_BASE_URL}/ai-api`;
-        const PING_URL = `${API_BASE_URL}/ping`;
-        const TOKEN_URL = `${API_BASE_URL}/token`;
-        const REGISTER_URL = `${API_BASE_URL}/register`;
-        const API_KEY_URL = `${API_BASE_URL}/generate-api-key`;
+        // Configuration - VERIFY THIS IS CORRECT
+        const API_URL = "https://robotics-ai-cells.onrender.com/ai-api";
+        const PING_URL = "https://robotics-ai-cells.onrender.com/ping";
         
-        // State management
-        let currentToken = null;
-        let currentUser = null;
-        let currentApiKey = null;
-        let apiStatus = false;
-
-        // All 25 cells configuration (same as before)
+        // All 25 cells configuration
         const CELLS = [
             // 1. Core Mathematical Cells
             {
@@ -606,6 +429,7 @@
                     { id: "gps_lon", label: "GPS Lon", type: "number", value: -122.4194 }
                 ]
             },
+            
             // 9. Path Planning
             {
                 id: "path_optimization",
@@ -725,10 +549,14 @@
             }
         ];
 
+    // State management
+        let apiStatus = false;
+        let lastResponse = null;
+
         // Initialize the application
         document.addEventListener('DOMContentLoaded', function() {
             // Set API URL display
-            document.getElementById('api-url').textContent = API_BASE_URL;
+            document.getElementById('api-url').textContent = API_URL;
             
             // Create all cell cards
             renderAllCells();
@@ -740,29 +568,6 @@
             
             // Check API status
             checkApiStatus();
-            
-            // Check for saved token
-            const savedToken = localStorage.getItem('robotics_ai_token');
-            const savedUser = localStorage.getItem('robotics_ai_user');
-            
-            if (savedToken && savedUser) {
-                currentToken = savedToken;
-                currentUser = savedUser;
-                updateUserStatus();
-                checkApiKey();
-            }
-            
-            // Set up click handlers
-            document.addEventListener('click', function(e) {
-                const btn = e.target.closest('.cell-card button');
-                if (btn) {
-                    const cellId = btn.closest('.cell-card').dataset.cellId;
-                    executeCell(cellId);
-                }
-            });
-            
-            // Execute from URL params if needed
-            executeFromUrl();
         });
 
         function renderAllCells() {
@@ -894,89 +699,159 @@
         }
 
         async function executeCell(cellId) {
-            const cell = CELLS.find(c => c.id === cellId);
-            if (!cell) return;
+    const cell = CELLS.find(c => c.id === cellId);
+    if (!cell) return;
 
-            const responseElement = document.getElementById(`${cellId}_response`);
-            const button = document.querySelector(`.cell-card[data-cell-id="${cellId}"] button`);
+    const responseElement = document.getElementById(`${cellId}_response`);
+    const button = document.querySelector(`.cell-card[data-cell-id="${cellId}"] button`);
+    
+    // Reset UI
+    responseElement.className = 'response loading';
+    responseElement.textContent = 'Processing...';
+    button.disabled = true;
+
+    try {
+        // Prepare input data - STRUCTURE CHANGED TO MATCH BACKEND
+        const cellInputData = {};
+        for (const input of cell.inputs) {
+            const inputElement = document.getElementById(`${cellId}_${input.id}`);
+            const value = inputElement.value.trim();
             
-            // Reset UI
-            responseElement.className = 'response loading';
-            responseElement.textContent = 'Processing...';
-            button.disabled = true;
-
-            try {
-                // Prepare input data
-                const cellInputData = {};
-                for (const input of cell.inputs) {
-                    const inputElement = document.getElementById(`${cellId}_${input.id}`);
-                    const value = inputElement.value.trim();
-                    
-                    switch(input.type) {
-                        case 'number':
-                            cellInputData[input.id] = parseFloat(value);
-                            if (isNaN(cellInputData[input.id])) throw new Error('Invalid number');
-                            break;
-                        case 'text':
-                        case 'select':
-                            cellInputData[input.id] = value;
-                            break;
-                        case 'json':
-                            cellInputData[input.id] = value ? JSON.parse(value) : null;
-                            break;
-                    }
-                }
-
-                // Structure data to match backend expectations
-                const requestData = {
-                    cells: [cellId],
-                    data: {
-                        [cellId]: cellInputData
-                    }
-                };
-
-                const headers = {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json'
-                };
-                
-                if (currentToken) {
-                    headers['Authorization'] = `Bearer ${currentToken}`;
-                } else if (currentApiKey) {
-                    headers['x-api-key'] = currentApiKey;
-                }
-
-                const response = await fetch(API_URL, {
-                    method: 'POST',
-                    headers: headers,
-                    body: JSON.stringify(requestData)
-                });
-
-                const result = await response.json();
-                
-                if (!response.ok || !result.success) {
-                    throw new Error(result.error || `API request failed with status ${response.status}`);
-                }
-
-                // Handle backend response format
-                if (result.results && result.results[cellId]) {
-                    responseElement.textContent = JSON.stringify(result.results[cellId], null, 2);
-                    responseElement.className = 'response success';
-                } else {
-                    throw new Error('API did not return results for this cell');
-                }
-                
-                updateLastUpdate();
-
-            } catch (error) {
-                console.error('Execution error:', error);
-                responseElement.textContent = `Error: ${error.message}`;
-                responseElement.className = 'response error';
-            } finally {
-                button.disabled = false;
+            switch(input.type) {
+                case 'number':
+                    cellInputData[input.id] = parseFloat(value);
+                    if (isNaN(cellInputData[input.id])) throw new Error('Invalid number');
+                    break;
+                case 'text':
+                case 'select':
+                    cellInputData[input.id] = value;
+                    break;
+                case 'json':
+                    cellInputData[input.id] = value ? JSON.parse(value) : null;
+                    break;
             }
         }
+
+        // Structure data to match backend expectations
+        const requestData = {
+            cells: [cellId],
+            data: {
+                [cellId]: cellInputData  // Nest input data under cell ID
+            }
+        };
+
+        console.log("Sending request:", requestData);  // Debug log
+
+        const response = await fetch(API_URL, {
+            method: 'POST',
+            headers: { 
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify(requestData)
+        });
+
+        const result = await response.json();
+        console.log("API Response:", result);  // Debug log
         
+        if (!response.ok || !result.success) {
+            throw new Error(result.error || `API request failed with status ${response.status}`);
+        }
+
+        // Handle backend response format
+        if (result.results && result.results[cellId]) {
+            responseElement.textContent = JSON.stringify(result.results[cellId], null, 2);
+            responseElement.className = 'response success';
+        } else {
+            throw new Error('API did not return results for this cell');
+        }
+        
+        updateLastUpdate();
+
+    } catch (error) {
+        console.error('Execution error:', error);
+        responseElement.textContent = `Error: ${error.message}`;
+        responseElement.className = 'response error';
+    } finally {
+        button.disabled = false;
+    }
+}
+        
+        /*async function executeCell(cellId) {
+  const cell = CELLS.find(c => c.id === cellId);
+  if (!cell) return;
+
+  const responseElement = document.getElementById(`${cellId}_response`);
+  const button = document.querySelector(`.cell-card[data-cell-id="${cellId}"] button`);
+  
+  // Reset UI
+  responseElement.className = 'response loading';
+  responseElement.textContent = 'Processing...';
+  button.disabled = true;
+
+  try {
+    // Prepare input data
+    const inputData = {};
+    for (const input of cell.inputs) {
+      const inputElement = document.getElementById(`${cellId}_${input.id}`);
+      const value = inputElement.value.trim();
+      
+      switch(input.type) {
+        case 'number':
+          inputData[input.id] = parseFloat(value);
+          if (isNaN(inputData[input.id])) throw new Error('Invalid number');
+          break;
+        case 'text':
+        case 'select':
+          inputData[input.id] = value;
+          break;
+        case 'json':
+          inputData[input.id] = value ? JSON.parse(value) : null;
+          break;
+      }
+    }
+    const response = await fetch(API_URL, {
+            method: 'POST',
+            mode: 'cors', // explicitly request CORS
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                cells: cell,
+                data: inputData
+            })
+        });
+
+        console.log("Full response:", response);
+        
+        if (!response.ok) {
+            const error = await response.json().catch(() => ({}));
+            throw new Error(error.message || `HTTP ${response.status}`);
+        }
+        
+        return await response.json();
+
+
+        // Display results
+        responseElement.textContent = JSON.stringify(data.results[cellId], null, 2);
+        responseElement.className = 'response success';
+
+    } catch (error) {
+        console.error('API Error:', error);
+        console.error('Execution error:', error);
+        responseElement.textContent = `Error: ${error.message}`;
+        responseElement.className = 'response error';
+    
+        // Additional error logging
+        if (error instanceof SyntaxError) {
+            responseElement.textContent += '\n(Invalid JSON response)';
+        }
+     } finally {
+           button.disabled = false;
+     }
+        throw error;
+   }*/
+
         function switchTab(tabId) {
             // Update active tab
             document.querySelectorAll('.tab').forEach(tab => {
@@ -990,299 +865,97 @@
         }
 
         async function checkApiStatus() {
-            const statusElement = document.getElementById('api-status');
-            statusElement.className = 'api-status checking';
-            
-            try {
-                const response = await fetch(PING_URL, {
-                    method: 'GET',
-                    mode: 'cors',
-                    credentials: 'omit'
-                });
-                
-                apiStatus = response.ok;
-                statusElement.className = `api-status ${apiStatus ? 'online' : 'offline'}`;
-                
-                if (apiStatus) {
-                    const data = await response.json();
-                    console.log("API Status:", data.status);
-                }
-            } catch (e) {
-                apiStatus = false;
-                statusElement.className = 'api-status offline';
-                console.error("API Status Check Failed:", e);
-            }
-            
-            setTimeout(checkApiStatus, 30000);
-        }
+  const statusElement = document.getElementById('api-status');
+  statusElement.className = 'api-status checking';
+  
+  try {
+    const response = await fetch(PING_URL, {
+      method: 'GET',
+      mode: 'cors',
+      credentials: 'omit'
+    });
+    
+    apiStatus = response.ok;
+    statusElement.className = `api-status ${apiStatus ? 'online' : 'offline'}`;
+    
+    if (apiStatus) {
+      const data = await response.json();
+      console.log("API Status:", data.status);
+    }
+  } catch (e) {
+    apiStatus = false;
+    statusElement.className = 'api-status offline';
+    console.error("API Status Check Failed:", e);
+  }
+  
+  setTimeout(checkApiStatus, 30000);
+}
 
         function updateLastUpdate() {
             const now = new Date();
             document.getElementById('last-update').textContent = 
                 `Last updated: ${now.toLocaleTimeString()}`;
         }
-        
-        // Authentication functions
-        function showLogin() {
-            document.getElementById('auth-modal-title').textContent = 'Login';
-            document.getElementById('auth-form').innerHTML = `
-                <div class="form-group">
-                    <label for="login-username">Username:</label>
-                    <input type="text" id="login-username" required>
-                </div>
-                <div class="form-group">
-                    <label for="login-password">Password:</label>
-                    <input type="password" id="login-password" required>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="button-secondary" onclick="toggleAuthModal()">Cancel</button>
-                    <button type="button" class="button-success" onclick="login()">Login</button>
-                </div>
-            `;
-            toggleAuthModal();
-        }
-        
-        function showRegister() {
-            document.getElementById('auth-modal-title').textContent = 'Register';
-            document.getElementById('auth-form').innerHTML = `
-                <div class="form-group">
-                    <label for="register-username">Username:</label>
-                    <input type="text" id="register-username" required>
-                </div>
-                <div class="form-group">
-                    <label for="register-email">Email:</label>
-                    <input type="email" id="register-email" required>
-                </div>
-                <div class="form-group">
-                    <label for="register-password">Password:</label>
-                    <input type="password" id="register-password" required>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="button-secondary" onclick="toggleAuthModal()">Cancel</button>
-                    <button type="button" class="button-success" onclick="register()">Register</button>
-                </div>
-            `;
-            toggleAuthModal();
-        }
-        
-        function toggleAuthModal() {
-            const modal = document.getElementById('auth-modal');
-            modal.style.display = modal.style.display === 'flex' ? 'none' : 'flex';
-        }
-        
-        function toggleApiKeyModal() {
-            const modal = document.getElementById('api-key-modal');
-            modal.style.display = modal.style.display === 'flex' ? 'none' : 'flex';
-        }
-        
-        async function login() {
-            const username = document.getElementById('login-username').value;
-            const password = document.getElementById('login-password').value;
-            
-            try {
-                const formData = new URLSearchParams();
-                formData.append('username', username);
-                formData.append('password', password);
-                formData.append('grant_type', 'password');
-                
-                const response = await fetch(TOKEN_URL, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded',
-                    },
-                    body: formData
-                });
-                
-                if (!response.ok) {
-                    const error = await response.json();
-                    throw new Error(error.detail || 'Login failed');
-                }
-                
-                const data = await response.json();
-                currentToken = data.access_token;
-                currentUser = username;
-                
-                // Save to localStorage
-                localStorage.setItem('robotics_ai_token', currentToken);
-                localStorage.setItem('robotics_ai_user', currentUser);
-                
-                updateUserStatus();
-                toggleAuthModal();
-                checkApiKey();
-            } catch (error) {
-                alert(`Login error: ${error.message}`);
-            }
-        }
-        
-        async function register() {
-            const username = document.getElementById('register-username').value;
-            const email = document.getElementById('register-email').value;
-            const password = document.getElementById('register-password').value;
-            
-            try {
-                const response = await fetch(REGISTER_URL, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        username,
-                        email,
-                        password
-                    })
-                });
-                
-                if (!response.ok) {
-                    const error = await response.json();
-                    throw new Error(error.detail || 'Registration failed');
-                }
-                
-                alert('Registration successful! Please login.');
-                showLogin();
-            } catch (error) {
-                alert(`Registration error: ${error.message}`);
-            }
-        }
-        
-        function logout() {
-            currentToken = null;
-            currentUser = null;
-            currentApiKey = null;
-            localStorage.removeItem('robotics_ai_token');
-            localStorage.removeItem('robotics_ai_user');
-            updateUserStatus();
-        }
-        
-        function updateUserStatus() {
-            const statusElement = document.getElementById('user-status');
-            const loginBtn = document.getElementById('login-btn');
-            const registerBtn = document.getElementById('register-btn');
-            const logoutBtn = document.getElementById('logout-btn');
-            const apiKeyBtn = document.getElementById('api-key-btn');
-            
-            if (currentUser) {
-                statusElement.textContent = `Logged in as ${currentUser}`;
-                loginBtn.style.display = 'none';
-                registerBtn.style.display = 'none';
-                logoutBtn.style.display = 'inline-block';
-                apiKeyBtn.style.display = 'inline-block';
-            } else {
-                statusElement.textContent = 'Not logged in';
-                loginBtn.style.display = 'inline-block';
-                registerBtn.style.display = 'inline-block';
-                logoutBtn.style.display = 'none';
-                apiKeyBtn.style.display = 'none';
-            }
-        }
-        
-        async function checkApiKey() {
-            if (!currentToken) return;
-            
-            try {
-                const response = await fetch(API_KEY_URL, {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${currentToken}`
-                    }
-                });
-                
-                if (response.ok) {
-                    const data = await response.json();
-                    currentApiKey = data.api_key;
-                }
-            } catch (error) {
-                console.error('Failed to check API key:', error);
-            }
-        }
-        
-        async function showApiKey() {
-            if (!currentApiKey) {
-                try {
-                    const response = await fetch(API_KEY_URL, {
-                        method: 'POST',
-                        headers: {
-                            'Authorization': `Bearer ${currentToken}`
-                        }
-                    });
-                    
-                    if (!response.ok) {
-                        throw new Error('Failed to get API key');
-                    }
-                    
-                    const data = await response.json();
-                    currentApiKey = data.api_key;
-                } catch (error) {
-                    alert(`Error: ${error.message}`);
-                    return;
-                }
-            }
-            
-            document.getElementById('api-key-display').textContent = currentApiKey;
-            toggleApiKeyModal();
-        }
-        
-        function copyApiKey() {
-            const apiKey = document.getElementById('api-key-display').textContent;
-            navigator.clipboard.writeText(apiKey)
-                .then(() => alert('API key copied to clipboard!'))
-                .catch(err => alert('Failed to copy API key: ' + err));
-        }
-        
-        async function generateNewApiKey() {
-            try {
-                const response = await fetch(API_KEY_URL, {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${currentToken}`
-                    }
-                });
-                
-                if (!response.ok) {
-                    throw new Error('Failed to generate new API key');
-                }
-                
-                const data = await response.json();
-                currentApiKey = data.api_key;
-                document.getElementById('api-key-display').textContent = currentApiKey;
-                alert('New API key generated!');
-            } catch (error) {
-                alert(`Error: ${error.message}`);
-            }
-        }
-        
+        // Add this at the bottom of your script
+window.debugExecute = function(cellId) {
+  console.log(`Debug executing ${cellId}`);
+  const cell = CELLS.find(c => c.id === cellId);
+  if (!cell) return console.error('Cell not found');
+  
+  console.group(`Cell: ${cell.name}`);
+  console.log('Inputs:', cell.inputs);
+  executeCell(cellId);
+  console.groupEnd();
+};
         // Function to parse URL parameters
-        function getUrlParams() {
-            const params = new URLSearchParams(window.location.search);
-            return {
-                cell: params.get('cell'),
-                ...Object.fromEntries(params.entries())
-            };
-        }
+function getUrlParams() {
+  const params = new URLSearchParams(window.location.search);
+  return {
+    cell: params.get('cell'),
+    ...Object.fromEntries(params.entries())
+  };
+}
 
-        // Function to auto-execute a cell from URL parameters
-        function executeFromUrl() {
-            const params = getUrlParams();
-            if (params.cell) {
-                const cellId = params.cell;
-                const cell = CELLS.find(c => c.id === cellId);
-                
-                if (cell) {
-                    // Set input values from URL params
-                    cell.inputs.forEach(input => {
-                        const paramValue = params[input.id];
-                        if (paramValue !== undefined) {
-                            const inputElement = document.getElementById(`${cellId}_${input.id}`);
-                            if (inputElement) {
-                                inputElement.value = paramValue;
-                            }
-                        }
-                    });
-                    
-                    // Execute the cell after a short delay to ensure DOM is ready
-                    setTimeout(() => executeCell(cellId), 300);
-                }
-            }
+// Function to auto-execute a cell from URL parameters
+function executeFromUrl() {
+  const params = getUrlParams();
+  if (params.cell) {
+    const cellId = params.cell;
+    const cell = CELLS.find(c => c.id === cellId);
+    
+    if (cell) {
+      // Set input values from URL params
+      cell.inputs.forEach(input => {
+        const paramValue = params[input.id];
+        if (paramValue !== undefined) {
+          const inputElement = document.getElementById(`${cellId}_${input.id}`);
+          if (inputElement) {
+            inputElement.value = paramValue;
+          }
         }
+      });
+      
+      // Execute the cell after a short delay to ensure DOM is ready
+      setTimeout(() => executeCell(cellId), 300);
+    }
+  }
+}
+
+// Call this when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    // ... all your existing code ...
+
+    // ▼ REPLACE your current button binding with this ▼
+    document.addEventListener('click', function(e) {
+        const btn = e.target.closest('.cell-card button');
+        if (btn) {
+            const cellId = btn.closest('.cell-card').dataset.cellId;
+            console.log('Execute clicked for:', cellId);
+            executeCell(cellId);
+        }
+    });
+  executeFromUrl();
+});
     </script>
 </body>
 </html>
