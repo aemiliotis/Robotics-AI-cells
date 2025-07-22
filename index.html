@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="api-key" content="" id="api-key-meta">
     <title>Robotics AI Hub</title>
     <style>
         :root {
@@ -252,6 +253,7 @@
         // Configuration - VERIFY THIS IS CORRECT
         const API_URL = "https://robotics-ai-cells.onrender.com/ai-api";
         const PING_URL = "https://robotics-ai-cells.onrender.com/ping";
+        const API_KEY = localStorage.getItem('api_key') || ''; // NEW: API key storage
         
         // All 25 cells configuration
         const CELLS = [
@@ -698,9 +700,52 @@
             return card;
         }
 
+        function showLoginModal() {
+            const modal = document.createElement('div');
+            modal.innerHTML = `
+                <div style="/* modal styles */">
+                    <h3>API Key Required</h3>
+                    <input type="text" id="api-key-input" placeholder="Paste your API key">
+                    <button onclick="saveApiKey()">Save Key</button>
+                    <p>Don't have one? <a href="#" onclick="registerUser()">Register</a></p>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+
+        async function registerUser() {
+            const username = prompt("Choose a username:");
+            const password = prompt("Choose a password:");
+            
+            const response = await fetch('https://robotics-ai-cells-m5gy.onrender.com/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password })
+            });
+            
+            const result = await response.json();
+            if (result.success) {
+                localStorage.setItem('api_key', result.api_key);
+                location.reload();
+            }
+        }
+
+        function saveApiKey() {
+            const key = document.getElementById('api-key-input').value.trim();
+            if (key) {
+                localStorage.setItem('api_key', key);
+                location.reload();
+            }
+        }
+
+
         async function executeCell(cellId) {
     const cell = CELLS.find(c => c.id === cellId);
     if (!cell) return;
+            if (!API_KEY) {  // NEW: Check API key
+                showLoginModal();
+                return;
+            }
 
     const responseElement = document.getElementById(`${cellId}_response`);
     const button = document.querySelector(`.cell-card[data-cell-id="${cellId}"] button`);
@@ -743,13 +788,13 @@
         console.log("Sending request:", requestData);  // Debug log
 
         const response = await fetch(API_URL, {
-            method: 'POST',
-            headers: { 
-                'Content-Type': 'application/json',
-                'Accept': 'application/json'
-            },
-            body: JSON.stringify(requestData)
-        });
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'X-API-Key': API_KEY  // NEW: Add API key header
+                },
+                body: JSON.stringify(requestData)
+            });
 
         const result = await response.json();
         console.log("API Response:", result);  // Debug log
