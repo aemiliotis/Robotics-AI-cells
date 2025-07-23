@@ -25,6 +25,7 @@ CELLS_DIR = os.path.join(os.path.dirname(__file__), "cells")
 ai_cells = load_cells(CELLS_DIR)
 
 @app.route('/ai-api', methods=['POST', 'OPTIONS'])
+@require_api_key
 def handle_request():
     if request.method == 'OPTIONS':
         return _build_cors_preflight_response()
@@ -41,6 +42,15 @@ def handle_request():
                 # Pass only the relevant portion of input data
                 cell_input = input_data.get(cell_name, {})
                 results[cell_name] = ai_cells[cell_name](cell_input)  # Changed from passing full data
+
+        with get_db() as conn:
+        with conn.cursor() as cur:
+            for cell_name in cell_names:
+                cur.execute(
+                    "INSERT INTO cell_usage (user_id, cell_name) VALUES (%s, %s)",
+                    (request.user_id, cell_name)
+                )
+            conn.commit()
         
         return _corsify_response(jsonify({
             "success": True,
@@ -97,24 +107,6 @@ def register():
     
     except psycopg2.IntegrityError:
         return jsonify({"error": "Username already exists"}), 400
-
-# Protect existing route
-@app.route('/ai-api', methods=['POST'])
-@require_api_key  # <-- Add this decorator
-def handle_request():
-    # ... existing code ...
-    
-    # Add usage tracking (before return)
-    with get_db() as conn:
-        with conn.cursor() as cur:
-            for cell_name in cell_names:
-                cur.execute(
-                    "INSERT INTO cell_usage (user_id, cell_name) VALUES (%s, %s)",
-                    (request.user_id, cell_name)
-                )
-            conn.commit()
-    
-    return _corsify_response(...)
 
 @app.route('/list-cells', methods=['GET', 'OPTIONS'])
 def list_cells():
