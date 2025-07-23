@@ -4,6 +4,7 @@ import os
 from flask_cors import CORS
 from auth_utils import require_api_key, generate_api_key
 from database import init_db, get_db
+from werkzeug.security import generate_password_hash, check_password_hash
 
 # Initialize after app creation
 app = Flask(__name__)
@@ -92,35 +93,46 @@ def _corsify_response(response):
     return response
 
 @app.route('/register', methods=['POST'])
+@app.route('/register', methods=['POST', 'OPTIONS'])
 def register():
-    data = request.json
-    username = data.get('username')
-    password = data.get('password')
-    
-    if not username or not password:
-        return jsonify({"error": "Username and password required"}), 400
-    
-    api_key = generate_api_key()
-    password_hash = generate_password_hash(password)
+    if request.method == 'OPTIONS':
+        return _build_cors_preflight_response()
     
     try:
+        data = request.get_json()
+        if not data or 'username' not in data or 'password' not in data:
+            return jsonify({"error": "Username and password required"}), 400
+
+        # Generate secure password hash
+        password_hash = generate_password_hash(data['password'])
+        api_key = secrets.token_hex(32)
+
         with get_db() as conn:
             with conn.cursor() as cur:
                 cur.execute(
                     "INSERT INTO users (username, password_hash, api_key) VALUES (%s, %s, %s) RETURNING id",
-                    (username, password_hash, api_key)
+                    (data['username'], password_hash, api_key)
                 )
-                user_id = cur.fetchone()[0]
                 conn.commit()
-        
-        return jsonify({
+
+        response = jsonify({
             "success": True,
             "api_key": api_key,
             "message": "Keep your API key secure!"
         })
-    
+        response.headers.add('Access-Control-Allow-Origin', 'https://aemiliotis.github.io')
+        return response
+
     except psycopg2.IntegrityError:
         return jsonify({"error": "Username already exists"}), 400
+    except Exception as e:
+        error_response = jsonify({
+            "error": str(e),
+            "message": "Registration failed"
+        })
+        error_response.status_code = 500
+        error_response.headers.add('Access-Control-Allow-Origin', 'https://aemiliotis.github.io')
+        return error_response
 
 @app.route('/list-cells', methods=['GET', 'OPTIONS'])
 def list_cells():
