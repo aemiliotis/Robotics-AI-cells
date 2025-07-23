@@ -2,6 +2,7 @@ import os
 import secrets
 from functools import wraps
 from flask import request, jsonify
+from database import get_db
 
 def generate_api_key():
     return secrets.token_hex(32)
