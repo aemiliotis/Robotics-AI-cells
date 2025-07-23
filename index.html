@@ -807,6 +807,7 @@
 
         const response = await fetch(API_URL, {
                 method: 'POST',
+                credentials: 'include',
                 headers: { 
                     'Content-Type': 'application/json',
                     'X-API-Key': API_KEY  // NEW: Add API key header
@@ -839,81 +840,6 @@
         button.disabled = false;
     }
 }
-        
-        /*async function executeCell(cellId) {
-  const cell = CELLS.find(c => c.id === cellId);
-  if (!cell) return;
-
-  const responseElement = document.getElementById(`${cellId}_response`);
-  const button = document.querySelector(`.cell-card[data-cell-id="${cellId}"] button`);
-  
-  // Reset UI
-  responseElement.className = 'response loading';
-  responseElement.textContent = 'Processing...';
-  button.disabled = true;
-
-  try {
-    // Prepare input data
-    const inputData = {};
-    for (const input of cell.inputs) {
-      const inputElement = document.getElementById(`${cellId}_${input.id}`);
-      const value = inputElement.value.trim();
-      
-      switch(input.type) {
-        case 'number':
-          inputData[input.id] = parseFloat(value);
-          if (isNaN(inputData[input.id])) throw new Error('Invalid number');
-          break;
-        case 'text':
-        case 'select':
-          inputData[input.id] = value;
-          break;
-        case 'json':
-          inputData[input.id] = value ? JSON.parse(value) : null;
-          break;
-      }
-    }
-    const response = await fetch(API_URL, {
-            method: 'POST',
-            mode: 'cors', // explicitly request CORS
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                cells: cell,
-                data: inputData
-            })
-        });
-
-        console.log("Full response:", response);
-        
-        if (!response.ok) {
-            const error = await response.json().catch(() => ({}));
-            throw new Error(error.message || `HTTP ${response.status}`);
-        }
-        
-        return await response.json();
-
-
-        // Display results
-        responseElement.textContent = JSON.stringify(data.results[cellId], null, 2);
-        responseElement.className = 'response success';
-
-    } catch (error) {
-        console.error('API Error:', error);
-        console.error('Execution error:', error);
-        responseElement.textContent = `Error: ${error.message}`;
-        responseElement.className = 'response error';
-    
-        // Additional error logging
-        if (error instanceof SyntaxError) {
-            responseElement.textContent += '\n(Invalid JSON response)';
-        }
-     } finally {
-           button.disabled = false;
-     }
-        throw error;
-   }*/
 
         function switchTab(tabId) {
             // Update active tab
