@@ -20,7 +20,8 @@ CORS(app, resources={
             "http://localhost:*"
         ],
         "methods": ["POST", "OPTIONS"],
-        "allow_headers": ["Content-Type", "X-API-Key"]  # Add X-API-Key
+        "allow_headers": ["Content-Type", "X-API-Key"],
+        "supports_credentials": True
     },
     r"/register": {  # Explicit CORS for registration
         "origins": [
