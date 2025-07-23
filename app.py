@@ -44,13 +44,13 @@ def handle_request():
                 results[cell_name] = ai_cells[cell_name](cell_input)  # Changed from passing full data
 
         with get_db() as conn:
-        with conn.cursor() as cur:
-            for cell_name in cell_names:
-                cur.execute(
-                    "INSERT INTO cell_usage (user_id, cell_name) VALUES (%s, %s)",
-                    (request.user_id, cell_name)
-                )
-            conn.commit()
+            with conn.cursor() as cur:
+                for cell_name in cell_names:
+                    cur.execute(
+                        "INSERT INTO cell_usage (user_id, cell_name) VALUES (%s, %s)",
+                        (request.user_id, cell_name)
+                    )
+                conn.commit()
         
         return _corsify_response(jsonify({
             "success": True,
