@@ -11,15 +11,29 @@ init_db()
 
 CORS(app, resources={
     r"/ai-api": {
-        "origins": ["https://aemiliotis.github.io/Robotics-AI-cells", "http://localhost:*"],
+        "origins": [
+            "https://aemiliotis.github.io",
+            "https://aemiliotis.github.io/Robotics-AI-Cells",
+            "http://localhost:*"
+        ],
+        "methods": ["POST", "OPTIONS"],
+        "allow_headers": ["Content-Type", "X-API-Key"]  # Add X-API-Key
+    },
+    r"/register": {  # Explicit CORS for registration
+        "origins": [
+            "https://aemiliotis.github.io",
+            "https://aemiliotis.github.io/Robotics-AI-Cells",
+            "http://localhost:*"
+        ],
         "methods": ["POST", "OPTIONS"],
         "allow_headers": ["Content-Type"]
     },
     r"/list-cells": {
-        "origins": "*",  # More open for listing
+        "origins": "*",
         "methods": ["GET", "OPTIONS"]
     }
 })
+
 # Load cells
 CELLS_DIR = os.path.join(os.path.dirname(__file__), "cells")
 ai_cells = load_cells(CELLS_DIR)
