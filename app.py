@@ -5,6 +5,8 @@ from flask_cors import CORS
 from auth_utils import require_api_key, generate_api_key
 from database import init_db, get_db
 from werkzeug.security import generate_password_hash, check_password_hash
+import secrets
+import psycopg2
 
 # Initialize after app creation
 app = Flask(__name__)
