@@ -1066,15 +1066,15 @@ document.addEventListener('DOMContentLoaded', function() {
     const apiKeySection = document.querySelector('.api-key-section'); // Use querySelector for class
     const storedApiKey = localStorage.getItem('apiKey');
 
-    if (apiKeySection) { // Check if element exists
+    //if (apiKeySection) { // Check if element exists
         if (storedApiKey) {
             apiKeySection.style.display = 'block'; // Show if key exists
         } else {
             apiKeySection.style.display = 'none';  // Hide if no key
         }
-    } else {
-        console.error("Error: .api-key-section not found in DOM!");
-    }
+    } //else {
+        //console.error("Error: .api-key-section not found in DOM!");
+    //}
     
     document.addEventListener('click', function(e) {
         const btn = e.target.closest('.cell-card button');
