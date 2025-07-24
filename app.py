@@ -137,31 +137,31 @@ def register():
         return error_response
 
 @app.route('/logout', methods=['POST', 'OPTIONS'])
-@require_api_key
 def logout():
     if request.method == 'OPTIONS':
-        return _build_cors_preflight_response()
+        return _build_cors_preflight_response()  # Use your existing CORS function
+    
+    api_key = request.headers.get('X-API-Key')
+    if not api_key:
+        return jsonify({"error": "API key required"}), 401
     
     try:
-        # Invalidate the API key
         with get_db() as conn:
             with conn.cursor() as cur:
+                # Invalidate the key by setting it to NULL
                 cur.execute(
-                    "UPDATE users SET api_key = NULL WHERE api_key = %s",
-                    (request.headers.get('X-API-Key'),)
+                    "UPDATE users SET api_key = NULL WHERE api_key = %s RETURNING id",
+                    (api_key,)
                 )
+                if not cur.fetchone():
+                    return jsonify({"error": "Invalid API key"}), 401
                 conn.commit()
         
-        return _corsify_response(jsonify({
-            "success": True,
-            "message": "Logged out successfully"
-        }))
+        response = jsonify({"success": True})
+        return _corsify_response(response)
     
     except Exception as e:
-        return _corsify_response(jsonify({
-            "success": False,
-            "error": str(e)
-        })), 500
+        return _corsify_response(jsonify({"error": str(e)}), 500)
 
 @app.route('/list-cells', methods=['GET', 'OPTIONS'])
 def list_cells():
