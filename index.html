@@ -778,26 +778,42 @@ async function logoutUser() {
     if (!apiKey) return;
 
     try {
+        // First check if preflight succeeds
+        const preflight = await fetch('https://robotics-ai-cells-m5gy.onrender.com/logout', {
+            method: 'OPTIONS'
+        });
+        
+        if (!preflight.ok) {
+            throw new Error('CORS preflight failed');
+        }
+
+        // Main logout request
         const response = await fetch('https://robotics-ai-cells-m5gy.onrender.com/logout', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 'X-API-Key': apiKey
-            }
+            },
+            credentials: 'include'  // Required for CORS with auth
         });
 
         if (response.ok) {
             localStorage.removeItem('api_key');
+            updateAuthUI();
             alert('Logged out successfully!');
-            location.reload();
         } else {
-            throw new Error('Logout failed');
+            const error = await response.json();
+            throw new Error(error.message || 'Logout failed');
         }
     } catch (error) {
         console.error('Logout error:', error);
-        alert('Logout failed. Please clear your browser data if needed.');
+        alert(`Logout failed: ${error.message}`);
+        
+        // Fallback: Force client-side logout
+        localStorage.removeItem('api_key');
+        updateAuthUI();
     }
-        }
+}
 
         async function executeCell(cellId) {
     const cell = CELLS.find(c => c.id === cellId);
