@@ -260,7 +260,7 @@
         <div class="status-bar">
         <div>
             <span id="api-status" class="api-status offline"></span>
-            <span id="api-url">Connecting...</span>
+            <span id="api-url">Wait for connection...</span>
         </div>
         <div id="last-update">Last updated: Never</div>
         </div>
@@ -991,7 +991,7 @@ async function logoutUser() {
     } catch (e) {
         apiStatus = false;
         statusElement.className = 'api-status offline';
-        apiUrlElement.textContent = 'Connecting...';
+        apiUrlElement.textContent = 'Wait for connection...';
         console.error("API Status Check Failed:", e);
     }
     
