@@ -1063,6 +1063,15 @@ document.getElementById('show-key-btn')?.addEventListener('click', function() {
 
 // Call this when page loads
 document.addEventListener('DOMContentLoaded', function() {
+    const apiKeySection = document.getElementById('api-key-section');
+    const storedApiKey = localStorage.getItem('apiKey');
+  
+    if (storedApiKey) {
+        apiKeySection.style.display = 'block';
+    } else {
+        apiKeySection.style.display = 'none';
+    }
+    
     document.addEventListener('click', function(e) {
         const btn = e.target.closest('.cell-card button');
         if (btn) {
