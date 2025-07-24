@@ -1067,9 +1067,9 @@ document.addEventListener('DOMContentLoaded', function() {
     const storedApiKey = localStorage.getItem('apiKey');
   
     if (storedApiKey) {
-        apiKeySection.style.display = 'block';
-    } else {
         apiKeySection.style.display = 'none';
+    } else {
+        apiKeySection.style.display = 'block';
     }
     
     document.addEventListener('click', function(e) {
