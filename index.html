@@ -984,14 +984,14 @@ async function logoutUser() {
         if (response.ok) {
             apiStatus = true;
             statusElement.className = 'api-status online';
-            apiUrlElement.textContent = ''; // Clear any previous error message
+            apiUrlElement.textContent = 'ONLINE';
         } else {
             throw new Error('Ping failed');
         }
     } catch (e) {
         apiStatus = false;
         statusElement.className = 'api-status offline';
-        apiUrlElement.textContent = ''; // Clear the "ONLINE" text
+        apiUrlElement.textContent = 'Connecting...';
         console.error("API Status Check Failed:", e);
     }
     
