@@ -332,6 +332,17 @@
         </div>
     </div>
 
+    <div id="logout-confirm-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center;">
+  <div style="background: white; padding: 20px; border-radius: 8px; max-width: 300px; text-align: center;">
+    <p style="margin-top: 0;">Are you sure you saved your API key?</p>
+    <p style="font-size: 0.9em; color: var(--error); margin-bottom: 20px;">You won't be able to retrieve it if you don't.</p>
+    <div style="display: flex; gap: 10px; justify-content: center;">
+      <button id="confirm-logout-btn" style="background-color: var(--error);">Yes, Logout</button>
+      <button id="cancel-logout-btn" style="background-color: var(--primary);">No, Keep Key</button>
+    </div>
+  </div>
+    </div>
+    
     <script>
         // Configuration - VERIFY THIS IS CORRECT
         const API_URL = "https://robotics-ai-cells-m5gy.onrender.com/ai-api";
