@@ -953,6 +953,8 @@ document.addEventListener('DOMContentLoaded', function() {
             console.log('Execute clicked for:', cellId);
             executeCell(cellId);
         }
+        document.getElementById('logout-btn').addEventListener('click', logoutUser);
+        updateAuthUI();
     });
   executeFromUrl();
 });
