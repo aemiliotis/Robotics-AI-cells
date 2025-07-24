@@ -1052,11 +1052,11 @@ function executeFromUrl() {
 
 document.getElementById('show-key-btn')?.addEventListener('click', function() {
     const span = this.previousElementSibling;
-    if (span.textContent.includes('••••')) {
+    if (span.textContent.includes('****')) {
         span.textContent = `API Key: ${localStorage.getItem('api_key')}`;
         this.textContent = 'Hide';
     } else {
-        span.textContent = 'API Key: ••••••••';
+        span.textContent = 'API Key: ********';
         this.textContent = 'Show';
     }
 });
