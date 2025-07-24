@@ -809,8 +809,14 @@
         }
 
         function updateAuthUI() {
-    const isLoggedIn = !!localStorage.getItem('api_key');
+    const apiKey = localStorage.getItem('api_key');
+    const isLoggedIn = !!apiKey;
     document.getElementById('logout-btn').style.display = isLoggedIn ? 'block' : 'none';
+    const apiKeyDisplay = document.getElementById('api-key-display');
+    if (apiKeyDisplay) {
+        apiKeyDisplay.style.display = isLoggedIn ? 'flex' : 'none';
+        apiKeyDisplay.querySelector('span').textContent = `API Key: ${isLoggedIn ? '••••••••' : 'Not set'}`;
+    }
 }
 
 async function logoutUser() {
