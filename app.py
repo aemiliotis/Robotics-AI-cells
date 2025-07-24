@@ -95,7 +95,6 @@ def _corsify_response(response):
     response.headers.add("Access-Control-Allow-Origin", "*")
     return response
 
-@app.route('/register', methods=['POST'])
 @app.route('/register', methods=['POST', 'OPTIONS'])
 def register():
     if request.method == 'OPTIONS':
@@ -136,6 +135,33 @@ def register():
         error_response.status_code = 500
         error_response.headers.add('Access-Control-Allow-Origin', 'https://aemiliotis.github.io')
         return error_response
+
+@app.route('/logout', methods=['POST', 'OPTIONS'])
+@require_api_key
+def logout():
+    if request.method == 'OPTIONS':
+        return _build_cors_preflight_response()
+    
+    try:
+        # Invalidate the API key
+        with get_db() as conn:
+            with conn.cursor() as cur:
+                cur.execute(
+                    "UPDATE users SET api_key = NULL WHERE api_key = %s",
+                    (request.headers.get('X-API-Key'),)
+                )
+                conn.commit()
+        
+        return _corsify_response(jsonify({
+            "success": True,
+            "message": "Logged out successfully"
+        }))
+    
+    except Exception as e:
+        return _corsify_response(jsonify({
+            "success": False,
+            "error": str(e)
+        })), 500
 
 @app.route('/list-cells', methods=['GET', 'OPTIONS'])
 def list_cells():
