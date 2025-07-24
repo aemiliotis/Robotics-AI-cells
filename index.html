@@ -1029,11 +1029,19 @@ function executeFromUrl() {
   }
 }
 
+document.getElementById('show-key-btn')?.addEventListener('click', function() {
+    const span = this.previousElementSibling;
+    if (span.textContent.includes('••••')) {
+        span.textContent = `API Key: ${localStorage.getItem('api_key')}`;
+        this.textContent = 'Hide';
+    } else {
+        span.textContent = 'API Key: ••••••••';
+        this.textContent = 'Show';
+    }
+});
+
 // Call this when page loads
 document.addEventListener('DOMContentLoaded', function() {
-    // ... all your existing code ...
-
-    // ▼ REPLACE your current button binding with this ▼
     document.addEventListener('click', function(e) {
         const btn = e.target.closest('.cell-card button');
         if (btn) {
@@ -1041,8 +1049,8 @@ document.addEventListener('DOMContentLoaded', function() {
             console.log('Execute clicked for:', cellId);
             executeCell(cellId);
         }
-        document.getElementById('logout-btn').addEventListener('click', logoutUser);
         updateAuthUI();
+        document.getElementById('logout-btn').addEventListener('click', logoutUser);
     });
   executeFromUrl();
 });
