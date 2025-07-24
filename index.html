@@ -244,6 +244,18 @@
             <h1>Robotics AI Hub</h1>
             <p>Control panel for Robotic AI Cells</p>
         </header>
+   
+        <div id="login-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center;">
+  <div style="background: white; padding: 20px; border-radius: 8px; width: 90%; max-width: 400px;">
+    <h3 style="margin-top: 0;">API Key Required</h3>
+    <input type="text" id="api-key-input" placeholder="Paste your API key" style="width: 100%; padding: 8px; margin-bottom: 10px;">
+    <div style="display: flex; gap: 10px;">
+      <button onclick="saveApiKey()" style="flex: 1;">Save Key</button>
+      <button onclick="registerUser()" style="flex: 1; background: #4CAF50;">Register</button>
+    </div>
+    <p style="text-align: center; margin-bottom: 0;">Don't have an API key?</p>
+  </div>
+        </div>
         
         <div class="status-bar">
         <div>
@@ -752,17 +764,20 @@
         }
 
         function showLoginModal() {
-            const modal = document.createElement('div');
-            modal.innerHTML = `
-                <div style="/* modal styles */">
-                    <h3>API Key Required</h3>
-                    <input type="text" id="api-key-input" placeholder="Paste your API key">
-                    <button onclick="saveApiKey()">Save Key</button>
-                    <p>Don't have one? <a href="#" onclick="registerUser()">Register</a></p>
-                </div>
-            `;
-            document.body.appendChild(modal);
-        }
+  const modal = document.getElementById('login-modal');
+  if (modal) {
+    modal.style.display = 'flex';
+    document.getElementById('api-key-input').focus();
+  } else {
+    console.error('Login modal element not found');
+    // Fallback to alert if modal fails
+    const key = prompt('Enter your API key:');
+    if (key) {
+      localStorage.setItem('api_key', key.trim());
+      location.reload();
+    }
+  }
+}
 
         async function registerUser() {
     try {
