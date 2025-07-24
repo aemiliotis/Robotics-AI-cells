@@ -969,30 +969,34 @@ async function logoutUser() {
         }
 
         async function checkApiStatus() {
-  const statusElement = document.getElementById('api-status');
-  statusElement.className = 'api-status checking';
-  
-  try {
-    const response = await fetch(PING_URL, {
-      method: 'GET',
-      mode: 'cors',
-      credentials: 'omit'
-    });
+    const statusElement = document.getElementById('api-status');
+    const apiUrlElement = document.getElementById('api-url');
     
-    apiStatus = response.ok;
-    statusElement.className = `api-status ${apiStatus ? 'online' : 'offline'}`;
+    statusElement.className = 'api-status checking';
     
-    if (apiStatus) {
-      const data = await response.json();
-      console.log("API Status:", data.status);
+    try {
+        const response = await fetch(PING_URL, {
+            method: 'GET',
+            mode: 'cors',
+            credentials: 'omit'
+        });
+        
+        if (response.ok) {
+            apiStatus = true;
+            statusElement.className = 'api-status online';
+            apiUrlElement.textContent = ''; // Clear any previous error message
+        } else {
+            throw new Error('Ping failed');
+        }
+    } catch (e) {
+        apiStatus = false;
+        statusElement.className = 'api-status offline';
+        apiUrlElement.textContent = ''; // Clear the "ONLINE" text
+        console.error("API Status Check Failed:", e);
     }
-  } catch (e) {
-    apiStatus = false;
-    statusElement.className = 'api-status offline';
-    console.error("API Status Check Failed:", e);
-  }
-  
-  setTimeout(checkApiStatus, Math.floor(Math.random() * (720000 - 540000 + 1)) + 540000);
+    
+    // Keep the random interval check
+    setTimeout(checkApiStatus, Math.floor(Math.random() * (720000 - 540000 + 1)) + 540000);
 }
 
         function updateLastUpdate() {
