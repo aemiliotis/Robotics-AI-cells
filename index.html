@@ -219,12 +219,19 @@
         </header>
         
         <div class="status-bar">
-            <div>
-                <span id="api-status" class="api-status offline"></span>
-                <span id="api-url">Connecting to API...</span>
-            </div>
-            <div id="last-update">Last updated: Never</div>
-            <button id="logout-btn" class="logout-button">Logout</button>
+        <div>
+            <span id="api-status" class="api-status offline"></span>
+            <span id="api-url">API: ${API_URL}</span>
+        </div>
+        <div id="last-update">Last updated: Never</div>
+        </div>
+
+        <div class="api-key-section">
+        <div id="api-key-display">
+            <span>API Key: ********</span>
+            <button id="show-key-btn">Show</button>
+        </div>
+        <button id="logout-btn" class="logout-button">Logout</button>
         </div>
         
         <div class="tabs">
