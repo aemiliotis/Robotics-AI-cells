@@ -767,6 +767,36 @@
             }
         }
 
+        function updateAuthUI() {
+    const isLoggedIn = !!localStorage.getItem('api_key');
+    document.getElementById('logout-btn').style.display = isLoggedIn ? 'block' : 'none';
+}
+
+async function logoutUser() {
+    const apiKey = localStorage.getItem('api_key');
+    if (!apiKey) return;
+
+    try {
+        const response = await fetch('https://robotics-ai-cells-m5gy.onrender.com/logout', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-API-Key': apiKey
+            }
+        });
+
+        if (response.ok) {
+            localStorage.removeItem('api_key');
+            alert('Logged out successfully!');
+            location.reload();
+        } else {
+            throw new Error('Logout failed');
+        }
+    } catch (error) {
+        console.error('Logout error:', error);
+        alert('Logout failed. Please clear your browser data if needed.');
+    }
+        }
 
         async function executeCell(cellId) {
     const cell = CELLS.find(c => c.id === cellId);
