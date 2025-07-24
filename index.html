@@ -265,7 +265,7 @@
         <div id="last-update">Last updated: Never</div>
         </div>
 
-        <div class="api-key-section">
+        <div class="api-key-section" style="display: none;">
         <div id="api-key-display">
             <span>API Key: ********</span>
             <button id="show-key-btn">Show</button>
@@ -1067,9 +1067,9 @@ document.addEventListener('DOMContentLoaded', function() {
     const storedApiKey = localStorage.getItem('apiKey');
   
     if (storedApiKey) {
-        apiKeySection.style.display = 'none';
-    } else {
         apiKeySection.style.display = 'block';
+    } else {
+        apiKeySection.style.display = 'none';
     }
     
     document.addEventListener('click', function(e) {
