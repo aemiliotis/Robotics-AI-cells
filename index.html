@@ -749,6 +749,7 @@
         const result = await response.json();
         if (result.success) {
             localStorage.setItem('api_key', result.api_key);
+            updateAuthUI();
             location.reload();
         } else {
             alert(result.error || "Registration failed");
@@ -801,7 +802,7 @@ async function logoutUser() {
         async function executeCell(cellId) {
     const cell = CELLS.find(c => c.id === cellId);
     if (!cell) return;
-            if (!API_KEY) {  // NEW: Check API key
+            if (!API_KEY) {
                 showLoginModal();
                 return;
             }
@@ -815,7 +816,7 @@ async function logoutUser() {
     button.disabled = true;
 
     try {
-        // Prepare input data - STRUCTURE CHANGED TO MATCH BACKEND
+        // Prepare input data
         const cellInputData = {};
         for (const input of cell.inputs) {
             const inputElement = document.getElementById(`${cellId}_${input.id}`);
@@ -840,24 +841,24 @@ async function logoutUser() {
         const requestData = {
             cells: [cellId],
             data: {
-                [cellId]: cellInputData  // Nest input data under cell ID
+                [cellId]: cellInputData
             }
         };
 
-        console.log("Sending request:", requestData);  // Debug log
+        console.log("Sending request:", requestData);
 
         const response = await fetch(API_URL, {
                 method: 'POST',
                 credentials: 'include',
                 headers: { 
                     'Content-Type': 'application/json',
-                    'X-API-Key': API_KEY  // NEW: Add API key header
+                    'X-API-Key': API_KEY
                 },
                 body: JSON.stringify(requestData)
             });
 
         const result = await response.json();
-        console.log("API Response:", result);  // Debug log
+        console.log("API Response:", result);
         
         if (!response.ok || !result.success) {
             throw new Error(result.error || `API request failed with status ${response.status}`);
@@ -865,6 +866,7 @@ async function logoutUser() {
 
         // Handle backend response format
         if (result.results && result.results[cellId]) {
+            updateAuthUI();
             responseElement.textContent = JSON.stringify(result.results[cellId], null, 2);
             responseElement.className = 'response success';
         } else {
