@@ -1,71 +1,81 @@
-# Core Web Framework
+### Core Web Framework ###
 flask==2.2.5
-flask-cors==3.0.10  # CORS support
-werkzeug==2.2.3  # Pinned for Flask 2.2.5 compatibility
+flask-cors==3.0.10
+werkzeug==2.2.3  # Flask 2.2.5 compatibility
 jinja2==3.0.3
 itsdangerous==2.0.1
 click==8.0.4
 flask-sqlalchemy==3.0.3
+flask-limiter==2.8.1  # Rate limiting
 
+### Async Support ###
 fastapi==0.68.1
-sqlalchemy==1.4.23
-python-jose==3.3.0
-passlib==1.7.4
+uvicorn==0.22.0
 aiofiles==23.1.0
+aiohttp==3.8.5
+python-multipart==0.0.6
 
-# Server & ASGI
-gunicorn==20.1.0
-uvicorn==0.22.0  # ASGI server
-python-multipart==0.0.6  # Form data handling
+### Authentication & Security ###
+python-jose==3.3.0  # JWT
+passlib==1.7.4  # Password hashing
+bcrypt==4.0.1  # Stronger hashing
+cryptography==41.0.2  # Encryption
 
-# Machine Learning Core
+### Database ###
+sqlalchemy==1.4.23
+psycopg2-binary==2.9.5  # PostgreSQL
+pymongo==4.3.3  # MongoDB
+redis==4.5.5  # Caching
+alembic==1.11.1  # Migrations
+
+### Machine Learning Core ###
 tensorflow==2.10.1
 tflite-runtime==2.10.0
-protobuf==3.19.6  # TF-compatible version
-onnxruntime==1.15.1  # Alternative inference engine
+protobuf==3.19.6  # TF compatibility
+onnxruntime==1.15.1
+torch==2.0.1  # PyTorch support
+transformers==4.30.2  # HuggingFace
 
-# Computer Vision
+### Computer Vision ###
 opencv-python-headless==4.6.0.66
 opencv-contrib-python-headless==4.6.0.66
-pillow==9.5.0  # Image processing
+pillow==9.5.0
 
-# Math & Signals
+### Robotics Specific ###
+roslibpy==0.7.0  # ROS bridge
+pyserial==3.5  # Serial comms
+pymavlink==2.4.37  # MAVLink
+pyserial-asyncio==0.6
+RPi.GPIO==0.7.1; platform_machine == 'armv7l' or platform_machine == 'aarch64'  # Raspberry Pi
+
+### Math & Signals ###
 numpy==1.23.5
 scipy==1.9.3
-pyquaternion==0.9.9
+pyquaternion==0.9.9  # 3D rotations
 numba==0.56.4  # JIT acceleration
+pandas==1.5.3  # Data processing
 
-# Robotics Specific
-roslibpy==0.7.0
-pyserial==3.5
-pymavlink==2.4.37  # Drone communication
-pyserial-asyncio==0.6  # Async serial
+### Communication Protocols ###
+paho-mqtt==1.6.1  # MQTT
+zeroconf==0.38.7  # Service discovery
+websockets==11.0.3  # WebSockets
+grpcio==1.54.2  # gRPC support
 
-# Communication Protocols
-paho-mqtt==1.6.1
-zeroconf==0.38.7
-websockets==11.0.3  # Real-time comms
-aiohttp==3.8.5  # Async HTTP
-
-# Utility Libraries
-pyyaml==6.0
-python-dotenv==1.0.0
-psutil==5.9.5
+### Utility Libraries ###
+pyyaml==6.0  # Config files
+python-dotenv==1.0.0  # Env vars
+psutil==5.9.5  # System monitoring
 tqdm==4.65.0  # Progress bars
-loguru==0.7.0  # Enhanced logging
+loguru==0.7.0  # Logging
+gunicorn==20.1.0  # Production server
+gevent==22.10.2  # Async workers
 
-# Database & Storage
-#sqlalchemy==2.0.21
-redis==4.5.5  # Caching
-pymongo==4.3.3  # MongoDB driver
-psycopg2-binary==2.9.5
-
-# Testing & Debugging
+### Testing & Debugging ###
 pytest==7.2.2
 pytest-benchmark==4.0.0
 pytest-cov==4.1.0
-ipdb==0.13.13  # Debugging
+ipdb==0.13.13
+faker==18.10.1  # Test data generation
 
-# Platform-Specific Extras
-tensorflow-macos==2.10.0; sys_platform == 'darwin' and platform_machine == 'arm64'
-RPi.GPIO==0.7.1; platform_machine == 'armv7l' or platform_machine == 'aarch64'
+### Platform-Specific ###
+tensorflow-macos==2.10.0; sys_platform == 'darwin' and platform_machine == 'arm64'  # M1/M2 Macs
