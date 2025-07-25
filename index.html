@@ -892,13 +892,9 @@ async function performLogout() {
     const btn = document.getElementById('logout-btn');
     btn.disabled = true;
     btn.textContent = 'Logging out...';
-
-    try {
-        
-        localStorage.removeItem('api_key');
-        updateAuthUI();
-        alert('Logged out successfully!');
-    }
+    localStorage.removeItem('api_key');
+    updateAuthUI();
+    alert('Logged out successfully!');
 }
 
         async function executeCell(cellId) {
