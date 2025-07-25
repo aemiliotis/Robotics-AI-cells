@@ -1117,11 +1117,13 @@ document.getElementById('show-key-btn')?.addEventListener('click', function() {
     const copyBtn = document.getElementById('copy-key-btn');
     
     if (span.textContent.includes('****')) {
+        console.log('Show API');
         const apiKey = localStorage.getItem('api_key');
         span.textContent = `API Key: ${apiKey}`;
         this.textContent = 'Hide';
         copyBtn.style.display = 'inline-block';
     } else {
+        console.log('Hide API');
         span.textContent = 'API Key: ********';
         this.textContent = 'Show';
         copyBtn.style.display = 'none';
