@@ -898,6 +898,30 @@
     }
 }
 
+function copyApiKeyToClipboard() {
+    const apiKey = localStorage.getItem('api_key');
+    if (!apiKey) {
+        alert('No API key found');
+        return;
+    }
+    
+    navigator.clipboard.writeText(apiKey).then(() => {
+        // Show temporary feedback
+        const copyBtn = document.getElementById('copy-key-btn');
+        const originalHTML = copyBtn.innerHTML;
+        copyBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+        copyBtn.title = 'Copied!';
+        
+        setTimeout(() => {
+            copyBtn.innerHTML = originalHTML;
+            copyBtn.title = 'Copy to clipboard';
+        }, 2000);
+    }).catch(err => {
+        console.error('Failed to copy API key: ', err);
+        alert('Failed to copy API key');
+    });
+}
+
        function copyApiKey() {
     const apiKey = localStorage.getItem('api_key');
     if (!apiKey) {
