@@ -287,7 +287,7 @@
 
         <div class="api-key-section" style="display: none;">
         <div id="api-key-display">
-            <span>API Key: ********</span>
+            <span id="showAPI">API Key: ********</span>
             <button id="copy-key-btn">Copy</button>
         </div>
         <button id="logout-btn" class="logout-button">Logout</button>
@@ -1095,7 +1095,7 @@ document.getElementById('copy-key-btn')?.addEventListener('click', function() {
 
 // Call this when page loads
 document.addEventListener('DOMContentLoaded', function() {
-    const span = this.previousElementSibling;
+    const span = document.getElementById("showAPI");;
     span.textContent = `API Key: ${localStorage.getItem('api_key')}`;
     span.textContent = span.textContent.length > 15 ? span.textContent.substring(0, 15) + '...' : span.textContent;
     
