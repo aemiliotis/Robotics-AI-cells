@@ -1139,13 +1139,17 @@ function executeFromUrl() {
 }
 
 document.getElementById('show-key-btn')?.addEventListener('click', function() {
-    const span = this.previousElementSibling;
-    if (span.textContent.includes('****')) {
-        span.textContent = `API Key: ${localStorage.getItem('api_key')}`;
-        span.textContent = span.textContent.length > 15 ? span.textContent.substring(0, 15) + '...' : span.textContent;
+    const span = this.parentElement.querySelector('span');
+    if (span.textContent.includes('••••')) {
+        const apiKey = localStorage.getItem('api_key');
+        span.textContent = `API Key: ${apiKey}`;
+        // Truncate if too long
+        if (span.textContent.length > 30) {
+            span.textContent = span.textContent.substring(0, 27) + '...';
+        }
         this.textContent = 'Hide';
     } else {
-        span.textContent = 'API Key: ********';
+        span.textContent = 'API Key: ••••••••';
         this.textContent = 'Show';
     }
 });
