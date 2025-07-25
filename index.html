@@ -346,8 +346,8 @@
 
     <div id="logout-confirm-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center;">
   <div style="background: white; padding: 20px; border-radius: 8px; max-width: 300px; text-align: center;">
-    <p style="margin-top: 0;">Are you sure you saved your API key?</p>
-    <p style="font-size: 0.9em; color: var(--error); margin-bottom: 20px;">You won't be able to retrieve it if you don't.</p>
+    <p style="margin-top: 0;">Are you sure you copied your API key?</p>
+    <p style="font-size: 0.9em; color: var(--error); margin-bottom: 20px;">You won't be able to retrieve it.</p>
     <div style="display: flex; gap: 10px; justify-content: center;">
       <button id="confirm-logout-btn" style="background-color: var(--error);">Yes, Logout</button>
       <button id="cancel-logout-btn" style="background-color: var(--primary);">No, Keep Key</button>
@@ -875,7 +875,7 @@
         apiKeyDisplay.style.display = isLoggedIn ? 'flex' : 'none';
         apiKeyDisplay.querySelector('span').textContent = 'API Key: ********';
         document.getElementById('show-key-btn').textContent = 'Show';
-        document.getElementById('copy-key-btn').style.display = 'none';
+        document.getElementById('copy-key-btn').style.display = 'block';
     }
 }
 
@@ -1123,7 +1123,6 @@ document.getElementById('show-key-btn')?.addEventListener('click', function() {
         span.textContent = span.textContent.length > 15 ? span.textContent.substring(0, 15) + '...' : span.textContent;
         this.textContent = 'Hide';
         copyBtn.style.display = 'inline-block';
-        alert('show');
     } else {
         console.log('Hide API');
         span.textContent = 'API Key: ********';
