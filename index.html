@@ -895,6 +895,7 @@ async function performLogout() {
     localStorage.removeItem('api_key');
     updateAuthUI();
     alert('Logged out successfully!');
+    location.reload();
 }
 
         async function executeCell(cellId) {
