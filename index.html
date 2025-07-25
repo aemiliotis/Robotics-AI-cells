@@ -928,15 +928,35 @@ async function logoutUser() {
 
 async function performLogout() {
     const apiKey = localStorage.getItem('api_key');
-    if (!apiKey) return;
+    const sessionId = localStorage.getItem('session_id');
+    
+    if (!apiKey || !sessionId) {
+        localStorage.removeItem('api_key');
+        localStorage.removeItem('session_id');
+        updateAuthUI();
+        return;
+    }
 
     const btn = document.getElementById('logout-btn');
     btn.disabled = true;
     btn.textContent = 'Logging out...';
-    localStorage.removeItem('api_key');
-    updateAuthUI();
-    alert('Logged out successfully!');
-    location.reload();
+
+    try {
+        await fetch('https://robotics-ai-cells-m5gy.onrender.com/logout', {
+            method: 'POST',
+            headers: {
+                'X-API-Key': apiKey,
+                'X-Session-ID': sessionId
+            }
+        });
+    } finally {
+        localStorage.removeItem('api_key');
+        localStorage.removeItem('session_id');
+        updateAuthUI();
+        btn.disabled = false;
+        btn.textContent = 'Logout';
+        location.reload();
+    }
 }
 
         async function executeCell(cellId) {
