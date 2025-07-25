@@ -860,6 +860,48 @@
     document.getElementById('api-key-display').style.display = isLoggedIn ? 'flex' : 'none';
         }
 
+        let SESSION_ID = localStorage.getItem('session_id') || '';
+
+function handleAuthSuccess(apiKey) {
+    localStorage.setItem('api_key', apiKey);
+    SESSION_ID = crypto.randomUUID();
+    localStorage.setItem('session_id', SESSION_ID);
+    
+    // Register session with backend
+    fetch('https://robotics-ai-cells-m5gy.onrender.com/register-session', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-API-Key': apiKey
+        },
+        body: JSON.stringify({ session_id: SESSION_ID })
+    }).then(() => {
+        updateAuthUI();
+        startSessionHeartbeat();
+    });
+}
+
+function startSessionHeartbeat() {
+    // Send heartbeat every 5 minutes
+    setInterval(() => {
+        if (SESSION_ID && API_KEY) {
+            fetch('https://robotics-ai-cells-m5gy.onrender.com/session-heartbeat', {
+                method: 'POST',
+                headers: {
+                    'X-API-Key': localStorage.getItem('api_key'),
+                    'X-Session-ID': SESSION_ID
+                }
+            }).catch(() => {
+                // Session expired
+                localStorage.removeItem('api_key');
+                localStorage.removeItem('session_id');
+                updateAuthUI();
+                alert('Session expired. Please login again.');
+            });
+        }
+    }, 300000); // 5 minutes
+}
+        
 let isLoggingOut = false;
 
 async function logoutUser() {
