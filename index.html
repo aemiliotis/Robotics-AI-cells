@@ -160,17 +160,6 @@
 #cancel-logout-btn:hover {
     background-color: var(--secondary) !important;
 }
-
-        #copy-key-btn {
-    background-color: var(--accent);
-    padding: 4px 8px;
-    font-size: 0.8em;
-    margin-left: 5px;
-}
-
-#copy-key-btn:hover {
-    background-color: #039be5; /* Slightly darker accent color */
-}
         
         button {
             background-color: var(--primary);
@@ -297,13 +286,12 @@
         </div>
 
         <div class="api-key-section" style="display: none;">
-    <div id="api-key-display">
-        <span>API Key: ********</span>
-        <button id="show-key-btn">Show</button>
-        <button id="copy-key-btn" style="display: none;">Copy</button>
-    </div>
-    <button id="logout-btn" class="logout-button">Logout</button>
-</div>
+        <div id="api-key-display">
+            <span>API Key: ********</span>
+            <button id="show-key-btn">Show</button>
+        </div>
+        <button id="logout-btn" class="logout-button">Logout</button>
+        </div>
         
         <div class="tabs">
             <div class="tab active" data-tab="all">All Cells</div>
@@ -346,8 +334,8 @@
 
     <div id="logout-confirm-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center;">
   <div style="background: white; padding: 20px; border-radius: 8px; max-width: 300px; text-align: center;">
-    <p style="margin-top: 0;">Are you sure you copied your API key?</p>
-    <p style="font-size: 0.9em; color: var(--error); margin-bottom: 20px;">You won't be able to retrieve it.</p>
+    <p style="margin-top: 0;">Are you sure you saved your API key?</p>
+    <p style="font-size: 0.9em; color: var(--error); margin-bottom: 20px;">You won't be able to retrieve it if you don't.</p>
     <div style="display: flex; gap: 10px; justify-content: center;">
       <button id="confirm-logout-btn" style="background-color: var(--error);">Yes, Logout</button>
       <button id="cancel-logout-btn" style="background-color: var(--primary);">No, Keep Key</button>
@@ -869,30 +857,7 @@
         function updateAuthUI() {
     const isLoggedIn = !!localStorage.getItem('api_key');
     document.getElementById('logout-btn').style.display = isLoggedIn ? 'block' : 'none';
-    
-    const apiKeyDisplay = document.getElementById('api-key-display');
-    if (apiKeyDisplay) {
-        apiKeyDisplay.style.display = isLoggedIn ? 'flex' : 'none';
-        apiKeyDisplay.querySelector('span').textContent = 'API Key: ********';
-        document.getElementById('show-key-btn').textContent = 'Show';
-        document.getElementById('copy-key-btn').style.display = 'block';
-    }
-}
-
-        function copyApiKey() {
-    const apiKey = localStorage.getItem('api_key');
-    if (!apiKey) return;
-    
-    navigator.clipboard.writeText(apiKey).then(() => {
-        const copyBtn = document.getElementById('copy-key-btn');
-        copyBtn.textContent = 'Copied!';
-        setTimeout(() => {
-            copyBtn.textContent = 'Copy';
-        }, 2000);
-    }).catch(err => {
-        console.error('Failed to copy API key:', err);
-        alert('Failed to copy API key to clipboard');
-    });
+    document.getElementById('api-key-display').style.display = isLoggedIn ? 'flex' : 'none';
         }
 
 let isLoggingOut = false;
@@ -1112,22 +1077,14 @@ function executeFromUrl() {
 }
 
 document.getElementById('show-key-btn')?.addEventListener('click', function() {
-    console.log('Push show');
     const span = this.previousElementSibling;
-    const copyBtn = document.getElementById('copy-key-btn');
-    
     if (span.textContent.includes('****')) {
-        console.log('Show API');
-        const apiKey = localStorage.getItem('api_key');
-        span.textContent = `API Key: ${apiKey}`;
+        span.textContent = `API Key: ${localStorage.getItem('api_key')}`;
         span.textContent = span.textContent.length > 15 ? span.textContent.substring(0, 15) + '...' : span.textContent;
         this.textContent = 'Hide';
-        copyBtn.style.display = 'inline-block';
     } else {
-        console.log('Hide API');
         span.textContent = 'API Key: ********';
         this.textContent = 'Show';
-        copyBtn.style.display = 'none';
     }
 });
 
@@ -1161,7 +1118,6 @@ document.getElementById('logout-btn').addEventListener('click', () => {
         }
         updateAuthUI();
         document.getElementById('logout-btn').addEventListener('click', logoutUser);
-        document.getElementById('copy-key-btn')?.addEventListener('click', copyApiKey);
     });
   executeFromUrl();
 });
