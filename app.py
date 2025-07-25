@@ -266,6 +266,25 @@ def logout():
 def session_heartbeat():
     return jsonify({"success": True})
 
+@app.route('/list-cells', methods=['GET', 'OPTIONS'])
+def list_cells():
+    """Endpoint to see available cells"""
+    if request.method == 'OPTIONS':
+        return _build_cors_preflight_response()
+    
+    return _corsify_response(jsonify({
+        "success": True,
+        "available_cells": list(ai_cells.keys())
+    }))
+
+# backend/app.py - Add this test endpoint
+@app.route('/ping', methods=['GET'])
+def ping():
+    return _corsify_response(jsonify({
+        "status": "alive",
+        "cells": list(ai_cells.keys())
+    }))
+
 # Helper functions
 def _build_cors_preflight_response():
     response = jsonify({"message": "Preflight Accepted"})
