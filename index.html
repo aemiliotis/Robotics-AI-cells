@@ -1077,13 +1077,28 @@ function executeFromUrl() {
 }
 
 document.getElementById('copy-key-btn')?.addEventListener('click', function() {
-    const span = this.previousElementSibling;
-    span.textContent = `API Key: ${localStorage.getItem('api_key')}`;
-    span.textContent = span.textContent.length > 15 ? span.textContent.substring(0, 15) + '...' : span.textContent;
+    const apiKey = localStorage.getItem('api_key');
+    if (!apiKey) return;
+    
+    navigator.clipboard.writeText(apiKey).then(() => {
+        const copyBtn = document.getElementById('copy-key-btn');
+        const originalText = copyBtn.textContent;
+        copyBtn.textContent = 'Copied!';
+        setTimeout(() => {
+            copyBtn.textContent = originalText;
+        }, 2000);
+    }).catch(err => {
+        console.error('Failed to copy:', err);
+        alert('Failed to copy API key');
+    });
 });
 
 // Call this when page loads
 document.addEventListener('DOMContentLoaded', function() {
+    const span = this.previousElementSibling;
+    span.textContent = `API Key: ${localStorage.getItem('api_key')}`;
+    span.textContent = span.textContent.length > 15 ? span.textContent.substring(0, 15) + '...' : span.textContent;
+    
     const apiKeySection = document.querySelector('.api-key-section'); // Use querySelector for class
     const storedApiKey = localStorage.getItem('api_key');
 
