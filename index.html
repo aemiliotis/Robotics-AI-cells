@@ -955,7 +955,7 @@ async function performLogout() {
                 },
                 body: JSON.stringify(requestData)
             });
-
+        console.log("Sending fetch:", response);
         const result = await response.json();
         console.log("API Response:", result);
         
