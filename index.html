@@ -834,8 +834,7 @@
         
         const result = await response.json();
         if (result.success) {
-            localStorage.setItem('api_key', result.api_key);
-            updateAuthUI();
+            handleAuthSuccess(result.api_key);
             location.reload();
         } else {
             alert(result.error || "Registration failed");
