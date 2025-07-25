@@ -1120,8 +1120,10 @@ document.getElementById('show-key-btn')?.addEventListener('click', function() {
         console.log('Show API');
         const apiKey = localStorage.getItem('api_key');
         span.textContent = `API Key: ${apiKey}`;
+        span.textContent = span.textContent.length > 15 ? span.textContent.substring(0, 15) + '...' : span.textContent;
         this.textContent = 'Hide';
         copyBtn.style.display = 'inline-block';
+        alert('show');
     } else {
         console.log('Hide API');
         span.textContent = 'API Key: ********';
