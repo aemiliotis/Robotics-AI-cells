@@ -857,8 +857,15 @@
         function updateAuthUI() {
     const isLoggedIn = !!localStorage.getItem('api_key');
     document.getElementById('logout-btn').style.display = isLoggedIn ? 'block' : 'none';
-    document.getElementById('api-key-display').style.display = isLoggedIn ? 'flex' : 'none';
-        }
+    
+    const apiKeyDisplay = document.getElementById('api-key-display');
+    if (apiKeyDisplay) {
+        apiKeyDisplay.style.display = isLoggedIn ? 'flex' : 'none';
+        apiKeyDisplay.querySelector('span').textContent = 'API Key: ••••••••';
+        document.getElementById('show-key-btn').textContent = 'Show';
+        document.getElementById('copy-key-btn').style.display = 'none'; // Hidden by default
+    }
+}
 
 let isLoggingOut = false;
 
