@@ -1076,16 +1076,10 @@ function executeFromUrl() {
   }
 }
 
-document.getElementById('show-key-btn')?.addEventListener('click', function() {
+document.getElementById('copy-key-btn')?.addEventListener('click', function() {
     const span = this.previousElementSibling;
-    if (span.textContent.includes('****')) {
-        span.textContent = `API Key: ${localStorage.getItem('api_key')}`;
-        span.textContent = span.textContent.length > 15 ? span.textContent.substring(0, 15) + '...' : span.textContent;
-        this.textContent = 'Hide';
-    } else {
-        span.textContent = 'API Key: ********';
-        this.textContent = 'Show';
-    }
+    span.textContent = `API Key: ${localStorage.getItem('api_key')}`;
+    span.textContent = span.textContent.length > 15 ? span.textContent.substring(0, 15) + '...' : span.textContent;
 });
 
 // Call this when page loads
