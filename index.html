@@ -999,12 +999,13 @@ async function performLogout() {
         };
 
         const response = await fetch(API_URL, {
-            method: 'POST',
-            headers: { 
-                'Content-Type': 'application/json',
-                'X-API-Key': currentApiKey
-            },
-            body: JSON.stringify(requestData)
+        method: 'POST',
+        headers: { 
+            'Content-Type': 'application/json',
+            'X-API-Key': localStorage.getItem('api_key'),
+            'X-Session-ID': SESSION_ID
+        },
+        body: JSON.stringify(requestData)
         });
 
         const result = await response.json();
