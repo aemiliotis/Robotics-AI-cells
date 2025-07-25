@@ -945,7 +945,7 @@ async function performLogout() {
         };
 
         console.log("Sending request:", requestData);
-
+        console.log("API stored", API_KEY);
         const response = await fetch(API_URL, {
                 method: 'POST',
                 credentials: 'include',
