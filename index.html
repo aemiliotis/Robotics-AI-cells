@@ -1184,7 +1184,7 @@ document.getElementById('logout-btn').addEventListener('click', () => {
         }
         updateAuthUI();
         document.getElementById('logout-btn').addEventListener('click', logoutUser);
-        document.getElementById('copy-key-btn').addEventListener('click', copyApiKey);
+        document.getElementById('copy-key-btn')?.addEventListener('click', copyApiKeyToClipboard);
     });
   executeFromUrl();
 });
