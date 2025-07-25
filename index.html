@@ -869,7 +869,30 @@
         function updateAuthUI() {
     const isLoggedIn = !!localStorage.getItem('api_key');
     document.getElementById('logout-btn').style.display = isLoggedIn ? 'block' : 'none';
-    document.getElementById('api-key-display').style.display = isLoggedIn ? 'flex' : 'none';
+    
+    const apiKeyDisplay = document.getElementById('api-key-display');
+    if (apiKeyDisplay) {
+        apiKeyDisplay.style.display = isLoggedIn ? 'flex' : 'none';
+        apiKeyDisplay.querySelector('span').textContent = 'API Key: ********';
+        document.getElementById('show-key-btn').textContent = 'Show';
+        document.getElementById('copy-key-btn').style.display = 'none';
+    }
+}
+
+        function copyApiKey() {
+    const apiKey = localStorage.getItem('api_key');
+    if (!apiKey) return;
+    
+    navigator.clipboard.writeText(apiKey).then(() => {
+        const copyBtn = document.getElementById('copy-key-btn');
+        copyBtn.textContent = 'Copied!';
+        setTimeout(() => {
+            copyBtn.textContent = 'Copy';
+        }, 2000);
+    }).catch(err => {
+        console.error('Failed to copy API key:', err);
+        alert('Failed to copy API key to clipboard');
+    });
         }
 
 let isLoggingOut = false;
@@ -1090,13 +1113,17 @@ function executeFromUrl() {
 
 document.getElementById('show-key-btn')?.addEventListener('click', function() {
     const span = this.previousElementSibling;
+    const copyBtn = document.getElementById('copy-key-btn');
+    
     if (span.textContent.includes('****')) {
-        span.textContent = `API Key: ${localStorage.getItem('api_key')}`;
-        span.textContent = span.textContent.length > 15 ? span.textContent.substring(0, 15) + '...' : span.textContent;
+        const apiKey = localStorage.getItem('api_key');
+        span.textContent = `API Key: ${apiKey}`;
         this.textContent = 'Hide';
+        copyBtn.style.display = 'inline-block';
     } else {
         span.textContent = 'API Key: ********';
         this.textContent = 'Show';
+        copyBtn.style.display = 'none';
     }
 });
 
@@ -1130,6 +1157,7 @@ document.getElementById('logout-btn').addEventListener('click', () => {
         }
         updateAuthUI();
         document.getElementById('logout-btn').addEventListener('click', logoutUser);
+        document.getElementById('copy-key-btn')?.addEventListener('click', copyApiKey);
     });
   executeFromUrl();
 });
