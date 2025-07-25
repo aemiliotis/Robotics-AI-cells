@@ -160,6 +160,17 @@
 #cancel-logout-btn:hover {
     background-color: var(--secondary) !important;
 }
+
+        #copy-key-btn {
+    background-color: var(--accent);
+    padding: 4px 8px;
+    font-size: 0.8em;
+    margin-left: 5px;
+}
+
+#copy-key-btn:hover {
+    background-color: #039be5; /* Slightly darker accent color */
+}
         
         button {
             background-color: var(--primary);
@@ -286,12 +297,13 @@
         </div>
 
         <div class="api-key-section" style="display: none;">
-        <div id="api-key-display">
-            <span>API Key: ********</span>
-            <button id="show-key-btn">Show</button>
-        </div>
-        <button id="logout-btn" class="logout-button">Logout</button>
-        </div>
+    <div id="api-key-display">
+        <span>API Key: ********</span>
+        <button id="show-key-btn">Show</button>
+        <button id="copy-key-btn" style="display: none;">Copy</button>
+    </div>
+    <button id="logout-btn" class="logout-button">Logout</button>
+</div>
         
         <div class="tabs">
             <div class="tab active" data-tab="all">All Cells</div>
