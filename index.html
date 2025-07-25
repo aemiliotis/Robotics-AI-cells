@@ -899,12 +899,18 @@ async function performLogout() {
 }
 
         async function executeCell(cellId) {
+    // Get current API key from localStorage (not just the initial constant)
+    const currentApiKey = localStorage.getItem('api_key');
+    if (!currentApiKey) {
+        showLoginModal();
+        return;
+    }
+
     const cell = CELLS.find(c => c.id === cellId);
-    if (!cell) return;
-            if (!API_KEY) {
-                showLoginModal();
-                return;
-            }
+    if (!cell) {
+        console.error(`Cell ${cellId} not found`);
+        return;
+    }
 
     const responseElement = document.getElementById(`${cellId}_response`);
     const button = document.querySelector(`.cell-card[data-cell-id="${cellId}"] button`);
@@ -915,28 +921,34 @@ async function performLogout() {
     button.disabled = true;
 
     try {
-        // Prepare input data
+        // Prepare input data with better error handling
         const cellInputData = {};
         for (const input of cell.inputs) {
             const inputElement = document.getElementById(`${cellId}_${input.id}`);
             const value = inputElement.value.trim();
             
-            switch(input.type) {
-                case 'number':
-                    cellInputData[input.id] = parseFloat(value);
-                    if (isNaN(cellInputData[input.id])) throw new Error('Invalid number');
-                    break;
-                case 'text':
-                case 'select':
-                    cellInputData[input.id] = value;
-                    break;
-                case 'json':
-                    cellInputData[input.id] = value ? JSON.parse(value) : null;
-                    break;
+            try {
+                switch(input.type) {
+                    case 'number':
+                        cellInputData[input.id] = parseFloat(value);
+                        if (isNaN(cellInputData[input.id])) {
+                            throw new Error(`Invalid number for ${input.label}`);
+                        }
+                        break;
+                    case 'text':
+                    case 'select':
+                        cellInputData[input.id] = value;
+                        break;
+                    case 'json':
+                        cellInputData[input.id] = value ? JSON.parse(value) : null;
+                        break;
+                }
+            } catch (e) {
+                throw new Error(`Invalid input for ${input.label}: ${e.message}`);
             }
         }
 
-        // Structure data to match backend expectations
+        // Structure request data
         const requestData = {
             cells: [cellId],
             data: {
@@ -944,31 +956,30 @@ async function performLogout() {
             }
         };
 
-        console.log("Sending request:", requestData);
-        
         const response = await fetch(API_URL, {
-                method: 'POST',
-                headers: { 
-                    'Content-Type': 'application/json',
-                    'X-API-Key': API_KEY
-                },
-                body: JSON.stringify(requestData)
-            });
-        console.log("Sending fetch:", response);
+            method: 'POST',
+            headers: { 
+                'Content-Type': 'application/json',
+                'X-API-Key': currentApiKey
+            },
+            body: JSON.stringify(requestData)
+        });
+
         const result = await response.json();
-        console.log("API Response:", result);
         
-        if (!response.ok || !result.success) {
+        if (!response.ok) {
             throw new Error(result.error || `API request failed with status ${response.status}`);
         }
 
-        // Handle backend response format
+        // More flexible response handling
         if (result.results && result.results[cellId]) {
-            updateAuthUI();
             responseElement.textContent = JSON.stringify(result.results[cellId], null, 2);
             responseElement.className = 'response success';
+        } else if (result[cellId]) { // Alternative response format
+            responseElement.textContent = JSON.stringify(result[cellId], null, 2);
+            responseElement.className = 'response success';
         } else {
-            throw new Error('API did not return results for this cell');
+            throw new Error('Unexpected API response format');
         }
         
         updateLastUpdate();
@@ -977,10 +988,15 @@ async function performLogout() {
         console.error('Execution error:', error);
         responseElement.textContent = `Error: ${error.message}`;
         responseElement.className = 'response error';
+        
+        // Show more detailed error for JSON parsing issues
+        if (error instanceof SyntaxError) {
+            responseElement.textContent = `JSON Error: ${error.message}`;
+        }
     } finally {
         button.disabled = false;
     }
-}
+        }
 
         function switchTab(tabId) {
             // Update active tab
