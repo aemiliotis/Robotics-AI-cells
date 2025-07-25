@@ -342,6 +342,7 @@ def login():
                 cur.execute(
                     "UPDATE users SET api_key = %s, last_login = NOW() WHERE id = %s",
                     (new_api_key, user[0])
+                )
                 conn.commit()
         
         return jsonify({
