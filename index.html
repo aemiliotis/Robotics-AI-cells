@@ -160,6 +160,32 @@
 #cancel-logout-btn:hover {
     background-color: var(--secondary) !important;
 }
+
+        #copy-key-btn {
+    background: none;
+    border: 1px solid var(--primary);
+    padding: 4px;
+    border-radius: 4px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#copy-key-btn:hover {
+    background-color: var(--primary);
+    color: white;
+}
+
+#copy-key-btn svg {
+    pointer-events: none;
+}
+
+#api-key-display {
+    display: flex;
+    align-items: center;
+    gap: 8px; /* Reduced from 10px for better spacing */
+}
         
         button {
             background-color: var(--primary);
