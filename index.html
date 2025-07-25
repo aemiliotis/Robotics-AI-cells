@@ -834,7 +834,8 @@
         
         const result = await response.json();
         if (result.success) {
-            handleAuthSuccess(result.api_key);
+            localStorage.setItem('api_key', result.api_key);
+            updateAuthUI();
             location.reload();
         } else {
             alert(result.error || "Registration failed");
@@ -859,48 +860,6 @@
     document.getElementById('api-key-display').style.display = isLoggedIn ? 'flex' : 'none';
         }
 
-        let SESSION_ID = localStorage.getItem('session_id') || '';
-
-function handleAuthSuccess(apiKey) {
-    localStorage.setItem('api_key', apiKey);
-    SESSION_ID = crypto.randomUUID();
-    localStorage.setItem('session_id', SESSION_ID);
-    
-    // Register session with backend
-    fetch('https://robotics-ai-cells-m5gy.onrender.com/register-session', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-API-Key': apiKey
-        },
-        body: JSON.stringify({ session_id: SESSION_ID })
-    }).then(() => {
-        updateAuthUI();
-        startSessionHeartbeat();
-    });
-}
-
-function startSessionHeartbeat() {
-    // Send heartbeat every 5 minutes
-    setInterval(() => {
-        if (SESSION_ID && API_KEY) {
-            fetch('https://robotics-ai-cells-m5gy.onrender.com/session-heartbeat', {
-                method: 'POST',
-                headers: {
-                    'X-API-Key': localStorage.getItem('api_key'),
-                    'X-Session-ID': SESSION_ID
-                }
-            }).catch(() => {
-                // Session expired
-                localStorage.removeItem('api_key');
-                localStorage.removeItem('session_id');
-                updateAuthUI();
-                alert('Session expired. Please login again.');
-            });
-        }
-    }, 300000); // 5 minutes
-}
-        
 let isLoggingOut = false;
 
 async function logoutUser() {
@@ -928,50 +887,24 @@ async function logoutUser() {
 
 async function performLogout() {
     const apiKey = localStorage.getItem('api_key');
-    const sessionId = localStorage.getItem('session_id');
-    
-    if (!apiKey || !sessionId) {
-        localStorage.removeItem('api_key');
-        localStorage.removeItem('session_id');
-        updateAuthUI();
-        return;
-    }
+    if (!apiKey) return;
 
     const btn = document.getElementById('logout-btn');
     btn.disabled = true;
     btn.textContent = 'Logging out...';
-
-    try {
-        await fetch('https://robotics-ai-cells-m5gy.onrender.com/logout', {
-            method: 'POST',
-            headers: {
-                'X-API-Key': apiKey,
-                'X-Session-ID': sessionId
-            }
-        });
-    } finally {
-        localStorage.removeItem('api_key');
-        localStorage.removeItem('session_id');
-        updateAuthUI();
-        btn.disabled = false;
-        btn.textContent = 'Logout';
-        location.reload();
-    }
+    localStorage.removeItem('api_key');
+    updateAuthUI();
+    alert('Logged out successfully!');
+    location.reload();
 }
 
         async function executeCell(cellId) {
-    // Get current API key from localStorage (not just the initial constant)
-    const currentApiKey = localStorage.getItem('api_key');
-    if (!currentApiKey) {
-        showLoginModal();
-        return;
-    }
-
     const cell = CELLS.find(c => c.id === cellId);
-    if (!cell) {
-        console.error(`Cell ${cellId} not found`);
-        return;
-    }
+    if (!cell) return;
+            if (!API_KEY) {
+                showLoginModal();
+                return;
+            }
 
     const responseElement = document.getElementById(`${cellId}_response`);
     const button = document.querySelector(`.cell-card[data-cell-id="${cellId}"] button`);
@@ -982,34 +915,28 @@ async function performLogout() {
     button.disabled = true;
 
     try {
-        // Prepare input data with better error handling
+        // Prepare input data
         const cellInputData = {};
         for (const input of cell.inputs) {
             const inputElement = document.getElementById(`${cellId}_${input.id}`);
             const value = inputElement.value.trim();
             
-            try {
-                switch(input.type) {
-                    case 'number':
-                        cellInputData[input.id] = parseFloat(value);
-                        if (isNaN(cellInputData[input.id])) {
-                            throw new Error(`Invalid number for ${input.label}`);
-                        }
-                        break;
-                    case 'text':
-                    case 'select':
-                        cellInputData[input.id] = value;
-                        break;
-                    case 'json':
-                        cellInputData[input.id] = value ? JSON.parse(value) : null;
-                        break;
-                }
-            } catch (e) {
-                throw new Error(`Invalid input for ${input.label}: ${e.message}`);
+            switch(input.type) {
+                case 'number':
+                    cellInputData[input.id] = parseFloat(value);
+                    if (isNaN(cellInputData[input.id])) throw new Error('Invalid number');
+                    break;
+                case 'text':
+                case 'select':
+                    cellInputData[input.id] = value;
+                    break;
+                case 'json':
+                    cellInputData[input.id] = value ? JSON.parse(value) : null;
+                    break;
             }
         }
 
-        // Structure request data
+        // Structure data to match backend expectations
         const requestData = {
             cells: [cellId],
             data: {
@@ -1017,31 +944,31 @@ async function performLogout() {
             }
         };
 
-        const response = await fetch(API_URL, {
-        method: 'POST',
-        headers: { 
-            'Content-Type': 'application/json',
-            'X-API-Key': localStorage.getItem('api_key'),
-            'X-Session-ID': SESSION_ID
-        },
-        body: JSON.stringify(requestData)
-        });
-
-        const result = await response.json();
+        console.log("Sending request:", requestData);
         
-        if (!response.ok) {
+        const response = await fetch(API_URL, {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'X-API-Key': API_KEY
+                },
+                body: JSON.stringify(requestData)
+            });
+        console.log("Sending fetch:", response);
+        const result = await response.json();
+        console.log("API Response:", result);
+        
+        if (!response.ok || !result.success) {
             throw new Error(result.error || `API request failed with status ${response.status}`);
         }
 
-        // More flexible response handling
+        // Handle backend response format
         if (result.results && result.results[cellId]) {
+            updateAuthUI();
             responseElement.textContent = JSON.stringify(result.results[cellId], null, 2);
             responseElement.className = 'response success';
-        } else if (result[cellId]) { // Alternative response format
-            responseElement.textContent = JSON.stringify(result[cellId], null, 2);
-            responseElement.className = 'response success';
         } else {
-            throw new Error('Unexpected API response format');
+            throw new Error('API did not return results for this cell');
         }
         
         updateLastUpdate();
@@ -1050,15 +977,10 @@ async function performLogout() {
         console.error('Execution error:', error);
         responseElement.textContent = `Error: ${error.message}`;
         responseElement.className = 'response error';
-        
-        // Show more detailed error for JSON parsing issues
-        if (error instanceof SyntaxError) {
-            responseElement.textContent = `JSON Error: ${error.message}`;
-        }
     } finally {
         button.disabled = false;
     }
-        }
+}
 
         function switchTab(tabId) {
             // Update active tab
