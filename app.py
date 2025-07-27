@@ -139,24 +139,16 @@ def require_api_key(f):
 
 # CORS Configuration
 CORS(app, resources={
-    r"/ai-api": {
+    r"/*": {  # Apply to ALL routes
         "origins": [
             "https://aemiliotis.github.io",
             "https://aemiliotis.github.io/Robotics-AI-Cells",
-            "http://localhost:*"
+            "http://localhost:*",
+            "http://127.0.0.1:*"
         ],
-        "methods": ["POST", "OPTIONS"],
-        "allow_headers": ["Content-Type", "X-API-Key", "X-Session-ID"],
+        "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+        "allow_headers": ["*"],  # Allow all headers
         "supports_credentials": True
-    },
-    r"/register": {
-        "origins": [
-            "https://aemiliotis.github.io",
-            "https://aemiliotis.github.io/Robotics-AI-Cells",
-            "http://localhost:*"
-        ],
-        "methods": ["POST", "OPTIONS"],
-        "allow_headers": ["Content-Type"]
     }
 })
 
