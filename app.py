@@ -310,6 +310,8 @@ def register():
             "user_id": user_id,
             "message": "Account created. Keep your API key secure!"
         })
+        response.headers.add('Access-Control-Allow-Origin', 'https://aemiliotis.github.io')
+        return response
         
     except psycopg2.IntegrityError:
         return jsonify({"error": "Username already exists"}), 400
