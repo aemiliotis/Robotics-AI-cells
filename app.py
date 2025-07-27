@@ -34,14 +34,12 @@ limiter = Limiter(
     strategy="fixed-window"
 )
 
+def get_db():
+    return psycopg2.connect(os.getenv('DATABASE_URL'))
+
 # Database setup
 def init_db():
-    conn = psycopg2.connect(
-        dbname=os.environ.get('DB_NAME', 'ai_cells'),
-        user=os.environ.get('DB_USER', 'postgres'),
-        password=os.environ.get('DB_PASSWORD', ''),
-        host=os.environ.get('DB_HOST', 'localhost')
-    )
+    with get_db() as conn:
     
     with conn.cursor() as cur:
         # Create tables if they don't exist
@@ -81,9 +79,6 @@ def init_db():
         
         conn.commit()
     conn.close()
-
-def get_db():
-    return psycopg2.connect(os.getenv('DATABASE_URL'))
 
 # JWT Authentication
 def generate_jwt(user_id):
