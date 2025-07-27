@@ -699,9 +699,11 @@
             try {
                 const response = await fetch(`${CONFIG.API_BASE_URL}/usage`, {
                     method: 'GET',
+                    credentials: 'include',  // Required for cookies/sessions
                     headers: {
-                        'X-API-Key': state.apiKey,
-                        'X-Session-ID': state.sessionId
+                        'X-API-Key': localStorage.getItem('api_key'),
+                        'X-Session-Id': localStorage.getItem('session_id'),
+                        'Content-Type': 'application/json'
                     }
                 });
                 
