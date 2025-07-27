@@ -147,7 +147,7 @@ CORS(app, resources={
         "methods": ["POST", "OPTIONS"],
         "allow_headers": ["Content-Type"],
         "supports_credentials": False
-    }
+    },
     r"/usage": {
         "origins": [
             "https://aemiliotis.github.io",
