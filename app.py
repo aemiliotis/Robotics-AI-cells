@@ -149,15 +149,11 @@ CORS(app, resources={
         "supports_credentials": False
     },
     r"/usage": {
-        "origins": [
-            "https://aemiliotis.github.io",
-            "https://aemiliotis.github.io/Robotics-AI-Cells", 
-            "http://localhost:*"
-        ],
+        "origins": ["https://aemiliotis.github.io", "http://localhost:*"],
         "methods": ["GET", "OPTIONS"],
-        "allow_headers": ["Content-Type", "X-API-Key"],
+        "allow_headers": ["X-API-Key", "X-Session-Id", "Content-Type"],
         "supports_credentials": True,
-        "max_age": 600  # Cache preflight response for 10 minutes
+        "expose_headers": ["X-New-Token"]  # If you generate new tokens
     }
 })
 
