@@ -1,4 +1,3 @@
-this is backend app.py
 from flask import Flask, request, jsonify
 from cell_loader import load_cells
 import os
