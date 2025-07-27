@@ -385,11 +385,11 @@ def list_cells():
 
 @app.route('/ping', methods=['GET'])
 def ping():
-    return jsonify({
+    return _corsify_response(jsonify({
         "status": "alive",
         "timestamp": datetime.utcnow().isoformat(),
         "cells_loaded": len(ai_cells)
-    })
+    }))
 
 @app.route('/usage', methods=['GET'])
 @require_api_key
