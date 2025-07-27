@@ -37,9 +37,9 @@ limiter = Limiter(
 # Database setup
 def init_db():
     conn = psycopg2.connect(
-        dbname=os.environ.get('DATABASE_URL', 'ai_cells'),
+        dbname=os.environ.get('DB_NAME', 'ai_cells'),
         user=os.environ.get('DB_USER', 'postgres'),
-        password=os.environ.get('SECRET_KEY', ''),
+        password=os.environ.get('DB_PASSWORD', ''),
         host=os.environ.get('DB_HOST', 'localhost')
     )
     
@@ -84,9 +84,9 @@ def init_db():
 
 def get_db():
     return psycopg2.connect(
-        dbname=os.environ.get('DATABASE_URL', 'ai_cells'),
+        dbname=os.environ.get('DB_NAME', 'ai_cells'),
         user=os.environ.get('DB_USER', 'postgres'),
-        password=os.environ.get('SECRET_KEY', ''),
+        password=os.environ.get('DB_PASSWORD', ''),
         host=os.environ.get('DB_HOST', 'localhost')
     )
 
