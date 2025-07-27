@@ -139,7 +139,6 @@ def require_api_key(f):
 
 # CORS Configuration
 CORS(app, resources={
-CORS(app, resources={
     r"/ai-api": {
         "origins": [
             "https://aemiliotis.github.io",
