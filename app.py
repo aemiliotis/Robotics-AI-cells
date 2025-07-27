@@ -156,7 +156,8 @@ CORS(app, resources={
             "http://localhost:*"
         ],
         "methods": ["POST", "OPTIONS"],
-        "allow_headers": ["Content-Type"]
+        "allow_headers": ["Content-Type"],
+        "supports_credentials": False
     }
 })
 
