@@ -148,6 +148,17 @@ CORS(app, resources={
         "allow_headers": ["Content-Type"],
         "supports_credentials": False
     }
+    r"/usage": {
+        "origins": [
+            "https://aemiliotis.github.io",
+            "https://aemiliotis.github.io/Robotics-AI-Cells", 
+            "http://localhost:*"
+        ],
+        "methods": ["GET", "OPTIONS"],
+        "allow_headers": ["Content-Type", "X-API-Key"],
+        "supports_credentials": True,
+        "max_age": 600  # Cache preflight response for 10 minutes
+    }
 })
 
 # Load AI cells
@@ -381,7 +392,8 @@ def ping():
     }))
 
 @app.route('/usage', methods=['GET'])
-@require_api_key
+@require_api_key  # Your existing auth decorator
+@limiter.limit("5/minute")  # Rate limiting
 def get_usage():
     try:
         with get_db() as conn:
