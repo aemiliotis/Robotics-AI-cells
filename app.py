@@ -40,45 +40,44 @@ def get_db():
 # Database setup
 def init_db():
     with get_db() as conn:
-    
-    with conn.cursor() as cur:
-        # Create tables if they don't exist
-        cur.execute("""
-            CREATE TABLE IF NOT EXISTS users (
-                id SERIAL PRIMARY KEY,
-                username VARCHAR(50) UNIQUE NOT NULL,
-                password_hash VARCHAR(256) NOT NULL,
-                api_key VARCHAR(64) UNIQUE,
-                created_at TIMESTAMP DEFAULT NOW(),
-                last_login TIMESTAMP
-            )
-        """)
+        with conn.cursor() as cur:
+            # Create tables if they don't exist
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS users (
+                    id SERIAL PRIMARY KEY,
+                    username VARCHAR(50) UNIQUE NOT NULL,
+                    password_hash VARCHAR(256) NOT NULL,
+                    api_key VARCHAR(64) UNIQUE,
+                    created_at TIMESTAMP DEFAULT NOW(),
+                    last_login TIMESTAMP
+                )
+            """)
         
-        cur.execute("""
-            CREATE TABLE IF NOT EXISTS cell_usage (
-                id SERIAL PRIMARY KEY,
-                user_id INTEGER REFERENCES users(id),
-                cell_name VARCHAR(50) NOT NULL,
-                input_hash VARCHAR(64) NOT NULL,
-                session_id VARCHAR(36) NOT NULL,
-                timestamp TIMESTAMP DEFAULT NOW(),
-                execution_time FLOAT
-            )
-        """)
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS cell_usage (
+                    id SERIAL PRIMARY KEY,
+                    user_id INTEGER REFERENCES users(id),
+                    cell_name VARCHAR(50) NOT NULL,
+                    input_hash VARCHAR(64) NOT NULL,
+                    session_id VARCHAR(36) NOT NULL,
+                    timestamp TIMESTAMP DEFAULT NOW(),
+                    execution_time FLOAT
+                )
+            """)
         
-        cur.execute("""
-            CREATE TABLE IF NOT EXISTS user_sessions (
-                session_id VARCHAR(36) PRIMARY KEY,
-                user_id INTEGER REFERENCES users(id),
-                ip_address VARCHAR(45),
-                user_agent TEXT,
-                created_at TIMESTAMP DEFAULT NOW(),
-                last_active TIMESTAMP
-            )
-        """)
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS user_sessions (
+                    session_id VARCHAR(36) PRIMARY KEY,
+                    user_id INTEGER REFERENCES users(id),
+                    ip_address VARCHAR(45),
+                    user_agent TEXT,
+                    created_at TIMESTAMP DEFAULT NOW(),
+                    last_active TIMESTAMP
+                )
+            """)
         
-        conn.commit()
-    conn.close()
+            conn.commit()
+        conn.close()
 
 # JWT Authentication
 def generate_jwt(user_id):
