@@ -20,18 +20,12 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', secrets.token_hex(32))
 app.config['JWT_ALGORITHM'] = 'HS256'
 
-# Rate limiting with Redis
-redis_client = redis.Redis(
-    host=os.environ.get('REDIS_HOST', 'localhost'),
-    port=6379,
-    decode_responses=True
-)
-
 limiter = Limiter(
     app=app,
-    key_func=lambda: request.headers.get('X-API-Key'),
-    storage_uri="redis://localhost:6379",
-    strategy="fixed-window"
+    key_func=get_remote_address,  # Or keep using API key: lambda: request.headers.get('X-API-Key')
+    storage_uri="memory://",  # In-memory storage
+    strategy="fixed-window",
+    default_limits=["200 per day", "50 per hour"]
 )
 
 def get_db():
