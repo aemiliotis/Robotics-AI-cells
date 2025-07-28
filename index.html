@@ -1244,29 +1244,33 @@
         }
 
         function toggleApiKeyVisibility() {
-            const isVisible = elements.showApiKey.dataset.visible === 'true';
-            if (isVisible) {
-                elements.showApiKey.textContent = 'API Key: ********';
-                elements.showApiKey.dataset.visible = 'false';
-                elements.showKeyBtn.textContent = 'Show';
-            } else {
-                elements.showApiKey.textContent = `API Key: ${state.apiKey}`;
-                elements.showApiKey.dataset.visible = 'true';
-                elements.showKeyBtn.textContent = 'Hide';
-            }
-        }
+    const isVisible = elements.showApiKey.dataset.visible === 'true';
+    if (isVisible) {
+        // Hide the key (show masked version)
+        elements.showApiKey.textContent = 'API Key: ********';
+        elements.showApiKey.dataset.visible = 'false';
+        elements.showKeyBtn.textContent = 'Show';
+    } else {
+        // Show partial key (first 5 chars + dots)
+        const partialKey = state.apiKey.substring(0, 5) + '...';
+        elements.showApiKey.textContent = `API Key: ${partialKey}`;
+        elements.showApiKey.dataset.visible = 'true';
+        elements.showKeyBtn.textContent = 'Hide';
+    }
+}
 
         function updateApiKeyDisplay(show = false) {
-            if (show) {
-                elements.showApiKey.textContent = `API Key: ${state.apiKey}`;
-                elements.showApiKey.dataset.visible = 'true';
-                elements.showKeyBtn.textContent = 'Hide';
-            } else {
-                elements.showApiKey.textContent = 'API Key: ********';
-                elements.showApiKey.dataset.visible = 'false';
-                elements.showKeyBtn.textContent = 'Show';
-            }
-        }
+    if (show) {
+        const partialKey = state.apiKey.substring(0, 5) + '...';
+        elements.showApiKey.textContent = `API Key: ${partialKey}`;
+        elements.showApiKey.dataset.visible = 'true';
+        elements.showKeyBtn.textContent = 'Hide';
+    } else {
+        elements.showApiKey.textContent = 'API Key: ********';
+        elements.showApiKey.dataset.visible = 'false';
+        elements.showKeyBtn.textContent = 'Show';
+    }
+}
 
         // Toast notification system
         function showToast(message, type = 'info') {
