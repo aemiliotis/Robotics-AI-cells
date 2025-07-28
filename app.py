@@ -127,7 +127,7 @@ CORS(app, resources={
             "http://localhost:*"
         ],
         "methods": ["POST", "OPTIONS"],
-        "allow_headers": ["Content-Type", "X-API-Key", "X-Session-ID", "X-Request-ID"],
+        "allow_headers": ["Content-Type", "X-API-Key", "X-Session-Id", "X-Request-Id"],
         "supports_credentials": True
     },
     r"/register": {
@@ -150,7 +150,7 @@ CORS(app, resources={
     r"/logout": {
         "origins": ["https://aemiliotis.github.io"],
         "methods": ["POST", "OPTIONS"],
-        "allow_headers": ["Content-Type", "X-API-Key", "X-Session-ID"],
+        "allow_headers": ["Content-Type", "X-API-Key", "X-Session-Id"],
         "supports_credentials": True
     }
 })
@@ -177,7 +177,7 @@ def handle_request():
     try:
         request_data = request.json
         user_id = request.user_id
-        session_id = request.headers.get('X-Session-ID', secrets.token_hex(16))
+        session_id = request.headers.get('X-Session-Id', secrets.token_hex(16))
         cell_names = request_data.get("cells", [])
         input_data = request_data.get("data", {})
         
