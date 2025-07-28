@@ -1148,6 +1148,7 @@
         }
 
         async function handleRegister() {
+            hideLoginModal();
             const username = document.getElementById('register-username').value.trim();
             const password = document.getElementById('register-password').value;
             const confirm = document.getElementById('register-confirm').value;
