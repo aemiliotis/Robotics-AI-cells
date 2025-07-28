@@ -1397,7 +1397,7 @@
             
             try {
                 // Verify the API key
-                const response = await fetch(`${CONFIG.API_BASE_URL}/ping`, {
+                const response = await fetch(`${CONFIG.API_BASE_URL}/ai-api`, {
                     headers: {
                         'X-API-Key': apiKey,
                         'X-Session-ID': state.sessionId
