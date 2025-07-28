@@ -129,7 +129,7 @@ CORS(app, resources={
             "http://localhost:*"
         ],
         "methods": ["POST", "OPTIONS"],
-        "allow_headers": ["Content-Type", "X-API-Key", "X-Session-ID"],
+        "allow_headers": ["Content-Type", "X-API-Key", "X-Session-ID", "X-Request-ID"],
         "supports_credentials": True
     },
     r"/register": {
