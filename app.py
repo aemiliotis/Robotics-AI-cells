@@ -22,8 +22,8 @@ app.config['JWT_ALGORITHM'] = 'HS256'
 
 limiter = Limiter(
     app=app,
-    key_func=get_remote_address,  # Or keep using API key: lambda: request.headers.get('X-API-Key')
-    storage_uri="memory://",  # In-memory storage
+    key_func=get_remote_address,
+    storage_uri="memory://",
     strategy="fixed-window",
     default_limits=["200 per day", "50 per hour"]
 )
@@ -35,7 +35,6 @@ def get_db():
 def init_db():
     with get_db() as conn:
         with conn.cursor() as cur:
-            # Create tables if they don't exist
             cur.execute("""
                 CREATE TABLE IF NOT EXISTS users (
                     id SERIAL PRIMARY KEY,
@@ -108,7 +107,6 @@ def require_api_key(f):
                 if not user:
                     return jsonify({"error": "Invalid API key"}), 401
                 
-                # Update last active time
                 cur.execute("""
                     UPDATE users SET last_login = NOW() WHERE id = %s
                 """, (user[0],))
@@ -193,11 +191,9 @@ def handle_request():
                     continue
                     
                 try:
-                    # Create isolated workspace
                     work_dir = f"/tmp/cell_{user_id}_{session_id}"
                     os.makedirs(work_dir, exist_ok=True)
                     
-                    # Prepare input with context
                     cell_input = input_data.get(cell_name, {})
                     cell_input['_user_context'] = {
                         'user_id': user_id,
@@ -205,7 +201,6 @@ def handle_request():
                         'timestamp': datetime.utcnow().isoformat()
                     }
                     
-                    # Execute cell with timing
                     start_time = datetime.utcnow()
                     results[cell_name] = ai_cells[cell_name](cell_input)
                     exec_time = (datetime.utcnow() - start_time).total_seconds()
@@ -215,7 +210,6 @@ def handle_request():
                     app.logger.error(f"Cell {cell_name} error for user {user_id}: {str(e)}")
                     results[cell_name] = {"error": str(e)}
                 finally:
-                    # Clean up workspace
                     shutil.rmtree(work_dir, ignore_errors=True)
         
         # Log usage
@@ -438,7 +432,6 @@ def _corsify_response(response):
     response.headers.add("Access-Control-Allow-Origin", "*")
     return response
 
-# Initialize database and run app
 if __name__ == '__main__':
     init_db()
     app.run(host='0.0.0.0', port=5000, debug=True)
