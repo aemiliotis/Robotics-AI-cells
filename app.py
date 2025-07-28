@@ -146,6 +146,12 @@ CORS(app, resources={
         "allow_headers": ["X-API-Key", "X-Session-Id", "Content-Type"],
         "supports_credentials": True,
         "expose_headers": ["X-New-Token"]  # If you generate new tokens
+    },
+    r"/logout": {
+        "origins": ["https://aemiliotis.github.io"],
+        "methods": ["POST", "OPTIONS"],
+        "allow_headers": ["Content-Type", "X-API-Key", "X-Session-ID"],
+        "supports_credentials": True
     }
 })
 
