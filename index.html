@@ -1328,7 +1328,7 @@
 
         async function checkApiStatus() {
             elements.apiStatusIndicator.className = 'api-status checking';
-            elements.connectionStatus.textContent = 'Checking API connection...';
+            elements.connectionStatus.textContent = 'Checking Server connection...';
             
             try {
                 const startTime = performance.now();
@@ -1339,7 +1339,7 @@
                     const data = await response.json();
                     state.apiStatus = true;
                     elements.apiStatusIndicator.className = 'api-status online';
-                    elements.connectionStatus.textContent = `Serverv${data.version || '1.0'} ONLINE`;
+                    elements.connectionStatus.textContent = `Server v${data.version || '1.0'} ONLINE`;
                     elements.latencyDisplay.textContent = `${latency}ms`;
                 } else {
                     throw new Error('API not responding properly');
