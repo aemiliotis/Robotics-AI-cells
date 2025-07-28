@@ -207,7 +207,7 @@ def handle_request():
                     
                     # Execute cell with timing
                     start_time = datetime.utcnow()
-                    results[cell_name] = ai_cells[cell_name](cell_input, work_dir)
+                    results[cell_name] = ai_cells[cell_name](cell_input)
                     exec_time = (datetime.utcnow() - start_time).total_seconds()
                     execution_times[cell_name] = exec_time
                     
