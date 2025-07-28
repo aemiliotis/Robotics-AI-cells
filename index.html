@@ -255,7 +255,6 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
-        /* Modal styles */
         .modal {
             display: none;
             position: fixed;
@@ -301,7 +300,6 @@
             padding: 10px 20px;
         }
 
-        /* Toast notifications */
         .toast {
             position: fixed;
             bottom: 20px;
@@ -336,7 +334,6 @@
             color: var(--text);
         }
 
-        /* Responsive adjustments */
         @media (max-width: 768px) {
             .cell-grid {
                 grid-template-columns: 1fr;
@@ -358,7 +355,6 @@
             }
         }
 
-        /* Loader animation */
         .loader {
             display: inline-block;
             width: 20px;
@@ -383,7 +379,6 @@
             <p>Preview Panel for Robotic AI Cells</p>
         </header>
 
-        <!-- Login Modal -->
         <div id="login-modal" class="modal">
             <div class="modal-content">
                 <h3 class="modal-title">API Authentication</h3>
@@ -400,7 +395,6 @@
             </div>
         </div>
 
-        <!-- Registration Modal -->
         <div id="register-modal" class="modal">
             <div class="modal-content">
                 <h3 class="modal-title">Create New Account</h3>
@@ -423,7 +417,6 @@
             </div>
         </div>
 
-        <!-- Logout Confirmation Modal -->
         <div id="logout-modal" class="modal">
             <div class="modal-content">
                 <h3 class="modal-title">Confirm Logout</h3>
@@ -438,10 +431,8 @@
             </div>
         </div>
 
-        <!-- Toast Notification -->
         <div id="toast" class="toast"></div>
 
-        <!-- Auth Section -->
         <div class="auth-section">
             <div>
                 <span id="api-status" class="api-status offline"></span>
@@ -458,7 +449,6 @@
             </div>
         </div>
 
-        <!-- Status Bar -->
         <div class="status-bar">
             <div>
                 <span id="connection-status">Status: Checking Server connection...</span>
@@ -470,7 +460,6 @@
             </div>
         </div>
         
-        <!-- Tabs Navigation -->
         <div class="tabs">
             <div class="tab active" data-tab="all">All Cells</div>
             <div class="tab" data-tab="motion">Motion Control</div>
@@ -480,7 +469,6 @@
             <div class="tab" data-tab="history">Usage History</div>
         </div>
         
-        <!-- Tab Contents -->
         <div class="tab-content active" id="all-tab">
             <div class="cell-grid" id="all-cells">
                 <!-- All cells will be loaded here -->
@@ -558,7 +546,6 @@
         // Store session ID
         localStorage.setItem('session_id', state.sessionId);
 
-        // All 25 cells configuration (same as before)
         const CELLS = [
             // 1. Core Mathematical Cells
             {
@@ -872,7 +859,6 @@
             userInfo: document.getElementById('user-info'),
             usernameDisplay: document.getElementById('username-display'),
             toast: document.getElementById('toast'),
-            // ... add other element references as needed
         };
 
         // Initialize the application
@@ -1408,7 +1394,6 @@
                     throw new Error('Invalid API key');
                 }
                 
-                // Key is valid - store it
                 localStorage.setItem('api_key', apiKey);
                 state.apiKey = apiKey;
                 
@@ -1524,12 +1509,10 @@
         function toggleApiKeyVisibility() {
     const isVisible = elements.showApiKey.dataset.visible === 'true';
     if (isVisible) {
-        // Hide the key (show masked version)
         elements.showApiKey.textContent = 'API Key: ********';
         elements.showApiKey.dataset.visible = 'false';
         elements.showKeyBtn.textContent = 'Show';
     } else {
-        // Show partial key (first 5 chars + dots)
         const partialKey = state.apiKey.substring(0, 5) + '...';
         elements.showApiKey.textContent = `API Key: ${partialKey}`;
         elements.showApiKey.dataset.visible = 'true';
