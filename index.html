@@ -1339,7 +1339,7 @@
                     const data = await response.json();
                     state.apiStatus = true;
                     elements.apiStatusIndicator.className = 'api-status online';
-                    elements.connectionStatus.textContent = `API v${data.version || '1.0'} ONLINE`;
+                    elements.connectionStatus.textContent = `Serverv${data.version || '1.0'} ONLINE`;
                     elements.latencyDisplay.textContent = `${latency}ms`;
                 } else {
                     throw new Error('API not responding properly');
@@ -1347,7 +1347,7 @@
             } catch (error) {
                 state.apiStatus = false;
                 elements.apiStatusIndicator.className = 'api-status offline';
-                elements.connectionStatus.textContent = 'API OFFLINE - Connection failed';
+                elements.connectionStatus.textContent = 'Server OFFLINE - Connection failed';
                 console.error("API Status Check Failed:", error);
             }
         }
