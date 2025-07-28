@@ -368,6 +368,7 @@ def list_cells():
     })
 
 @app.route('/ping', methods=['GET'])
+@limiter.limit("10000 per minute")
 def ping():
     return _corsify_response(jsonify({
         "status": "alive",
