@@ -171,7 +171,7 @@ def get_user_lock(user_id):
 
 # Core API Endpoint
 @app.route('/ai-api', methods=['POST'])
-@limiter.limit("10 per second")
+@limiter.limit("10000 per minute")
 @require_api_key
 def handle_request():
     try:
@@ -268,6 +268,7 @@ def handle_request():
 
 # User Management Endpoints
 @app.route('/register', methods=['POST'])
+@limiter.limit("10000 per minute")
 def register():
     try:
         data = request.get_json()
@@ -350,6 +351,7 @@ def login():
 
 @app.route('/logout', methods=['POST'])
 @require_api_key
+@limiter.limit("10000 per minute")
 def logout():
     try:
         with get_db() as conn:
@@ -366,6 +368,7 @@ def logout():
 
 # Utility Endpoints
 @app.route('/list-cells', methods=['GET'])
+@limiter.limit("10000 per minute")
 def list_cells():
     return jsonify({
         "success": True,
@@ -383,8 +386,8 @@ def ping():
     }))
 
 @app.route('/usage', methods=['GET'])
-@require_api_key  # Your existing auth decorator
-@limiter.limit("5/minute")  # Rate limiting
+@require_api_key
+@limiter.limit("10000 per minute")
 def get_usage():
     try:
         with get_db() as conn:
