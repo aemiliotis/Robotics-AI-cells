@@ -1217,28 +1217,34 @@
         }
 
         async function apiRequest(url, options) {
-            // Track active requests
-            state.activeRequests++;
-            
-            try {
-                const startTime = performance.now();
-                const response = await fetch(url, options);
-                const latency = Math.round(performance.now() - startTime);
-                
-                elements.latencyDisplay.textContent = `${latency}ms`;
-                
-                if (!response.ok) {
-                    const errorData = await response.json().catch(() => ({}));
-                    throw new Error(errorData.error || `HTTP ${response.status}`);
-                }
-                
-                return await response.json();
-            } finally {
-                state.activeRequests--;
-                processQueue();
-            }
+    // Add API key to headers if available
+    if (state.apiKey) {
+        options.headers = options.headers || {};
+        options.headers['X-API-Key'] = state.apiKey;
+        options.headers['X-Session-ID'] = state.sessionId;
+    }
+    
+    // Track active requests
+    state.activeRequests++;
+    
+    try {
+        const startTime = performance.now();
+        const response = await fetch(url, options);
+        const latency = Math.round(performance.now() - startTime);
+        
+        elements.latencyDisplay.textContent = `${latency}ms`;
+        
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.error || `HTTP ${response.status}`);
         }
-
+        
+        return await response.json();
+    } finally {
+        state.activeRequests--;
+        processQueue();
+    }
+}
         function processQueue() {
             while (state.activeRequests < CONFIG.MAX_CONCURRENT_REQUESTS && state.requestQueue.length > 0) {
                 const { resolve, reject, cellId } = state.requestQueue.shift();
