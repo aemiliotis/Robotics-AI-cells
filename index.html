@@ -1168,8 +1168,8 @@
                     headers: {
                         'Content-Type': 'application/json',
                         'X-API-Key': state.apiKey,
-                        'X-Session-ID': state.sessionId,
-                        'X-Request-ID': crypto.randomUUID()
+                        'X-Session-Id': state.sessionId,
+                        'X-Request-Id': crypto.randomUUID()
                     },
                     body: JSON.stringify(requestData)
                 });
@@ -1207,7 +1207,7 @@
     if (state.apiKey) {
         options.headers = options.headers || {};
         options.headers['X-API-Key'] = state.apiKey;
-        options.headers['X-Session-ID'] = state.sessionId;
+        options.headers['X-Session-Id'] = state.sessionId;
     }
     
     // Track active requests
@@ -1386,7 +1386,7 @@
                 const response = await fetch(`${CONFIG.API_BASE_URL}/ai-api`, {
                     headers: {
                         'X-API-Key': apiKey,
-                        'X-Session-ID': state.sessionId
+                        'X-Session-Id': state.sessionId
                     }
                 });
                 
@@ -1467,7 +1467,7 @@
                     method: 'POST',
                     headers: {
                         'X-API-Key': state.apiKey,
-                        'X-Session-ID': state.sessionId
+                        'X-Session-Id': state.sessionId
                     }
                 });
                 
