@@ -388,7 +388,7 @@ def get_usage():
     try:
         with get_db() as conn:
             with conn.cursor() as cur:
-                cur.execute("SELECT 1 FROM users WHERE api_key = %s", (request.headers.get('X-API-Key')))
+                cur.execute("SELECT 1 FROM users WHERE api_key = %s", (request.headers.get('X-API-Key'),))
                 if not cur.fetchone():
                     return jsonify({"error": "Invalid API key"}), 401
                 # Get user's cell usage stats
