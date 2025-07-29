@@ -115,7 +115,7 @@ def require_api_key(f):
                 
                 request.user_id = user[0]
                 request.username = user[1]
-                print(f"Verifiedaa")
+                print(f"Verified")
         return f(*args, **kwargs)
     return decorated_function
 
