@@ -929,99 +929,102 @@
             });
         }
 
-        function createCellCard(cell) {
-            const card = document.createElement('div');
-            card.className = 'cell-card';
-            card.dataset.cellId = cell.id;
-            
-            // Header
-            const header = document.createElement('div');
-            header.className = 'cell-header';
-            
-            const title = document.createElement('div');
-            title.className = 'cell-title';
-            title.textContent = cell.name;
-            
-            header.appendChild(title);
-            card.appendChild(header);
-            
-            // Description
-            const desc = document.createElement('p');
-            desc.textContent = cell.description;
-            desc.style.fontSize = '0.9em';
-            desc.style.color = '#666';
-            card.appendChild(desc);
-            
-            // Controls
-            const controls = document.createElement('div');
-            controls.className = 'cell-controls';
-            
-            cell.inputs.forEach(input => {
-                const label = document.createElement('label');
-                label.textContent = input.label;
-                label.style.display = 'block';
-                label.style.marginTop = '10px';
-                label.style.fontWeight = '500';
-                controls.appendChild(label);
+        function createCellCard(cell, isCategoryTab = false) {
+    const card = document.createElement('div');
+    card.className = 'cell-card';
+    card.dataset.cellId = cell.id;
+    
+    // Header
+    const header = document.createElement('div');
+    header.className = 'cell-header';
+    
+    const title = document.createElement('div');
+    title.className = 'cell-title';
+    title.textContent = cell.name;
+    
+    header.appendChild(title);
+    card.appendChild(header);
+    
+    // Description
+    const desc = document.createElement('p');
+    desc.textContent = cell.description;
+    desc.style.fontSize = '0.9em';
+    desc.style.color = '#666';
+    card.appendChild(desc);
+    
+    // Controls
+    const controls = document.createElement('div');
+    controls.className = 'cell-controls';
+    
+    cell.inputs.forEach(input => {
+        const label = document.createElement('label');
+        label.textContent = input.label;
+        label.style.display = 'block';
+        label.style.marginTop = '10px';
+        label.style.fontWeight = '500';
+        controls.appendChild(label);
 
-                let inputElement;
+        let inputElement;
+        
+        switch(input.type) {
+            case 'number':
+                inputElement = document.createElement('input');
+                inputElement.type = 'number';
+                inputElement.value = input.value;
+                if (input.min !== undefined) inputElement.min = input.min;
+                if (input.max !== undefined) inputElement.max = input.max;
+                inputElement.step = input.step || 'any';
+                break;
                 
-                switch(input.type) {
-                    case 'number':
-                        inputElement = document.createElement('input');
-                        inputElement.type = 'number';
-                        inputElement.value = input.value;
-                        if (input.min !== undefined) inputElement.min = input.min;
-                        if (input.max !== undefined) inputElement.max = input.max;
-                        inputElement.step = input.step || 'any';
-                        break;
-                        
-                    case 'text':
-                        inputElement = document.createElement('input');
-                        inputElement.type = 'text';
-                        inputElement.value = input.value;
-                        break;
-                        
-                    case 'select':
-                        inputElement = document.createElement('select');
-                        input.options.forEach(option => {
-                            const optElement = document.createElement('option');
-                            optElement.value = option;
-                            optElement.textContent = option;
-                            if (option === input.value) optElement.selected = true;
-                            inputElement.appendChild(optElement);
-                        });
-                        break;
-                        
-                    case 'json':
-                        inputElement = document.createElement('textarea');
-                        inputElement.value = typeof input.value === 'string' ? input.value : JSON.stringify(input.value, null, 2);
-                        inputElement.rows = 4;
-                        break;
-                }
+            case 'text':
+                inputElement = document.createElement('input');
+                inputElement.type = 'text';
+                inputElement.value = input.value;
+                break;
                 
-                inputElement.id = `${cell.id}_${input.id}`;
-                //inputElement.id = `${cell.id}_${cell.category}_${input.id}`;
-                inputElement.className = 'cell-input';
-                controls.appendChild(inputElement);
-            });
-            
-            const button = document.createElement('button');
-            button.textContent = 'Execute';
-            button.className = 'execute-btn';
-            controls.appendChild(button);
-            
-            card.appendChild(controls);
-            
-            // Response area
-            const response = document.createElement('div');
-            response.className = 'response';
-            response.id = `${cell.id}_${cell.category}_response`;
-            response.textContent = 'Response will appear here...';
-            card.appendChild(response);
-            
-            return card;
+            case 'select':
+                inputElement = document.createElement('select');
+                input.options.forEach(option => {
+                    const optElement = document.createElement('option');
+                    optElement.value = option;
+                    optElement.textContent = option;
+                    if (option === input.value) optElement.selected = true;
+                    inputElement.appendChild(optElement);
+                });
+                break;
+                
+            case 'json':
+                inputElement = document.createElement('textarea');
+                inputElement.value = typeof input.value === 'string' ? input.value : JSON.stringify(input.value, null, 2);
+                inputElement.rows = 4;
+                break;
         }
+        
+        inputElement.id = isCategoryTab 
+            ? `${cell.id}_${cell.category}_${input.id}`
+            : `${cell.id}_${input.id}`;
+        inputElement.className = 'cell-input';
+        controls.appendChild(inputElement);
+    });
+    
+    const button = document.createElement('button');
+    button.textContent = 'Execute';
+    button.className = 'execute-btn';
+    controls.appendChild(button);
+    
+    card.appendChild(controls);
+    
+    // Response area
+    const response = document.createElement('div');
+    response.className = 'response';
+    response.id = isCategoryTab
+        ? `${cell.id}_${cell.category}_response`
+        : `${cell.id}_response`;
+    response.textContent = 'Response will appear here...';
+    card.appendChild(response);
+    
+    return card;
+}
 
         async function executeCell(cellId) {
     if (!state.apiKey) {
