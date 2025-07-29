@@ -1,3 +1,4 @@
+import cv2
 def process(input_data):
     # Feature tracking between 2 frames (FAST + optical flow)
     prev_pts = input_data["prev_keypoints"]
