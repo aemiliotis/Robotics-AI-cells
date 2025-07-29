@@ -1375,43 +1375,52 @@
         }
 
         async function handleLogin() {
-            const apiKey = document.getElementById('api-key-input').value.trim();
-            if (!apiKey) {
-                showToast('Please enter an API key', 'warning');
-                return;
+    const apiKey = document.getElementById('api-key-input').value.trim();
+    if (!apiKey) {
+        showToast('Please enter an API key', 'warning');
+        return;
+    }
+    
+    try {
+        // Verify the API key by making a simple request to /usage endpoint
+        const response = await fetch(`${CONFIG.API_BASE_URL}/usage`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-API-Key': apiKey,
+                'X-Session-Id': state.sessionId
             }
-            
-            try {
-                // Verify the API key
-                const result = await apiRequest(`${CONFIG.API_BASE_URL}/ai-api`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-API-Key': apiKey,
-                        'X-Session-Id': state.sessionId,
-                        'X-Request-Id': crypto.randomUUID()
-                    },
-                    body: JSON.stringify({cells: [], data: {}})
-                });
-                console.error(apiKey);
-                console.error(response);
-                if (!response.ok) {
-                    throw new Error('Invalid API key');
-                }
-                
-                localStorage.setItem('api_key', apiKey);
-                state.apiKey = apiKey;
-                
-                // Update UI
-                hideLoginModal();
-                initUI();
-                checkAuthState();
-                showToast('Logged in successfully', 'success');
-            } catch (error) {
-                showToast('Login failed: ' + error.message, 'error');
-                console.error('Login error:', error);
-            }
+        });
+        
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.error || 'Invalid API key');
         }
+        
+        // Store the API key and update state
+        localStorage.setItem('api_key', apiKey);
+        state.apiKey = apiKey;
+        
+        // Get user info
+        const userInfo = await response.json();
+        state.userInfo = userInfo;
+        
+        // Update UI
+        hideLoginModal();
+        initUI();
+        updateUserInfoDisplay();
+        showToast('Logged in successfully', 'success');
+        
+        // If there was a pending cell execution, retry it
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('cell')) {
+            executeFromUrl();
+        }
+    } catch (error) {
+        showToast('Login failed: ' + error.message, 'error');
+        console.error('Login error:', error);
+    }
+}
 
         async function handleRegister() {
             hideLoginModal();
