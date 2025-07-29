@@ -19,7 +19,7 @@ The future of robotics programming is here—**modular, scalable, and lightning-
 ✅ **Secure & Scalable** – Runs on a robust backend with authentication, rate limiting, and automatic updates.  
 
 ### **Get Started Today!**  
-🔗 **Try it now**: [https://aemiliotis.github.io/Robotics-AI-Cells/](https://aemiliotis.github.io/Robotics-AI-Cells/)  
+🔗 **Try it now**: https://aemiliotis.github.io/Robotics-AI-cells/
 💡 **Want a custom cell?** Propose your idea and help shape the future of robotics AI!  
 
 **The future is modular. The future is fast. The future is AI Cells.** 🚀  
