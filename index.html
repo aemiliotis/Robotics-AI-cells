@@ -1392,7 +1392,8 @@
                     },
                     body: JSON.stringify({cells: [], data: {}})
                 });
-                
+                console.error(apiKey);
+                console.error(response);
                 if (!response.ok) {
                     throw new Error('Invalid API key');
                 }
