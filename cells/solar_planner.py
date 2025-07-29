@@ -6,3 +6,4 @@ def process(input_data):
     return {
         "charge_hours": peak_hours,
         "recommended_usage": 0.8*peak_hours*input_data["panel_w"]
+    }
