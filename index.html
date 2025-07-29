@@ -1025,51 +1025,51 @@
         }
 
         async function executeCell(cellId) {
-            if (!state.apiKey) {
-                showLoginModal();
-                return Promise.reject('API key required');
-            }
-            
-            const cellInputData = {};
-for (const input of cell.inputs) {
-    const inputId = activeTab === 'all' 
-        ? `${cellId}_${input.id}`
-        : `${cellId}_${cell.category}_${input.id}`;
+    if (!state.apiKey) {
+        showLoginModal();
+        return Promise.reject('API key required');
+    }
     
-    const inputElement = document.getElementById(inputId);
-            const button = document.querySelector(`.cell-card[data-cell-id="${cellId}"] .execute-btn`);
-            
-            // Set loading state
-            responseElement.className = 'response loading';
-            responseElement.textContent = 'Processing request...';
-            button.disabled = true;
-            button.innerHTML = '<span class="loader"></span> Executing';
+    const cell = CELLS.find(c => c.id === cellId);
+    if (!cell) {
+        showToast(`Cell ${cellId} not found`, 'error');
+        return Promise.reject('Cell not found');
+    }
+    
+    const responseElement = document.getElementById(`${cellId}_response`);
+    const button = document.querySelector(`.cell-card[data-cell-id="${cellId}"] .execute-btn`);
+    
+    // Set loading state
+    responseElement.className = 'response loading';
+    responseElement.textContent = 'Processing request...';
+    button.disabled = true;
+    button.innerHTML = '<span class="loader"></span> Executing';
+    
+    try {
+        // Gather inputs
+        const cellInputData = {};
+        for (const input of cell.inputs) {
+            const inputElement = document.getElementById(`${cellId}_${input.id}`);
+            const value = inputElement.value.trim();
             
             try {
-                // Gather inputs
-                const cellInputData = {};
-                for (const input of cell.inputs) {
-                    const inputElement = document.getElementById(`${cellId}_${input.id}`);
-                    const value = inputElement.value.trim();
-                    
-                    try {
-                        switch(input.type) {
-                            case 'number':
-                                cellInputData[input.id] = parseFloat(value);
-                                if (isNaN(cellInputData[input.id])) throw new Error('Invalid number');
-                                break;
-                            case 'text':
-                            case 'select':
-                                cellInputData[input.id] = value;
-                                break;
-                            case 'json':
-                                cellInputData[input.id] = value ? JSON.parse(value) : null;
-                                break;
-                        }
-                    } catch (e) {
-                        throw new Error(`Invalid input for ${input.label}: ${e.message}`);
-                    }
+                switch(input.type) {
+                    case 'number':
+                        cellInputData[input.id] = parseFloat(value);
+                        if (isNaN(cellInputData[input.id])) throw new Error('Invalid number');
+                        break;
+                    case 'text':
+                    case 'select':
+                        cellInputData[input.id] = value;
+                        break;
+                    case 'json':
+                        cellInputData[input.id] = value ? JSON.parse(value) : null;
+                        break;
                 }
+            } catch (e) {
+                throw new Error(`Invalid input for ${input.label}: ${e.message}`);
+            }
+        }
                 
                 // Add user context
                 const requestData = {
