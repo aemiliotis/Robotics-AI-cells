@@ -32,6 +32,9 @@ The future of robotics programming is here—**modular, scalable, and lightning-
 
 #Robotics #AI #ModularProgramming #CloudRobotics #Innovation #tinyML #AI_democratization 
 
+## 💖 Support This Project  
+If this tool helps you, consider [sponsoring me](https://github.com/sponsors/aemiliotis) to keep it alive!  
+
 Read manual
 https://aemiliotis.github.io/Robotics-AI-cells/rac_manual_v1.pdf
 
