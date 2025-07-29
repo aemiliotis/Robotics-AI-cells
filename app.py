@@ -355,11 +355,13 @@ def login():
 @limiter.limit("10000 per minute")
 def logout():
     try:
+        session_id = request.headers.get('X-Session-Id')
+        
         with get_db() as conn:
             with conn.cursor() as cur:
                 cur.execute(
-                    "UPDATE users SET api_key = NULL WHERE id = %s",
-                    (request.user_id,)
+                    "DELETE FROM user_sessions WHERE session_id = %s AND user_id = %s",
+                    (session_id, request.user_id)
                 )
                 conn.commit()
         
