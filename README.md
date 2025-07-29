@@ -10,7 +10,7 @@ Read manual
 https://aemiliotis.github.io/Robotics-AI-cells/rac_manual_v1.pdf
 
 Read Licence
-https://aemiliotis.github.io/Robotics-AI-cells/licence
+https://aemiliotis.github.io/Robotics-AI-cells/LICENSE
 
 Resgister for API
 https://aemiliotis.github.io/Robotics-AI-cells/
