@@ -1038,8 +1038,27 @@
         return Promise.reject('Cell not found');
     }
     
-    const responseElement = document.getElementById(`${cellId}_response`);
-    const button = document.querySelector(`.cell-card[data-cell-id="${cellId}"] .execute-btn`);
+    // Determine if we're in a category tab
+    const activeTab = document.querySelector('.tab.active').dataset.tab;
+    const isCategoryTab = activeTab !== 'all';
+    
+    // Get the correct response element
+    const responseId = isCategoryTab
+        ? `${cellId}_${cell.category}_response`
+        : `${cellId}_response`;
+    
+    const responseElement = document.getElementById(responseId);
+    if (!responseElement) {
+        console.error('Response element not found');
+        return;
+    }
+    
+    // Find the execute button in the current tab context
+    const button = document.querySelector(`#${activeTab}-tab .cell-card[data-cell-id="${cellId}"] .execute-btn`);
+    if (!button) {
+        console.error('Execute button not found');
+        return;
+    }
     
     // Set loading state
     responseElement.className = 'response loading';
@@ -1048,10 +1067,14 @@
     button.innerHTML = '<span class="loader"></span> Executing';
     
     try {
-        // Gather inputs
+        // Gather inputs - use the correct IDs based on tab
         const cellInputData = {};
         for (const input of cell.inputs) {
-            const inputElement = document.getElementById(`${cellId}_${input.id}`);
+            const inputId = isCategoryTab
+                ? `${cellId}_${cell.category}_${input.id}`
+                : `${cellId}_${input.id}`;
+                
+            const inputElement = document.getElementById(inputId);
             const value = inputElement.value.trim();
             
             try {
@@ -1072,60 +1095,60 @@
                 throw new Error(`Invalid input for ${input.label}: ${e.message}`);
             }
         }
-                
-                // Add user context
-                const requestData = {
-                    cells: [cellId],
-                    data: {
-                        [cellId]: {
-                            ...cellInputData,
-                            _client: {
-                                timestamp: new Date().toISOString(),
-                                userAgent: navigator.userAgent
-                            }
-                        }
+        
+        // Add user context
+        const requestData = {
+            cells: [cellId],
+            data: {
+                [cellId]: {
+                    ...cellInputData,
+                    _client: {
+                        timestamp: new Date().toISOString(),
+                        userAgent: navigator.userAgent
                     }
-                };
-                
-                // Execute via API
-                const result = await apiRequest(`${CONFIG.API_BASE_URL}/ai-api`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-API-Key': state.apiKey,
-                        'X-Session-Id': state.sessionId,
-                        'X-Request-Id': crypto.randomUUID()
-                    },
-                    body: JSON.stringify(requestData)
-                });
-                
-                // Handle response
-                if (result.success && result.results && result.results[cellId]) {
-                    responseElement.textContent = formatResponse(result.results[cellId]);
-                    responseElement.className = 'response success';
-                    updateLastUpdate();
-                    showToast(`${cell.name} executed successfully`, 'success');
-                    
-                    // Update usage history if visible
-                    if (document.querySelector('.tab.active').dataset.tab === 'history') {
-                        renderUsageHistory();
-                    }
-                    
-                    return result.results[cellId];
-                } else {
-                    throw new Error(result.error || 'No results returned');
                 }
-            } catch (error) {
-                console.error(`Error executing ${cellId}:`, error);
-                responseElement.textContent = `Error: ${error.message}`;
-                responseElement.className = 'response error';
-                showToast(`Error executing ${cell.name}: ${error.message}`, 'error');
-                throw error;
-            } finally {
-                button.disabled = false;
-                button.textContent = 'Execute';
             }
+        };
+        
+        // Execute via API
+        const result = await apiRequest(`${CONFIG.API_BASE_URL}/ai-api`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-API-Key': state.apiKey,
+                'X-Session-Id': state.sessionId,
+                'X-Request-Id': crypto.randomUUID()
+            },
+            body: JSON.stringify(requestData)
+        });
+        
+        // Handle response
+        if (result.success && result.results && result.results[cellId]) {
+            responseElement.textContent = formatResponse(result.results[cellId]);
+            responseElement.className = 'response success';
+            updateLastUpdate();
+            showToast(`${cell.name} executed successfully`, 'success');
+            
+            // Update usage history if visible
+            if (document.querySelector('.tab.active').dataset.tab === 'history') {
+                renderUsageHistory();
+            }
+            
+            return result.results[cellId];
+        } else {
+            throw new Error(result.error || 'No results returned');
         }
+    } catch (error) {
+        console.error(`Error executing ${cellId}:`, error);
+        responseElement.textContent = `Error: ${error.message}`;
+        responseElement.className = 'response error';
+        showToast(`Error executing ${cell.name}: ${error.message}`, 'error');
+        throw error;
+    } finally {
+        button.disabled = false;
+        button.textContent = 'Execute';
+    }
+}
 
         async function apiRequest(url, options) {
     // Add API key to headers if available
