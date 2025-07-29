@@ -1,3 +1,6 @@
+import time
+
+_LOG_BUFFER = []
 def process(input_data):
     # Circular buffer with 8 entries
     _LOG_BUFFER.append({
