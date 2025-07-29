@@ -1383,12 +1383,13 @@
             
             try {
                 // Verify the API key
-                const response = await fetch(`${CONFIG.API_BASE_URL}/ai-api`, {
+                const result = await apiRequest(`${CONFIG.API_BASE_URL}/ai-api`, {
                     method: 'POST',
                     headers: {
-                        'X-API-Key': apiKey,
+                        'Content-Type': 'application/json',
+                        'X-API-Key': state.apiKey,
                         'X-Session-Id': state.sessionId,
-                        'Content-Type': 'application/json'
+                        'X-Request-Id': crypto.randomUUID()
                     },
                     body: JSON.stringify({cells: [], data: {}})
                 });
