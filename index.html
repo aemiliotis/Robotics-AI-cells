@@ -963,6 +963,8 @@
                 label.style.marginTop = '10px';
                 label.style.fontWeight = '500';
                 controls.appendChild(label);
+
+                inputElement.id = `${cell.id}_${cell.category}_${input.id}`;
                 
                 let inputElement;
                 
@@ -1028,10 +1030,13 @@
                 return Promise.reject('API key required');
             }
             
-            const cell = CELLS.find(c => c.id === cellId);
-            if (!cell) return Promise.reject('Cell not found');
-            
-            const responseElement = document.getElementById(`${cellId}_response`);
+            const cellInputData = {};
+for (const input of cell.inputs) {
+    const inputId = activeTab === 'all' 
+        ? `${cellId}_${input.id}`
+        : `${cellId}_${cell.category}_${input.id}`;
+    
+    const inputElement = document.getElementById(inputId);
             const button = document.querySelector(`.cell-card[data-cell-id="${cellId}"] .execute-btn`);
             
             // Set loading state
