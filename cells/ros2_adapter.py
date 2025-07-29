@@ -1,3 +1,4 @@
+import time
 def process(input_data):
     # Converts between your API and ROS2 messages
     return {
