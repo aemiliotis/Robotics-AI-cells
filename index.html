@@ -843,11 +843,14 @@
             
             // Click handler for cell execute buttons
             document.addEventListener('click', function(e) {
-                if (e.target.classList.contains('execute-btn')) {
-                    const cellId = e.target.closest('.cell-card').dataset.cellId;
-                    executeCell(cellId);
-                }
-            });
+        if (e.target.classList.contains('execute-btn')) {
+            const cellCard = e.target.closest('.cell-card');
+            if (cellCard) {
+                const cellId = cellCard.dataset.cellId;
+                executeCell(cellId);
+            }
+        }
+    });
         }
 
         function checkAuthState() {
