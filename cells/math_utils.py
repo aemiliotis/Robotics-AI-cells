@@ -1,6 +1,8 @@
+import numpy as np
+
 def fast_sqrt(x):
-       # Quake III inverse sqrt approximation
-       i = np.int32(x)
-       i = 0x5f3759df - (i >> 1)
-       y = np.float32(i)
-       return y * (1.5 - 0.5 * x * y * y)
+    x = np.float32(x)  # Ensure input is float32
+    i = x.view(np.int32)  # Reinterpret bits as integer
+    i = np.int32(0x5f3759df) - (i >> np.int32(1))
+    y = i.view(np.float32)
+    return y * (np.float32(1.5) - (np.float32(0.5) * x * y * y)
