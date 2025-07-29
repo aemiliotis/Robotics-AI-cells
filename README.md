@@ -18,12 +18,6 @@ The future of robotics programming is here—**modular, scalable, and lightning-
 ✅ **Community-Driven** – Need a specific function? **Suggest a cell**, and we’ll build it!  
 ✅ **Secure & Scalable** – Runs on a robust backend with authentication, rate limiting, and automatic updates.  
 
-### **Example Use Cases:**  
-- **Motor Control** – PID tuning, inverse kinematics  
-- **Sensor Processing** – LIDAR compression, IMU fusion  
-- **AI & Vision** – TinyML classification, visual odometry  
-- **Power Management** – Battery optimization, solar planning  
-
 ### **Get Started Today!**  
 🔗 **Try it now**: [https://aemiliotis.github.io/Robotics-AI-Cells](https://aemiliotis.github.io/Robotics-AI-Cells)  
 💡 **Want a custom cell?** Propose your idea and help shape the future of robotics AI!  
