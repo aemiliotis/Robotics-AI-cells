@@ -1015,7 +1015,7 @@
             // Response area
             const response = document.createElement('div');
             response.className = 'response';
-            response.id = `${cell.id}_response`;
+            response.id = `${cell.id}_${cell.category}_response`;
             response.textContent = 'Response will appear here...';
             card.appendChild(response);
             
