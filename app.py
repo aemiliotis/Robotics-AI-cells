@@ -104,7 +104,7 @@ def require_api_key(f):
                     SELECT id, username FROM users WHERE api_key = %s
                 """, (api_key,))
                 user = cur.fetchone()
-                
+                print(f"Verifying User: {user}")
                 if not user:
                     return jsonify({"error": "Invalid API key"}), 401
                 
@@ -115,7 +115,7 @@ def require_api_key(f):
                 
                 request.user_id = user[0]
                 request.username = user[1]
-        
+                print(f"Verifiedaa")
         return f(*args, **kwargs)
     return decorated_function
 
