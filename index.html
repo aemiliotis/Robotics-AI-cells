@@ -905,28 +905,28 @@
         }
 
         function renderAllCells() {
-            const containers = {
-                all: document.getElementById('all-cells'),
-                motion: document.getElementById('motion-cells'),
-                perception: document.getElementById('perception-cells'),
-                power: document.getElementById('power-cells'),
-                utils: document.getElementById('utils-cells')
-            };
-            
-            // Clear existing content
-            Object.values(containers).forEach(container => {
-                container.innerHTML = '';
-            });
-            
-            CELLS.forEach(cell => {
-                const card = createCellCard(cell);
-                containers.all.appendChild(card.cloneNode(true));
-                
-                // Add to category-specific containers
-                if (containers[cell.category]) {
-                    containers[cell.category].appendChild(card);
-                }
-            });
+    const containers = {
+        all: document.getElementById('all-cells'),
+        motion: document.getElementById('motion-cells'),
+        perception: document.getElementById('perception-cells'),
+        power: document.getElementById('power-cells'),
+        utils: document.getElementById('utils-cells')
+    };
+    
+    // Clear existing content
+    Object.values(containers).forEach(container => {
+        container.innerHTML = '';
+    });
+    
+    CELLS.forEach(cell => {
+        // For "All" tab
+        containers.all.appendChild(createCellCard(cell, false));
+        
+        // For category tabs
+        if (containers[cell.category]) {
+            containers[cell.category].appendChild(createCellCard(cell, true));
+        }
+    });
         }
 
         function createCellCard(cell, isCategoryTab = false) {
