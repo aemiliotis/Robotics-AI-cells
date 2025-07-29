@@ -126,7 +126,7 @@ CORS(app, resources={
             "https://aemiliotis.github.io/Robotics-AI-Cells",
             "http://localhost:*"
         ],
-        "methods": ["POST", "OPTIONS"],
+        "methods": ["POST", "OPTIONS", "GET"],
         "allow_headers": ["Content-Type", "X-API-Key", "X-Session-Id", "X-Request-Id"],
         "supports_credentials": True
     },
