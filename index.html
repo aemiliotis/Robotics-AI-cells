@@ -791,53 +791,6 @@
                     { id: "arr", label: "Array", type: "json", value: "[1.23, 4.56, 7.89]" },
                     { id: "factor", label: "Scale Factor", type: "number", value: 100 }
                 ]
-            },
-            
-            // 15. Timed Process
-            {
-                id: "timed_process",
-                name: "Timed Process",
-                category: "utils",
-                description: "Execution monitoring",
-                inputs: [
-                    { id: "data", label: "Input Data", type: "json", value: "{\"sensor\": \"temp\", \"value\": 27.3}" }
-                ]
-            },
-            
-            // 16. Data Logger
-            {
-                id: "data_logger",
-                name: "Data Logger",
-                category: "utils",
-                description: "System telemetry",
-                inputs: [
-                    { id: "timestamp", label: "Timestamp", type: "number", value: 1625097600 },
-                    { id: "readings", label: "Readings", type: "json", value: "{\"current\": 1.2, \"voltage\": 12.3}" }
-                ]
-            },
-            
-            // 17. Network Optimizer
-            {
-                id: "network_optimizer",
-                name: "Network Optimizer",
-                category: "utils",
-                description: "Communication tuning",
-                inputs: [
-                    { id: "packet_size", label: "Packet Size", type: "number", value: 128 },
-                    { id: "signal_strength", label: "Signal dBm", type: "number", value: -67 }
-                ]
-            },
-            
-            // 18. Safety Monitor
-            {
-                id: "safety_monitor",
-                name: "Safety Monitor",
-                category: "utils",
-                description: "Joint limit checking",
-                inputs: [
-                    { id: "joint_angles", label: "Joint Angles", type: "json", value: "[0.1, 0.5, 1.2]" },
-                    { id: "limits", label: "Limits", type: "json", value: "[1.0, 1.0, 1.5]" }
-                ]
             }
         ];
 
