@@ -1,0 +1,1478 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Robotics AI Hub - Cosmic Control</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --space-dark: #0a0c24;
+            --nebula-blue: #1e3a8a;
+            --starlight: #e0f7fa;
+            --cosmic-accent: #00b7eb;
+            --glow-green: #4caf50;
+            --error-red: #ff3d00;
+            --warning-yellow: #ffb300;
+            --card-bg: rgba(30, 58, 138, 0.7);
+            --card-border: #00b7eb;
+            --text-light: #e5e7eb;
+            --text-secondary: #93c5fd;
+            --shadow: 0 4px 15px rgba(0, 183, 235, 0.3);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Orbitron', sans-serif;
+            line-height: 1.6;
+            color: var(--text-light);
+            background: var(--space-dark) url('data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"%3E%3Ccircle cx="10" cy="10" r="1" fill="white" opacity="0.3"/%3E%3Ccircle cx="90" cy="20" r="0.5" fill="white" opacity="0.2"/%3E%3Ccircle cx="30" cy="80" r="0.7" fill="white" opacity="0.4"/%3E%3C/svg%3E') repeat;
+            animation: starfield 50s linear infinite;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        @keyframes starfield {
+            from { background-position: 0 0; }
+            to { background-position: -100px -100px; }
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px 0;
+            border-bottom: 2px solid var(--cosmic-accent);
+            background: linear-gradient(180deg, rgba(30, 58, 138, 0.5), transparent);
+        }
+
+        h1 {
+            color: var(--starlight);
+            font-size: 2.5em;
+            text-shadow: 0 0 10px var(--cosmic-accent);
+        }
+
+        .auth-section {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 10px;
+            box-shadow: var(--shadow);
+            backdrop-filter: blur(5px);
+        }
+
+        .auth-controls {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        #api-key-display {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(0, 183, 235, 0.1);
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-family: monospace;
+            color: var(--text-secondary);
+        }
+
+        .status-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding: 12px;
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 10px;
+            box-shadow: var(--shadow);
+            backdrop-filter: blur(5px);
+        }
+
+        .cell-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 20px;
+        }
+
+        .cell-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: var(--shadow);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        .cell-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0, 183, 235, 0.5);
+        }
+
+        .cell-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--cosmic-accent);
+        }
+
+        .cell-title {
+            font-weight: 700;
+            color: var(--starlight);
+            font-size: 1.2em;
+        }
+
+        .cell-controls {
+            margin: 15px 0;
+        }
+
+        input, select, textarea, button {
+            width: 100%;
+            padding: 10px;
+            margin: 8px 0;
+            border: 1px solid var(--cosmic-accent);
+            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text-light);
+            font-family: inherit;
+        }
+
+        button {
+            background: linear-gradient(45deg, var(--nebula-blue), var(--cosmic-accent));
+            color: var(--text-light);
+            border: none;
+            cursor: pointer;
+            font-weight: 500;
+            transition: background 0.3s ease, transform 0.2s ease;
+            box-shadow: 0 0 10px rgba(0, 183, 235, 0.5);
+        }
+
+        button:hover:not(:disabled) {
+            background: linear-gradient(45deg, var(--cosmic-accent), var(--nebula-blue));
+            transform: scale(1.02);
+        }
+
+        button:disabled {
+            background: #4b5563;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        #logout-btn {
+            background: linear-gradient(45deg, var(--error-red), #b91c1c);
+            padding: 10px 16px;
+            border-radius: 6px;
+            min-width: 100px;
+        }
+
+        #copy-key-btn, #show-key-btn {
+            background: linear-gradient(45deg, var(--cosmic-accent), #0ea5e9);
+            padding: 8px 12px;
+            font-size: 0.9em;
+        }
+
+        .response {
+            margin-top: 15px;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 6px;
+            max-height: 300px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 0.9em;
+            white-space: pre-wrap;
+            border-left: 4px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .success {
+            border-left-color: var(--glow-green);
+            background: rgba(76, 175, 80, 0.1);
+        }
+
+        .error {
+            border-left-color: var(--error-red);
+            background: rgba(244, 67, 54, 0.1);
+        }
+
+        .warning {
+            border-left-color: var(--warning-yellow);
+            background: rgba(255, 193, 7, 0.1);
+        }
+
+        .api-status {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+
+        .online {
+            background: var(--glow-green);
+            box-shadow: 0 0 8px var(--glow-green);
+        }
+
+        .offline {
+            background: var(--error-red);
+        }
+
+        .checking {
+            background: var(--warning-yellow);
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 0.5; }
+            50% { opacity: 1; }
+            100% { opacity: 0.5; }
+        }
+
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .tabs {
+            display: flex;
+            margin-bottom: 20px;
+            border-bottom: 1px solid var(--cosmic-accent);
+            gap: 5px;
+        }
+
+        .tab {
+            padding: 12px 20px;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s ease;
+            border-radius: 4px 4px 0 0;
+            color: var(--text-secondary);
+        }
+
+        .tab.active {
+            border-bottom-color: var(--cosmic-accent);
+            font-weight: bold;
+            background: rgba(0, 183, 235, 0.1);
+            color: var(--starlight);
+        }
+
+        .tab:hover:not(.active) {
+            background: rgba(0, 183, 235, 0.05);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 10, 36, 0.8);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: var(--card-bg);
+            padding: 25px;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 450px;
+            box-shadow: var(--shadow);
+            backdrop-filter: blur(10px);
+            animation: modalFadeIn 0.3s ease-out;
+            border: 1px solid var(--card-border);
+        }
+
+        @keyframes modalFadeIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .modal-title {
+            margin-top: 0;
+            color: var(--starlight);
+            text-shadow: 0 0 5px var(--cosmic-accent);
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+            justify-content: flex-end;
+        }
+
+        .modal-actions button {
+            width: auto;
+            padding: 10px 20px;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            background: var(--cosmic-accent);
+            color: var(--text-light);
+            border-radius: 6px;
+            box-shadow: var(--shadow);
+            z-index: 1001;
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.3s ease;
+            max-width: 300px;
+        }
+
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .toast.success {
+            background: var(--glow-green);
+        }
+
+        .toast.error {
+            background: var(--error-red);
+        }
+
+        .toast.warning {
+            background: var(--warning-yellow);
+            color: var(--space-dark);
+        }
+
+        @media (max-width: 768px) {
+            .cell-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .auth-section {
+                flex-direction: column;
+                gap: 15px;
+                align-items: flex-start;
+            }
+
+            .tabs {
+                overflow-x: auto;
+                padding-bottom: 5px;
+            }
+
+            .tab {
+                white-space: nowrap;
+            }
+        }
+
+        .loader {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: var(--starlight);
+            animation: spin 1s ease-in-out infinite;
+            vertical-align: middle;
+            margin-right: 8px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Robotics AI Hub</h1>
+            <p>Cosmic Control Panel for Robotic AI Cells</p>
+        </header>
+
+        <div id="login-modal" class="modal" role="dialog" aria-labelledby="login-modal-title">
+            <div class="modal-content">
+                <h3 id="login-modal-title" class="modal-title">API Authentication</h3>
+                <p>Enter your API key to access cosmic features:</p>
+                <input type="password" id="api-key-input" placeholder="Paste your API key here" autocomplete="off" aria-label="API Key">
+                <div class="modal-actions">
+                    <button id="register-btn" style="background: var(--glow-green);">Register</button>
+                    <button id="login-btn">Login</button>
+                    <button id="cancel-login-btn" style="background: var(--error-red);">Cancel</button>
+                </div>
+                <p style="text-align: center; margin-top: 15px; font-size: 0.9em;">
+                    New to the cosmos? <a href="#" id="show-register" style="color: var(--cosmic-accent);">Register here</a>
+                </p>
+            </div>
+        </div>
+
+        <div id="register-modal" class="modal" role="dialog" aria-labelledby="register-modal-title">
+            <div class="modal-content">
+                <h3 id="register-modal-title" class="modal-title">Create New Account</h3>
+                <div style="margin-bottom: 15px;">
+                    <label for="register-username">Username</label>
+                    <input type="text" id="register-username" placeholder="Choose a username" aria-label="Username">
+                </div>
+                <div style="margin-bottom: 15px;">
+                    <label for="register-password">Password (min 8 chars)</label>
+                    <input type="password" id="register-password" placeholder="Create a password" aria-label="Password">
+                </div>
+                <div style="margin-bottom: 15px;">
+                    <label for="register-confirm">Confirm Password</label>
+                    <input type="password" id="register-confirm" placeholder="Re-enter your password" aria-label="Confirm Password">
+                </div>
+                <div class="modal-actions">
+                    <button id="cancel-register-btn" style="background: var(--error-red);">Cancel</button>
+                    <button id="confirm-register-btn" style="background: var(--glow-green);">Register</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="logout-modal" class="modal" role="dialog" aria-labelledby="logout-modal-title">
+            <div class="modal-content">
+                <h3 id="logout-modal-title" class="modal-title">Confirm Logout</h3>
+                <p>Are you sure you want to leave the cosmos?</p>
+                <p style="color: var(--error-red); font-weight: bold; font-size: 0.9em;">
+                    Save your API key - you'll need it to return!
+                </p>
+                <div class="modal-actions">
+                    <button id="cancel-logout-btn">Cancel</button>
+                    <button id="confirm-logout-btn" style="background: var(--error-red);">Logout</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="toast" class="toast"></div>
+
+        <div class="auth-section">
+            <div>
+                <span id="api-status" class="api-status offline"></span>
+                <span id="api-url">Connecting to the cosmos...</span>
+            </div>
+            <div class="auth-controls">
+                <div id="api-key-display" style="display: none;">
+                    <span id="showAPI" aria-live="polite">API Key: ********</span>
+                    <button id="copy-key-btn">Copy</button>
+                    <button id="show-key-btn">Show</button>
+                </div>
+                <button id="login-toggle-btn">Login</button>
+                <button id="logout-btn" style="display: none;">Logout</button>
+            </div>
+        </div>
+
+        <div class="status-bar">
+            <div>
+                <span id="connection-status">Status: Scanning cosmic servers...</span>
+                <span id="latency" style="margin-left: 15px;"></span>
+            </div>
+            <div id="last-update">Last transmission: Never</div>
+            <div id="user-info" style="display: none;">
+                Pilot: <span id="username-display"></span>
+            </div>
+        </div>
+
+        <div class="tabs" role="tablist">
+            <div class="tab active" data-tab="all" role="tab" aria-selected="true">All Cells</div>
+            <div class="tab" data-tab="motion" role="tab" aria-selected="false">Motion Control</div>
+            <div class="tab" data-tab="perception" role="tab" aria-selected="false">Perception</div>
+            <div class="tab" data-tab="power" role="tab" aria-selected="false">Power</div>
+            <div class="tab" data-tab="utils" role="tab" aria-selected="false">Utilities</div>
+            <div class="tab" data-tab="history" role="tab" aria-selected="false">Flight Log</div>
+        </div>
+
+        <div class="tab-content active" id="all-tab">
+            <div class="cell-grid" id="all-cells">
+                <!-- All cells will be loaded here -->
+            </div>
+        </div>
+
+        <div class="tab-content" id="motion-tab">
+            <div class="cell-grid" id="motion-cells">
+                <!-- Motion cells will be loaded here -->
+            </div>
+        </div>
+
+        <div class="tab-content" id="perception-tab">
+            <div class="cell-grid" id="perception-cells">
+                <!-- Perception cells will be loaded here -->
+            </div>
+        </div>
+
+        <div class="tab-content" id="power-tab">
+            <div class="cell-grid" id="power-cells">
+                <!-- Power cells will be loaded here -->
+            </div>
+        </div>
+
+        <div class="tab-content" id="utils-tab">
+            <div class="cell-grid" id="utils-cells">
+                <!-- Utility cells will be loaded here -->
+            </div>
+        </div>
+
+        <div class="tab-content" id="history-tab">
+            <div id="usage-history">
+                <h3>Your Flight Log</h3>
+                <div id="history-stats" style="margin-bottom: 20px;">
+                    <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+                        <div style="background: var(--card-bg); padding: 15px; border-radius: 8px; min-width: 200px; border: 1px solid var(--card-border);">
+                            <h4 style="margin-top: 0;">Total Missions</h4>
+                            <div id="total-executions" style="font-size: 1.5em; font-weight: bold;">-</div>
+                        </div>
+                        <div style="background: var(--card-bg); padding: 15px; border-radius: 8px; min-width: 200px; border: 1px solid var(--card-border);">
+                            <h4 style="margin-top: 0;">Most Used Module</h4>
+                            <div id="most-used-cell" style="font-size: 1.5em; font-weight: bold;">-</div>
+                        </div>
+                    </div>
+                </div>
+                <div id="recent-sessions">
+                    <h4>Recent Transmissions</h4>
+                    <div id="sessions-list" style="background: var(--card-bg); padding: 15px; border-radius: 8px; border: 1px solid var(--card-border);"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Configuration
+        const CONFIG = {
+            API_BASE_URL: window.location.hostname === 'localhost' 
+                ? 'http://localhost:5000' 
+                : 'https://robotics-ai-cells-m5gy.onrender.com',
+            PING_INTERVAL: 30000,
+            MAX_CONCURRENT_REQUESTS: 3
+        };
+
+        // State management
+        const state = {
+            apiKey: localStorage.getItem('api_key') || '',
+            cells: [],
+            activeRequests: 0,
+            requestQueue: [],
+            apiStatus: false,
+            userInfo: null,
+            sessionId: localStorage.getItem('session_id') || crypto.randomUUID()
+        };
+
+        localStorage.setItem('session_id', state.sessionId);
+
+        const CELLS = [
+            {
+                id: "fast_math",
+                name: "Fast Trigonometry",
+                category: "utils",
+                description: "High-speed sin/cos calculations",
+                inputs: [
+                    { id: "angle", label: "Angle (degrees)", type: "number", value: 45 }
+                ]
+            },
+            {
+                id: "pid_controller",
+                name: "PID Controller",
+                category: "motion",
+                description: "Motor control loop",
+                inputs: [
+                    { id: "error", label: "Error", type: "number", value: 0.5 },
+                    { id: "integral", label: "Integral", type: "number", value: 0 },
+                    { id: "last_error", label: "Last Error", type: "number", value: 0 }
+                ]
+            },
+            {
+                id: "arm_ik",
+                name: "Arm IK Solver",
+                category: "motion",
+                description: "3DOF inverse kinematics",
+                inputs: [
+                    { id: "target_x", label: "Target X", type: "number", value: 0.5 },
+                    { id: "target_y", label: "Target Y", type: "number", value: 0.2 },
+                    { id: "target_z", label: "Target Z", type: "number", value: 0.8 }
+                ]
+            },
+            {
+                id: "hexapod_gait",
+                name: "Hexapod Gait",
+                category: "motion",
+                description: "Leg coordination patterns",
+                inputs: [
+                    { id: "gait", label: "Gait Pattern", type: "select", options: ["tripod", "wave", "ripple"], value: "tripod" },
+                    { id: "step_count", label: "Step Count", type: "number", value: 0 }
+                ]
+            },
+            {
+                id: "lidar_compress",
+                name: "LIDAR Compression",
+                category: "perception",
+                description: "Scan data optimization",
+                inputs: [
+                    { id: "scan", label: "LIDAR Scan", type: "json", value: "[1.2, 1.21, 1.19, 5.3, 5.31, 5.29]" }
+                ]
+            },
+            {
+                id: "motor_model",
+                name: "Motor Model",
+                category: "power",
+                description: "Current/power estimation",
+                inputs: [
+                    { id: "motor_type", label: "Motor Type", type: "select", options: ["maxon_ec45", "tmotor_5010"], value: "maxon_ec45" },
+                    { id: "voltage", label: "Voltage (V)", type: "number", value: 12.6 },
+                    { id: "rpm", label: "RPM", type: "number", value: 3500 }
+                ]
+            },
+            {
+                id: "solar_planner",
+                name: "Solar Planner",
+                category: "power",
+                description: "Energy harvesting optimization",
+                inputs: [
+                    { id: "month", label: "Month (1-12)", type: "number", min: 1, max: 12, value: 7 },
+                    { id: "lat", label: "Latitude", type: "number", min: -90, max: 90, value: 37.7 },
+                    { id: "panel_w", label: "Panel Watts", type: "number", value: 100 }
+                ]
+            },
+            {
+                id: "lora_packer",
+                name: "LoRa Packer",
+                category: "utils",
+                description: "IoT message compression",
+                inputs: [
+                    { id: "temp", label: "Temperature", type: "number", value: 25.3 },
+                    { id: "humidity", label: "Humidity", type: "number", value: 45 },
+                    { id: "accel_x", label: "Accel X", type: "number", value: 0.12 },
+                    { id: "battery", label: "Battery %", type: "number", value: 78.5 }
+                ]
+            },
+            {
+                id: "ros2_adapter",
+                name: "ROS2 Adapter",
+                category: "utils",
+                description: "ROS message conversion",
+                inputs: [
+                    { id: "vel_x", label: "Velocity X", type: "number", value: 0.5 },
+                    { id: "ang_vel", label: "Angular Vel", type: "number", value: 0.2 },
+                    { id: "frame", label: "Frame ID", type: "text", value: "base_link" }
+                ]
+            },
+            {
+                id: "error_handler",
+                name: "Error Handler",
+                category: "utils",
+                description: "Fault recovery system",
+                inputs: [
+                    { id: "error_code", label: "Error Code", type: "text", value: "0x21" }
+                ]
+            },
+            {
+                id: "micro_logger",
+                name: "Micro Logger",
+                category: "utils",
+                description: "Data recording",
+                inputs: [
+                    { id: "event", label: "Event Name", type: "text", value: "obstacle_detected" },
+                    { id: "value", label: "Value", type: "number", value: 1.75 }
+                ]
+            },
+            {
+                id: "sensor_fusion",
+                name: "Sensor Fusion",
+                category: "perception",
+                description: "IMU + GPS + LIDAR",
+                inputs: [
+                    { id: "accel_x", label: "Accel X", type: "number", value: 0.1 },
+                    { id: "accel_y", label: "Accel Y", type: "number", value: 0.02 },
+                    { id: "accel_z", label: "Accel Z", type: "number", value: 9.8 },
+                    { id: "gps_lat", label: "GPS Lat", type: "number", value: 37.7749 },
+                    { id: "gps_lon", label: "GPS Lon", type: "number", value: -122.4194 }
+                ]
+            },
+            {
+                id: "path_optimization",
+                name: "Path Optimization",
+                category: "motion",
+                description: "Energy-efficient navigation",
+                inputs: [
+                    { id: "waypoints", label: "Waypoints", type: "json", value: "[[0,0], [1,1], [2,0], [3,1]]" },
+                    { id: "terrain", label: "Terrain Factor", type: "number", value: 1.2 }
+                ]
+            },
+            {
+                id: "battery_optimization",
+                name: "Battery Optimization",
+                category: "power",
+                description: "Power management",
+                inputs: [
+                    { id: "charge_cycles", label: "Charge Cycles", type: "number", value: 150 },
+                    { id: "avg_dod", label: "Avg DoD %", type: "number", value: 80 },
+                    { id: "avg_temp", label: "Avg Temp °C", type: "number", value: 35 }
+                ]
+            },
+            {
+                id: "vision_optimized",
+                name: "Vision Optimized",
+                category: "perception",
+                description: "Lightweight image processing",
+                inputs: [
+                    { id: "image", label: "Image", type: "json", value: "[[[120, 120, 120], [125, 125, 125]], [[130, 130, 130], [135, 135, 135]]]" }
+                ]
+            }
+        ];
+
+        // DOM Elements
+        const elements = {
+            loginModal: document.getElementById('login-modal'),
+            registerModal: document.getElementById('register-modal'),
+            logoutModal: document.getElementById('logout-modal'),
+            apiKeyDisplay: document.getElementById('api-key-display'),
+            showApiKey: document.getElementById('showAPI'),
+            copyKeyBtn: document.getElementById('copy-key-btn'),
+            showKeyBtn: document.getElementById('show-key-btn'),
+            loginToggleBtn: document.getElementById('login-toggle-btn'),
+            logoutBtn: document.getElementById('logout-btn'),
+            apiStatusIndicator: document.getElementById('api-status'),
+            connectionStatus: document.getElementById('connection-status'),
+            lastUpdate: document.getElementById('last-update'),
+            latencyDisplay: document.getElementById('latency'),
+            userInfo: document.getElementById('user-info'),
+            usernameDisplay: document.getElementById('username-display'),
+            toast: document.getElementById('toast'),
+        };
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', function() {
+            initUI();
+            setupEventListeners();
+            checkAuthState();
+            checkApiStatus();
+            setInterval(checkApiStatus, CONFIG.PING_INTERVAL);
+            renderAllCells();
+            executeFromUrl();
+        });
+
+        function initUI() {
+            if (state.apiKey) {
+                elements.apiKeyDisplay.style.display = 'flex';
+                elements.loginToggleBtn.style.display = 'none';
+                elements.logoutBtn.style.display = 'block';
+                updateApiKeyDisplay(false);
+            } else {
+                elements.apiKeyDisplay.style.display = 'none';
+                elements.loginToggleBtn.style.display = 'block';
+                elements.logoutBtn.style.display = 'none';
+            }
+        }
+
+        function setupEventListeners() {
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.addEventListener('click', () => switchTab(tab.dataset.tab));
+            });
+
+            elements.loginToggleBtn.addEventListener('click', showLoginModal);
+            elements.logoutBtn.addEventListener('click', showLogoutModal);
+            elements.copyKeyBtn.addEventListener('click', copyApiKey);
+            elements.showKeyBtn.addEventListener('click', toggleApiKeyVisibility);
+
+            document.getElementById('login-btn').addEventListener('click', handleLogin);
+            document.getElementById('cancel-login-btn').addEventListener('click', hideLoginModal);
+            document.getElementById('register-btn').addEventListener('click', showRegisterModal);
+            document.getElementById('show-register').addEventListener('click', (e) => {
+                e.preventDefault();
+                hideLoginModal();
+                showRegisterModal();
+            });
+            document.getElementById('confirm-register-btn').addEventListener('click', handleRegister);
+            document.getElementById('cancel-register-btn').addEventListener('click', hideRegisterModal);
+            document.getElementById('confirm-logout-btn').addEventListener('click', handleLogout);
+            document.getElementById('cancel-logout-btn').addEventListener('click', hideLogoutModal);
+
+            // Modal keyboard navigation
+            [elements.loginModal, elements.registerModal, elements.logoutModal].forEach(modal => {
+                modal.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape') {
+                        if (modal === elements.loginModal) hideLoginModal();
+                        if (modal === elements.registerModal) hideRegisterModal();
+                        if (modal === elements.logoutModal) hideLogoutModal();
+                    }
+                });
+            });
+
+            document.addEventListener('click', function(e) {
+                if (e.target.classList.contains('execute-btn')) {
+                    const cellCard = e.target.closest('.cell-card');
+                    if (cellCard) {
+                        const cellId = cellCard.dataset.cellId;
+                        executeCell(cellId);
+                    }
+                }
+            });
+        }
+
+        function checkAuthState() {
+            if (state.apiKey) {
+                fetchUserInfo()
+                    .then(userInfo => {
+                        state.userInfo = userInfo;
+                        updateUserInfoDisplay();
+                        showToast('Connected to the cosmos', 'success');
+                    })
+                    .catch(error => {
+                        console.error('API key verification failed:', error);
+                        localStorage.removeItem('api_key');
+                        state.apiKey = '';
+                        initUI();
+                        showToast('Session lost in space, please reconnect', 'warning');
+                    });
+            }
+        }
+
+        async function fetchUserInfo() {
+            const response = await fetch(`${CONFIG.API_BASE_URL}/usage`, {
+                method: 'GET',
+                credentials: 'include',
+                headers: {
+                    'X-API-Key': localStorage.getItem('api_key'),
+                    'X-Session-Id': localStorage.getItem('session_id'),
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (!response.ok) throw new Error('Failed to fetch user info');
+            return await response.json();
+        }
+
+        function updateUserInfoDisplay() {
+            if (state.userInfo) {
+                elements.userInfo.style.display = 'block';
+                elements.usernameDisplay.textContent = state.userInfo.username || 'Unknown Pilot';
+                if (document.querySelector('.tab.active').dataset.tab === 'history') {
+                    renderUsageHistory();
+                }
+            }
+        }
+
+        function renderAllCells() {
+            const containers = {
+                all: document.getElementById('all-cells'),
+                motion: document.getElementById('motion-cells'),
+                perception: document.getElementById('perception-cells'),
+                power: document.getElementById('power-cells'),
+                utils: document.getElementById('utils-cells')
+            };
+
+            Object.values(containers).forEach(container => {
+                container.innerHTML = '';
+            });
+
+            CELLS.forEach(cell => {
+                containers.all.appendChild(createCellCard(cell, false));
+                if (containers[cell.category]) {
+                    containers[cell.category].appendChild(createCellCard(cell, true));
+                }
+            });
+        }
+
+        function createCellCard(cell, isCategoryTab = false) {
+            const card = document.createElement('div');
+            card.className = 'cell-card';
+            card.dataset.cellId = cell.id;
+
+            const header = document.createElement('div');
+            header.className = 'cell-header';
+
+            const title = document.createElement('div');
+            title.className = 'cell-title';
+            title.textContent = cell.name;
+            header.appendChild(title);
+            card.appendChild(header);
+
+            const desc = document.createElement('p');
+            desc.textContent = cell.description;
+            desc.style.fontSize = '0.9em';
+            desc.style.color = var(--text-secondary);
+            card.appendChild(desc);
+
+            const controls = document.createElement('div');
+            controls.className = 'cell-controls';
+
+            cell.inputs.forEach(input => {
+                const label = document.createElement('label');
+                label.textContent = input.label;
+                label.style.display = 'block';
+                label.style.marginTop = '10px';
+                label.style.fontWeight = '500';
+                controls.appendChild(label);
+
+                let inputElement;
+                switch (input.type) {
+                    case 'number':
+                        inputElement = document.createElement('input');
+                        inputElement.type = 'number';
+                        inputElement.value = input.value;
+                        if (input.min !== undefined) inputElement.min = input.min;
+                        if (input.max !== undefined) inputElement.max = input.max;
+                        inputElement.step = input.step || 'any';
+                        break;
+                    case 'text':
+                        inputElement = document.createElement('input');
+                        inputElement.type = 'text';
+                        inputElement.value = input.value;
+                        break;
+                    case 'select':
+                        inputElement = document.createElement('select');
+                        input.options.forEach(option => {
+                            const optElement = document.createElement('option');
+                            optElement.value = option;
+                            optElement.textContent = option;
+                            if (option === input.value) optElement.selected = true;
+                            inputElement.appendChild(optElement);
+                        });
+                        break;
+                    case 'json':
+                        inputElement = document.createElement('textarea');
+                        inputElement.value = typeof input.value === 'string' ? input.value : JSON.stringify(input.value, null, 2);
+                        inputElement.rows = 4;
+                        break;
+                }
+
+                inputElement.id = isCategoryTab 
+                    ? `${cell.id}_${cell.category}_${input.id}`
+                    : `${cell.id}_${input.id}`;
+                inputElement.className = 'cell-input';
+                inputElement.setAttribute('aria-label', input.label);
+                controls.appendChild(inputElement);
+            });
+
+            const button = document.createElement('button');
+            button.textContent = 'Execute';
+            button.className = 'execute-btn';
+            controls.appendChild(button);
+            card.appendChild(controls);
+
+            const response = document.createElement('div');
+            response.className = 'response';
+            response.id = isCategoryTab
+                ? `${cell.id}_${cell.category}_response`
+                : `${cell.id}_response`;
+            response.textContent = 'Response will appear here...';
+            card.appendChild(response);
+
+            return card;
+        }
+
+        async function executeCell(cellId) {
+            if (!state.apiKey) {
+                showLoginModal();
+                return Promise.reject('API key required');
+            }
+
+            const cell = CELLS.find(c => c.id === cellId);
+            if (!cell) {
+                showToast(`Cell ${cellId} not found`, 'error');
+                return Promise.reject('Cell not found');
+            }
+
+            const activeTab = document.querySelector('.tab.active').dataset.tab;
+            const isCategoryTab = activeTab !== 'all';
+            const responseId = isCategoryTab
+                ? `${cellId}_${cell.category}_response`
+                : `${cellId}_response`;
+
+            const responseElement = document.getElementById(responseId);
+            if (!responseElement) {
+                console.error('Response element not found');
+                return;
+            }
+
+            const button = document.querySelector(`#${activeTab}-tab .cell-card[data-cell-id="${cellId}"] .execute-btn`);
+            if (!button) {
+                console.error('Execute button not found');
+                return;
+            }
+
+            responseElement.className = 'response loading';
+            responseElement.textContent = 'Processing cosmic request...';
+            button.disabled = true;
+            button.innerHTML = '<span class="loader"></span> Executing';
+
+            try {
+                const cellInputData = {};
+                for (const input of cell.inputs) {
+                    const inputId = isCategoryTab
+                        ? `${cellId}_${cell.category}_${input.id}`
+                        : `${cellId}_${input.id}`;
+                    const inputElement = document.getElementById(inputId);
+                    const value = inputElement.value.trim();
+
+                    try {
+                        switch (input.type) {
+                            case 'number':
+                                cellInputData[input.id] = parseFloat(value);
+                                if (isNaN(cellInputData[input.id])) throw new Error('Invalid number');
+                                break;
+                            case 'text':
+                            case 'select':
+                                cellInputData[input.id] = value;
+                                break;
+                            case 'json':
+                                cellInputData[input.id] = value ? JSON.parse(value) : null;
+                                break;
+                        }
+                    } catch (e) {
+                        throw new Error(`Invalid input for ${input.label}: ${e.message}`);
+                    }
+                }
+
+                const requestData = {
+                    cells: [cellId],
+                    data: {
+                        [cellId]: {
+                            ...cellInputData,
+                            _client: {
+                                timestamp: new Date().toISOString(),
+                                userAgent: navigator.userAgent
+                            }
+                        }
+                    }
+                };
+
+                const result = await apiRequest(`${CONFIG.API_BASE_URL}/ai-api`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-API-Key': state.apiKey,
+                        'X-Session-Id': state.sessionId,
+                        'X-Request-Id': crypto.randomUUID()
+                    },
+                    body: JSON.stringify(requestData)
+                });
+
+                if (result.success && result.results && result.results[cellId]) {
+                    responseElement.textContent = formatResponse(result.results[cellId]);
+                    responseElement.className = 'response success';
+                    updateLastUpdate();
+                    showToast(`${cell.name} executed successfully`, 'success');
+
+                    if (document.querySelector('.tab.active').dataset.tab === 'history') {
+                        renderUsageHistory();
+                    }
+
+                    return result.results[cellId];
+                } else {
+                    throw new Error(result.error || 'No results returned');
+                }
+            } catch (error) {
+                console.error(`Error executing ${cellId}:`, error);
+                responseElement.textContent = `Error: ${error.message}`;
+                responseElement.className = 'response error';
+                showToast(`Error executing ${cell.name}: ${error.message}`, 'error');
+                throw error;
+            } finally {
+                button.disabled = false;
+                button.textContent = 'Execute';
+            }
+        }
+
+        async function apiRequest(url, options) {
+            if (state.apiKey) {
+                options.headers = options.headers || {};
+                options.headers['X-API-Key'] = state.apiKey;
+                options.headers['X-Session-Id'] = state.sessionId;
+            }
+
+            state.activeRequests++;
+            try {
+                const startTime = performance.now();
+                const response = await fetch(url, options);
+                const latency = Math.round(performance.now() - startTime);
+
+                elements.latencyDisplay.textContent = `${latency}ms`;
+
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({}));
+                    throw new Error(errorData.error || `HTTP ${response.status}`);
+                }
+
+                return await response.json();
+            } finally {
+                state.activeRequests--;
+                processQueue();
+            }
+        }
+
+        function processQueue() {
+            while (state.activeRequests < CONFIG.MAX_CONCURRENT_REQUESTS && state.requestQueue.length > 0) {
+                const { resolve, reject, cellId } = state.requestQueue.shift();
+                executeCell(cellId).then(resolve).catch(reject);
+                state.activeRequests++;
+            }
+        }
+
+        function formatResponse(data) {
+            if (typeof data === 'object') {
+                return JSON.stringify(data, (key, value) => {
+                    if (typeof value === 'number') {
+                        return value.toString().length > 10 ? parseFloat(value.toFixed(6)) : value;
+                    }
+                    return value;
+                }, 2);
+            }
+            return data.toString();
+        }
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab').forEach(tab => {
+                const isActive = tab.dataset.tab === tabId;
+                tab.classList.toggle('active', isActive);
+                tab.setAttribute('aria-selected', isActive);
+            });
+
+            document.querySelectorAll('.tab-content').forEach(content => {
+                if (content.id === `${tabId}-tab`) {
+                    content.classList.add('active');
+                    if (tabId === 'history' && state.apiKey) {
+                        renderUsageHistory();
+                    }
+                } else {
+                    content.classList.remove('active');
+                }
+            });
+        }
+
+        async function renderUsageHistory() {
+            if (!state.apiKey) return;
+
+            try {
+                const usageData = await fetchUserInfo();
+
+                document.getElementById('total-executions').textContent = 
+                    usageData.usage.reduce((sum, item) => sum + item.count, 0);
+
+                const mostUsed = usageData.usage.reduce((max, item) => 
+                    item.count > max.count ? item : max, {count: 0, cell: 'None'});
+                document.getElementById('most-used-cell').textContent = 
+                    `${mostUsed.cell} (${mostUsed.count}x)`;
+
+                const sessionsList = document.getElementById('sessions-list');
+                sessionsList.innerHTML = '';
+
+                if (usageData.recent_sessions && usageData.recent_sessions.length > 0) {
+                    usageData.recent_sessions.forEach(session => {
+                        const sessionEl = document.createElement('div');
+                        sessionEl.style.padding = '10px';
+                        sessionEl.style.borderBottom = '1px solid var(--cosmic-accent)';
+                        sessionEl.innerHTML = `
+                            <div><strong>Session:</strong> ${session.session_id.substring(0, 8)}...</div>
+                            <div><strong>Started:</strong> ${new Date(session.created).toLocaleString()}</div>
+                            <div><strong>Last active:</strong> ${new Date(session.last_active).toLocaleString()}</div>
+                        `;
+                        sessionsList.appendChild(sessionEl);
+                    });
+                } else {
+                    sessionsList.textContent = 'No recent transmissions found';
+                }
+            } catch (error) {
+                console.error('Error loading flight log:', error);
+                document.getElementById('sessions-list').textContent = 'Error loading log';
+            }
+        }
+
+        async function checkApiStatus() {
+            elements.apiStatusIndicator.className = 'api-status checking';
+            elements.connectionStatus.textContent = 'Scanning cosmic servers...';
+
+            try {
+                const startTime = performance.now();
+                const response = await fetch(`${CONFIG.API_BASE_URL}/ping`);
+                const latency = Math.round(performance.now() - startTime);
+
+                if (response.ok) {
+                    const data = await response.json();
+                    state.apiStatus = true;
+                    elements.apiStatusIndicator.className = 'api-status online';
+                    elements.connectionStatus.textContent = `Server v${data.version || '1.0'} ONLINE`;
+                    elements.latencyDisplay.textContent = `${latency}ms`;
+                } else {
+                    throw new Error('API not responding properly');
+                }
+            } catch (error) {
+                state.apiStatus = false;
+                elements.apiStatusIndicator.className = 'api-status offline';
+                elements.connectionStatus.textContent = 'Server OFFLINE - Connection lost';
+                console.error("API Status Check Failed:", error);
+            }
+        }
+
+        function updateLastUpdate() {
+            const now = new Date();
+            elements.lastUpdate.textContent = `Last transmission: ${now.toLocaleTimeString()}`;
+        }
+
+        function showLoginModal() {
+            elements.loginModal.style.display = 'flex';
+            document.getElementById('api-key-input').focus();
+        }
+
+        function hideLoginModal() {
+            elements.loginModal.style.display = 'none';
+            document.getElementById('api-key-input').value = '';
+        }
+
+        function showRegisterModal() {
+            elements.registerModal.style.display = 'flex';
+            document.getElementById('register-username').focus();
+        }
+
+        function hideRegisterModal() {
+            elements.registerModal.style.display = 'none';
+            document.getElementById('register-username').value = '';
+            document.getElementById('register-password').value = '';
+            document.getElementById('register-confirm').value = '';
+        }
+
+        function showLogoutModal() {
+            elements.logoutModal.style.display = 'flex';
+        }
+
+        function hideLogoutModal() {
+            elements.logoutModal.style.display = 'none';
+        }
+
+        async function handleLogin() {
+            const apiKey = document.getElementById('api-key-input').value.trim();
+            if (!apiKey) {
+                showToast('Please enter an API key', 'warning');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${CONFIG.API_BASE_URL}/usage`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-API-Key': apiKey,
+                        'X-Session-Id': state.sessionId
+                    }
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({}));
+                    throw new Error(errorData.error || 'Invalid API key');
+                }
+
+                localStorage.setItem('api_key', apiKey);
+                state.apiKey = apiKey;
+                const userInfo = await response.json();
+                state.userInfo = userInfo;
+
+                hideLoginModal();
+                initUI();
+                updateUserInfoDisplay();
+                showToast('Connected to the cosmos', 'success');
+
+                const urlParams = new URLSearchParams(window.location.search);
+                if (urlParams.get('cell')) {
+                    executeFromUrl();
+                }
+            } catch (error) {
+                showToast('Connection failed: ' + error.message, 'error');
+                console.error('Login error:', error);
+            }
+        }
+
+        async function handleRegister() {
+            hideLoginModal();
+            const username = document.getElementById('register-username').value.trim();
+            const password = document.getElementById('register-password').value;
+            const confirm = document.getElementById('register-confirm').value;
+
+            if (!username || !password) {
+                showToast('Username and password required', 'warning');
+                return;
+            }
+
+            if (password !== confirm) {
+                showToast('Passwords do not match', 'warning');
+                return;
+            }
+
+            if (password.length < 8) {
+                showToast('Password must be at least 8 characters', 'warning');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${CONFIG.API_BASE_URL}/register`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ username, password })
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.error || 'Registration failed');
+                }
+
+                const result = await response.json();
+                localStorage.setItem('api_key', result.api_key);
+                state.apiKey = result.api_key;
+                localStorage.setItem('session_id', result.session_id);
+                state.sessionId = result.session_id;
+
+                hideLoginModal();
+                hideRegisterModal();
+                initUI();
+                checkAuthState();
+                showToast('Registration successful!', 'success');
+            } catch (error) {
+                showToast('Registration failed: ' + error.message, 'error');
+                console.error('Registration error:', error);
+            }
+        }
+
+        async function handleLogout() {
+            try {
+                await fetch(`${CONFIG.API_BASE_URL}/logout`, {
+                    method: 'POST',
+                    headers: {
+                        'X-API-Key': state.apiKey,
+                        'X-Session-Id': state.sessionId
+                    }
+                });
+
+                localStorage.removeItem('api_key');
+                state.apiKey = '';
+                state.userInfo = null;
+
+                hideLogoutModal();
+                initUI();
+                showToast('Logged out of the cosmos', 'success');
+            } catch (error) {
+                console.error('Logout error:', error);
+                localStorage.removeItem('api_key');
+                state.apiKey = '';
+                state.userInfo = null;
+                hideLogoutModal();
+                initUI();
+            }
+        }
+
+        function copyApiKey() {
+            if (!state.apiKey) return;
+
+            navigator.clipboard.writeText(state.apiKey).then(() => {
+                showToast('API key copied to clipboard', 'success');
+                elements.copyKeyBtn.textContent = 'Copied!';
+                setTimeout(() => {
+                    elements.copyKeyBtn.textContent = 'Copy';
+                }, 2000);
+            }).catch(err => {
+                console.error('Failed to copy:', err);
+                showToast('Failed to copy API key', 'error');
+            });
+        }
+
+        function toggleApiKeyVisibility() {
+            const isVisible = elements.showApiKey.dataset.visible === 'true';
+            if (isVisible) {
+                elements.showApiKey.textContent = 'API Key: ********';
+                elements.showApiKey.dataset.visible = 'false';
+                elements.showKeyBtn.textContent = 'Show';
+            } else {
+                const partialKey = state.apiKey.substring(0, 5) + '...';
+                elements.showApiKey.textContent = `API Key: ${partialKey}`;
+                elements.showApiKey.dataset.visible = 'true';
+                elements.showKeyBtn.textContent = 'Hide';
+            }
+        }
+
+        function updateApiKeyDisplay(show = false) {
+            if (show) {
+                const partialKey = state.apiKey.substring(0, 5) + '...';
+                elements.showApiKey.textContent = `API Key: ${partialKey}`;
+                elements.showApiKey.dataset.visible = 'true';
+                elements.showKeyBtn.textContent = 'Hide';
+            } else {
+                elements.showApiKey.textContent = 'API Key: ********';
+                elements.showApiKey.dataset.visible = 'false';
+                elements.showKeyBtn.textContent = 'Show';
+            }
+        }
+
+        function showToast(message, type = 'info') {
+            const toast = elements.toast;
+            toast.textContent = message;
+            toast.className = `toast ${type} show`;
+            setTimeout(() => {
+                toast.className = 'toast';
+            }, 3000);
+        }
+
+        function executeFromUrl() {
+            const params = new URLSearchParams(window.location.search);
+            const cellId = params.get('cell');
+
+            if (cellId) {
+                const cell = CELLS.find(c => c.id === cellId);
+                if (cell) {
+                    cell.inputs.forEach(input => {
+                        const paramValue = params.get(input.id);
+                        if (paramValue !== null) {
+                            const inputElement = document.getElementById(`${cellId}_${input.id}`);
+                            if (inputElement) {
+                                inputElement.value = paramValue;
+                            }
+                        }
+                    });
+
+                    const tab = document.querySelector(`.tab[data-tab="${cell.category}"]`) || 
+                                document.querySelector('.tab[data-tab="all"]');
+                    if (tab) tab.click();
+
+                    setTimeout(() => {
+                        const card = document.querySelector(`.cell-card[data-cell-id="${cellId}"]`);
+                        if (card) {
+                            card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                            executeCell(cellId);
+                        }
+                    }, 500);
+                }
+            }
+        }
+
+        window.debug = {
+            getState: () => state,
+            getApiKey: () => state.apiKey,
+            clearAuth: () => {
+                localStorage.removeItem('api_key');
+                state.apiKey = '';
+                initUI();
+            },
+            testCell: (cellId) => executeCell(cellId)
+        };
+    </script>
+</body>
+</html>
