@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Neural Networks Visualization</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { font-family: Arial, sans-serif; }
+        .network-section { margin: 2rem; padding: 1rem; border: 1px solid #ccc; border-radius: 8px; }
+        .tooltip { position: absolute; background: #333; color: white; padding: 5px; border-radius: 3px; pointer-events: none; }
+        svg { border: 1px solid #ddd; border-radius: 5px; }
+    </style>
+</head>
+<body class="bg-gray-100">
+    <div class="container mx-auto p-4">
+        <h1 class="text-3xl font-bold text-center mb-8">Neural Networks Visualization</h1>
+
+        <!-- Feedforward Neural Network -->
+        <div class="network-section bg-white shadow-md">
+            <h2 class="text-2xl font-semibold mb-4">Feedforward Neural Network (FNN)</h2>
+            <p class="mb-4">A basic neural network where data flows in one direction from input to output. Used for tasks like digit classification.</p>
+            <svg id="fnn" width="400" height="200"></svg>
+        </div>
+
+        <!-- Convolutional Neural Network -->
+        <div class="network-section bg-white shadow-md">
+            <h2 class="text-2xl font-semibold mb-4">Convolutional Neural Network (CNN)</h2>
+            <p class="mb-4">Designed for image data, using convolutional and pooling layers to detect features like edges or textures.</p>
+            <svg id="cnn" width="400" height="200"></svg>
+        </div>
+
+        <!-- Recurrent Neural Network -->
+        <div class="network-section bg-white shadow-md">
+            <h2 class="text-2xl font-semibold mb-4">Recurrent Neural Network (RNN)</h2>
+            <p class="mb-4">Handles sequential data with loops to maintain memory of previous inputs. Used in time-series or NLP.</p>
+            <svg id="rnn" width="400" height="200"></svg>
+        </div>
+
+        <!-- Transformer -->
+        <div class="network-section bg-white shadow-md">
+            <h2 class="text-2xl font-semibold mb-4">Transformer</h2>
+            <p class="mb-4">Uses attention mechanisms to focus on important parts of input, ideal for NLP tasks like translation.</p>
+            <svg id="transformer" width="400" height="200"></svg>
+        </div>
+
+        <!-- Generative Adversarial Network -->
+        <div class="network-section bg-white shadow-md">
+            <h2 class="text-2xl font-semibold mb-4">Generative Adversarial Network (GAN)</h2>
+            <p class="mb-4">Two networks (generator and discriminator) compete to generate realistic data, like images.</p>
+            <svg id="gan" width="400" height="200"></svg>
+        </div>
+    </div>
+
+    <script>
+        // Tooltip setup
+        const tooltip = d3.select("body").append("div").attr("class", "tooltip").style("opacity", 0);
+
+        // Feedforward Neural Network
+        const fnnSvg = d3.select("#fnn");
+        const fnnData = {
+            layers: [
+                { nodes: 3, label: "Input Layer" },
+                { nodes: 4, label: "Hidden Layer" },
+                { nodes: 2, label: "Output Layer" }
+            ]
+        };
+        drawNetwork(fnnSvg, fnnData, 400, 200, false);
+
+        // Convolutional Neural Network
+        const cnnSvg = d3.select("#cnn");
+        const cnnData = {
+            layers: [
+                { nodes: 4, label: "Input (Image)" },
+                { nodes: 3, label: "Conv Layer" },
+                { nodes: 3, label: "Pooling Layer" },
+                { nodes: 2, label: "Fully Connected" }
+            ]
+        };
+        drawNetwork(cnnSvg, cnnData, 400, 200, false);
+
+        // Recurrent Neural Network
+        const rnnSvg = d3.select("#rnn");
+        const rnnData = {
+            layers: [
+                { nodes: 3, label: "Input" },
+                { nodes: 3, label: "Recurrent Layer" },
+                { nodes: 2, label: "Output" }
+            ]
+        };
+        drawNetwork(rnnSvg, rnnData, 400, 200, true);
+
+        // Transformer
+        const transformerSvg = d3.select("#transformer");
+        const transformerData = {
+            layers: [
+                { nodes: 3, label: "Input Tokens" },
+                { nodes: 3, label: "Attention Layer" },
+                { nodes: 3, label: "Feedforward" },
+                { nodes: 2, label: "Output" }
+            ]
+        };
+        drawNetwork(transformerSvg, transformerData, 400, 200, false);
+
+        // Generative Adversarial Network
+        const ganSvg = d3.select("#gan");
+        const ganData = {
+            layers: [
+                { nodes: 3, label: "Noise Input" },
+                { nodes: 4, label: "Generator" },
+                { nodes: 4, label: "Discriminator" },
+                { nodes: 2, label: "Real/Fake Output" }
+            ]
+        };
+        drawNetwork(ganSvg, ganData, 400, 200, false);
+
+        // General function to draw a network
+        function drawNetwork(svg, data, width, height, hasLoops) {
+            const layerSpacing = width / (data.layers.length + 1);
+            const nodeRadius = 10;
+            let nodes = [];
+            let links = [];
+
+            // Create nodes for each layer
+            data.layers.forEach((layer, i) => {
+                const ySpacing = height / (layer.nodes + 1);
+                for (let j = 0; j < layer.nodes; j++) {
+                    nodes.push({
+                        x: (i + 1) * layerSpacing,
+                        y: (j + 1) * ySpacing,
+                        label: layer.label
+                    });
+                }
+            });
+
+            // Create links between layers
+            for (let i = 0; i < data.layers.length - 1; i++) {
+                const layer1 = nodes.slice(
+                    data.layers.slice(0, i).reduce((sum, l) => sum + l.nodes, 0),
+                    data.layers.slice(0, i + 1).reduce((sum, l) => sum + l.nodes, 0)
+                );
+                const layer2 = nodes.slice(
+                    data.layers.slice(0, i + 1).reduce((sum, l) => sum + l.nodes, 0),
+                    data.layers.slice(0, i + 2).reduce((sum, l) => sum + l.nodes, 0)
+                );
+                layer1.forEach(n1 => {
+                    layer2.forEach(n2 => {
+                        links.push({ source: n1, target: n2 });
+                    });
+                });
+            }
+
+            // Add loops for RNN
+            if (hasLoops) {
+                const recurrentLayer = nodes.slice(data.layers[0].nodes, data.layers[0].nodes + data.layers[1].nodes);
+                recurrentLayer.forEach(n => {
+                    links.push({ source: n, target: n });
+                });
+            }
+
+            // Draw links
+            svg.selectAll(".link")
+                .data(links)
+                .enter()
+                .append("line")
+                .attr("x1", d => d.source.x)
+                .attr("y1", d => d.source.y)
+                .attr("x2", d => d.target.x)
+                .attr("y2", d => d.target.y)
+                .attr("stroke", "#999")
+                .attr("stroke-width", 1)
+                .on("mouseover", function (event, d) {
+                    tooltip.transition().duration(200).style("opacity", 0.9);
+                    tooltip.html("Connection")
+                        .style("left", (event.pageX + 5) + "px")
+                        .style("top", (event.pageY - 28) + "px");
+                })
+                .on("mouseout", () => tooltip.transition().duration(500).style("opacity", 0));
+
+            // Draw nodes
+            svg.selectAll(".node")
+                .data(nodes)
+                .enter()
+                .append("circle")
+                .attr("cx", d => d.x)
+                .attr("cy", d => d.y)
+                .attr("r", nodeRadius)
+                .attr("fill", "#69b3a2")
+                .on("mouseover", function (event, d) {
+                    tooltip.transition().duration(200).style("opacity", 0.9);
+                    tooltip.html(d.label)
+                        .style("left", (event.pageX + 5) + "px")
+                        .style("top", (event.pageY - 28) + "px");
+                })
+                .on("mouseout", () => tooltip.transition().duration(500).style("opacity", 0));
+
+            // Draw labels
+            svg.selectAll(".label")
+                .data(data.layers)
+                .enter()
+                .append("text")
+                .attr("x", (d, i) => (i + 1) * layerSpacing)
+                .attr("y", 20)
+                .attr("text-anchor", "middle")
+                .attr("font-size", "12px")
+                .text(d => d.label);
+        }
+    </script>
+</body>
+</html>
