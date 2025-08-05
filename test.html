@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Self-Learning Web Scraper</title>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        textarea, button, pre { margin: 10px 0; width: 100%; }
+        #output { white-space: pre-wrap; background: #f5f5f5; padding: 10px; }
+    </style>
+</head>
+<body>
+    <h1>Self-Learning Web Scraper & Trainer</h1>
+    
+    <h3>1. Scrape Data from a URL</h3>
+    <input type="text" id="url" placeholder="Enter URL (e.g., https://example.com)" value="https://en.wikipedia.org/wiki/Machine_learning" />
+    <button onclick="scrapeData()">Scrape & Process</button>
+    
+    <h3>2. Train Model on Scraped Data</h3>
+    <button onclick="trainModel()">Train Model</button>
+    
+    <h3>3. Test Model on New Text</h3>
+    <textarea id="testText" placeholder="Enter text to classify"></textarea>
+    <button onclick="classifyText()">Classify Text</button>
+    
+    <h3>Output</h3>
+    <pre id="output">Ready...</pre>
+    
+    <script>
+        // ====== GLOBALS ======
+        let scrapedData = [];
+        let model = {
+            categories: {},
+            totalWords: 0,
+            categoryCounts: {}
+        };
+
+        // ====== SCRAPING ======
+        async function scrapeData() {
+            const url = document.getElementById('url").value;
+            const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
+            
+            try {
+                const response = await axios.get(proxyUrl);
+                const html = response.data.contents;
+                const text = stripHtml(html).substring(0, 1000); // Limit to 1000 chars
+                
+                scrapedData.push(text);
+                document.getElementById('output").textContent = `✅ Scraped & stored data:\n\n${text}`;
+            } catch (error) {
+                document.getElementById('output").textContent = `❌ Error: ${error.message}`;
+            }
+        }
+
+        // Remove HTML tags
+        function stripHtml(html) {
+            const doc = new DOMParser().parseFromString(html, 'text/html');
+            return doc.body.textContent || "";
+        }
+
+        // ====== TRAINING ======
+        function trainModel() {
+            if (scrapedData.length === 0) {
+                document.getElementById('output").textContent = "❌ No data to train on! Scrape first.";
+                return;
+            }
+
+            // Simple categorization: "AI" vs. "Other"
+            scrapedData.forEach(text => {
+                const category = text.toLowerCase().includes("machine learning") ? "AI" : "Other";
+                trainText(text, category);
+            });
+
+            document.getElementById('output").textContent = `✅ Model trained on ${scrapedData.length} samples!\n\nCategories: ${Object.keys(model.categories).join(", ")}`;
+        }
+
+        function trainText(text, category) {
+            if (!model.categories[category]) {
+                model.categories[category] = {};
+                model.categoryCounts[category] = 0;
+            }
+
+            const words = text.toLowerCase().split(/\W+/).filter(word => word.length > 2);
+            words.forEach(word => {
+                model.categories[category][word] = (model.categories[category][word] || 0) + 1;
+                model.totalWords++;
+            });
+            model.categoryCounts[category]++;
+        }
+
+        // ====== CLASSIFICATION ======
+        function classifyText() {
+            const text = document.getElementById('testText").value;
+            if (!text.trim()) {
+                document.getElementById('output").textContent = "❌ Enter text to classify!";
+                return;
+            }
+
+            const categoryScores = {};
+            const words = text.toLowerCase().split(/\W+/).filter(word => word.length > 2);
+
+            // Naive Bayes probability calculation
+            Object.keys(model.categories).forEach(cat => {
+                let score = Math.log(model.categoryCounts[cat] / scrapedData.length);
+                words.forEach(word => {
+                    const wordCount = model.categories[cat][word] || 0;
+                    const totalInCat = Object.values(model.categories[cat]).reduce((a, b) => a + b, 0);
+                    score += Math.log((wordCount + 1) / (totalInCat + model.totalWords));
+                });
+                categoryScores[cat] = score;
+            });
+
+            const bestCategory = Object.keys(categoryScores).reduce((a, b) => 
+                categoryScores[a] > categoryScores[b] ? a : b
+            );
+
+            document.getElementById('output").textContent = `📊 Classification Result:\n\n"${text}"\n\n→ Predicted Category: ${bestCategory}\n\n(Confidence: ${Math.exp(categoryScores[bestCategory]).toFixed(4)})`;
+        }
+    </script>
+</body>
+</html>
