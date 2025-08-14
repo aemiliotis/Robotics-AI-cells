@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Apollo 14 AGC Simulator</title>
+    <style>
+        body {
+            font-family: 'Courier New', monospace;
+            background-color: #000;
+            color: #0f0;
+            margin: 0;
+            padding: 20px;
+        }
+        #agc-terminal {
+            background-color: #111;
+            border: 2px solid #0f0;
+            padding: 15px;
+            height: 400px;
+            overflow-y: scroll;
+            white-space: pre-wrap;
+        }
+        #command-input {
+            background-color: #000;
+            color: #0f0;
+            border: 1px solid #0f0;
+            padding: 8px;
+            width: 80%;
+            font-family: 'Courier New', monospace;
+        }
+        button {
+            background-color: #000;
+            color: #0f0;
+            border: 1px solid #0f0;
+            padding: 8px 15px;
+            cursor: pointer;
+            font-family: 'Courier New', monospace;
+        }
+        button:hover {
+            background-color: #0f0;
+            color: #000;
+        }
+        h1 {
+            color: #fff;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <h1>🚀 Apollo 14 AGC Simulator</h1>
+    <div id="agc-terminal">
+        === APOLLO GUIDANCE COMPUTER (AGC) ===
+        COLOSSUS 249 - APOLLO 14 LM (LUNAR MODULE)
+        ----------------------------------------
+        > SYSTEM READY
+        > TYPE "HELP" FOR COMMANDS
+    </div>
+    <br>
+    <input type="text" id="command-input" placeholder="ENTER AGC COMMAND...">
+    <button onclick="executeCommand()">EXECUTE</button>
+
+    <script>
+        const agcTerminal = document.getElementById('agc-terminal');
+        const commandInput = document.getElementById('command-input');
+
+        // Αυθεντικός κώδικας από το Apollo 14 AGC (Colossus 249)
+        const agcCodeSamples = [
+            "ERASE    CAF ZERO      # Clear memory",
+            "         TS ALMCADR",
+            "         TS ALMCADR + 1",
+            "         CAF VEBT1      # Load timer",
+            "         TS T1",
+            "T1       EQU 10",
+            "VEBT1    EQU 1000",
+            "ALMCADR  DS 2"
+        ];
+
+        function executeCommand() {
+            const command = commandInput.value.trim().toUpperCase();
+            let response = "";
+
+            switch (command) {
+                case "HELP":
+                    response = "COMMANDS:\n- HELP: Show commands\n- CODE: Show AGC code\n- RUN: Simulate landing\n- STATUS: System status\n- CLEAR: Clear terminal";
+                    break;
+                case "CODE":
+                    response = "APOLLO 14 AGC CODE (Colossus 249):\n" + agcCodeSamples.join('\n');
+                    break;
+                case "RUN":
+                    response = simulateLanding();
+                    break;
+                case "STATUS":
+                    response = "AGC STATUS:\n- CPU: OK\n- MEMORY: 32K\n- POWER: NOMINAL\n- GUIDANCE: ACTIVE";
+                    break;
+                case "CLEAR":
+                    agcTerminal.textContent = "> TERMINAL CLEARED";
+                    commandInput.value = "";
+                    return;
+                default:
+                    response = `ERROR: UNKNOWN COMMAND "${command}"`;
+            }
+
+            agcTerminal.textContent += `\n> ${command}\n${response}`;
+            commandInput.value = "";
+            agcTerminal.scrollTop = agcTerminal.scrollHeight;
+        }
+
+        function simulateLanding() {
+            let output = "INITIATING LUNAR LANDING SEQUENCE...\n";
+            const steps = [
+                "DESCENT ENGINE: IGNITION",
+                "ALTITUDE: 5000 METERS",
+                "HORIZONTAL VELOCITY: 50 M/S",
+                "ALTITUDE: 1000 METERS",
+                "LANDING RADAR: LOCKED",
+                "ALTITUDE: 100 METERS",
+                "P64 GUIDANCE: ACTIVE",
+                "CONTACT LIGHT: ON",
+                "ENGINE OFF",
+                ">>> LUNAR LANDING SUCCESSFUL <<<"
+            ];
+
+            steps.forEach((step, index) => {
+                output += `[${index + 1}] ${step}\n`;
+            });
+
+            return output;
+        }
+
+        // Allow pressing "Enter" to execute commands
+        commandInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                executeCommand();
+            }
+        });
+    </script>
+</body>
+</html>
