@@ -1,126 +1,41 @@
+<!-- index.html -->
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Pi Flow - No-Code Tool Builder</title>
-    <script src="https://sdk.minepi.com/pi-sdk.js"></script>
-    <style>
-        body { font-family: Arial; margin: 40px; }
-        .auth-section, .editor-section { margin-bottom: 30px; }
-        .block { padding: 10px; margin: 5px; background: #eee; display: inline-block; cursor: grab; }
-        .canvas { min-height: 200px; border: 2px dashed #ccc; padding: 20px; }
-    </style>
-</head>
-<body>
-    <h1>Pi Flow 🛠️</h1>
-    <p>Build tools without code. Powered by Pi.</p>
-
-    <!-- Pi Auth Section -->
-    <div class="auth-section">
-        <button onclick="handleAuth()">Login with Pi</button>
-        <div id="userInfo"></div>
-    </div>
-
-    <!-- Tool Editor (shown after auth) -->
-    <div class="editor-section" style="display:none;" id="editorSection">
-        <h2>Create a New Tool</h2>
-        <input type="text" id="toolName" placeholder="Tool Name">
-        <br>
-        <h3>Building Blocks</h3>
-        <div class="block" draggable="true" data-type="text_uppercase">Text to UPPERCASE</div>
-        <div class="block" draggable="true" data-type="math_multiply">Multiply Number</div>
-        <div class="block" draggable="true" data-type="api_request">Fetch API Data</div>
-
-        <h3>Your Workflow Canvas</h3>
-        <div class="canvas" id="workflowCanvas" ondrop="drop(event)" ondragover="allowDrop(event)"></div>
-        <br>
-        <button onclick="saveTool()">Save & Make Public</button>
-    </div>
-
-    <!-- Public Tools Gallery -->
-    <div>
-        <h2>Public Tools Gallery</h2>
-        <div id="publicToolsList"></div>
-    </div>
-
+    <title>No-Code Tool Builder</title>
     <script>
-        let currentUser = null;
-        const API_BASE = 'https://your-render-app.onrender.com'; // Your backend URL
-
-        // 1. Pi Authentication
-        async function handleAuth() {
-            const Pi = window.Pi;
-            await Pi.init({ version: "2.0" });
-            const user = await Pi.authenticate();
-            currentUser = user;
-            document.getElementById('userInfo').innerText = `Hello, ${user.username}!`;
-            document.getElementById('editorSection').style.display = 'block';
-            fetchPublicTools();
-        }
-
-        // 2. Drag-and-Drop Workflow Builder Logic
-        function allowDrop(event) { event.preventDefault(); }
-        function drop(event) {
-            event.preventDefault();
-            const blockType = event.dataTransfer.getData("text");
-            const blockElement = document.createElement('div');
-            blockElement.className = 'block';
-            blockElement.innerText = blockType;
-            blockElement.setAttribute('data-type', blockType);
-            event.target.appendChild(blockElement);
-        }
-        // Make blocks draggable
-        document.querySelectorAll('.block').forEach(block => {
-            block.addEventListener('dragstart', event => {
-                event.dataTransfer.setData("text", event.target.getAttribute('data-type'));
-            });
-        });
-
-        // 3. Save the built tool to the backend
-        async function saveTool() {
-            const toolName = document.getElementById('toolName').value;
-            const blocks = Array.from(document.getElementById('workflowCanvas').children).map(blockEl => {
-                return { type: blockEl.getAttribute('data-type') };
-            });
-
-            const workflowData = { blocks };
-            const isPublic = true;
-
-            const response = await fetch(`${API_BASE}/api/tools`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name: toolName, is_public: isPublic, workflow_data: workflowData })
-            });
-            const result = await response.json();
-            if (result.success) {
-                alert('Tool saved and published!');
-            }
-        }
-
-        // 4. Fetch and display public tools
-        async function fetchPublicTools() {
-            const response = await fetch(`${API_BASE}/api/tools/public`);
-            const tools = await response.json();
-            const toolsListEl = document.getElementById('publicToolsList');
-            toolsListEl.innerHTML = tools.map(tool => `
-                <div>
-                    <h4>${tool.name}</h4>
-                    <p>${tool.description}</p>
-                    <button onclick="runTool(${tool.id})">Run This Tool</button>
-                </div>
-            `).join('');
-        }
-
-        // 5. Execute a public tool
-        async function runTool(toolId) {
-            const input = prompt("Enter input for this tool:"); // Simple input
-            const response = await fetch(`${API_BASE}/api/tools/execute/${toolId}`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(input)
-            });
-            const result = await response.json();
-            alert(`Result: ${JSON.stringify(result.output)}`);
+        let inputCount = 0;
+        function addInput() {
+            const container = document.getElementById('inputs-container');
+            const div = document.createElement('div');
+            div.innerHTML = `
+                Input Name: <input name="input_name_${inputCount}">
+                Type: <select name="input_type_${inputCount}">
+                    <option value="text">Text</option>
+                    <option value="number">Number</option>
+                </select><br>
+            `;
+            container.appendChild(div);
+            inputCount++;
         }
     </script>
+</head>
+<body>
+    <h1>Welcome, {{ session['username'] if 'username' in session else 'Guest' }}</h1>
+    <a href="/logout">Logout</a>
+    <h2>Your Tools</h2>
+    <ul>
+        {% for tool_name in tools %}
+            <li><a href="/tool/{{ tool_name }}">{{ tool_name }}</a> (Publicly executable)</li>
+        {% endfor %}
+    </ul>
+    <h2>Create New Tool</h2>
+    <form method="post" action="/create_tool">
+        Tool Name: <input name="tool_name"><br>
+        <div id="inputs-container"></div>
+        <button type="button" onclick="addInput()">Add Input</button><br>
+        Logic (Python expression, e.g., input1 + input2): <textarea name="logic"></textarea><br>
+        <input type="submit" value="Create Tool">
+    </form>
 </body>
 </html>
