@@ -1,41 +1,123 @@
-<!-- index.html -->
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>No-Code Tool Builder</title>
-    <script>
-        let inputCount = 0;
-        function addInput() {
-            const container = document.getElementById('inputs-container');
-            const div = document.createElement('div');
-            div.innerHTML = `
-                Input Name: <input name="input_name_${inputCount}">
-                Type: <select name="input_type_${inputCount}">
-                    <option value="text">Text</option>
-                    <option value="number">Number</option>
-                </select><br>
-            `;
-            container.appendChild(div);
-            inputCount++;
-        }
-    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pi ToolForge</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { padding: 20px; }
+        .form-section { margin-bottom: 20px; }
+    </style>
 </head>
 <body>
-    <h1>Welcome, {{ session['username'] if 'username' in session else 'Guest' }}</h1>
-    <a href="/logout">Logout</a>
-    <h2>Your Tools</h2>
-    <ul>
-        {% for tool_name in tools %}
-            <li><a href="/tool/{{ tool_name }}">{{ tool_name }}</a> (Publicly executable)</li>
-        {% endfor %}
-    </ul>
-    <h2>Create New Tool</h2>
-    <form method="post" action="/create_tool">
-        Tool Name: <input name="tool_name"><br>
-        <div id="inputs-container"></div>
-        <button type="button" onclick="addInput()">Add Input</button><br>
-        Logic (Python expression, e.g., input1 + input2): <textarea name="logic"></textarea><br>
-        <input type="submit" value="Create Tool">
-    </form>
+    <div class="container">
+        <h1>Pi ToolForge: Build Space Tools</h1>
+        <div id="login-section" class="form-section">
+            <h3>Login with Pi</h3>
+            <input type="text" id="user-id" class="form-control" placeholder="Pi User ID" required>
+            <input type="text" id="token" class="form-control" placeholder="Pi Token" required>
+            <button onclick="login()" class="btn btn-primary mt-2">Login</button>
+        </div>
+        <div id="tool-form-section" class="form-section" style="display: none;">
+            <h3>Create a Tool</h3>
+            <form id="tool-form">
+                <div class="mb-3">
+                    <label for="tool-name" class="form-label">Tool Name</label>
+                    <input type="text" id="tool-name" class="form-control" required>
+                </div>
+                <div class="mb-3">
+                    <label for="tool-type" class="form-label">Tool Type</label>
+                    <select id="tool-type" class="form-select" required>
+                        <option value="calculator">Calculator (e.g., Rocket Fuel Cost)</option>
+                        <option value="visualizer">Visualizer (e.g., Satellite Orbit)</option>
+                    </select>
+                </div>
+                <div id="inputs-section" class="mb-3">
+                    <h4>Inputs</h4>
+                    <div id="input-fields">
+                        <div class="input-group mb-2">
+                            <input type="text" class="form-control" placeholder="Input Label" name="input-label[]">
+                            <input type="text" class="form-control" placeholder="Input Name" name="input-name[]">
+                            <select class="form-select" name="input-type[]">
+                                <option value="number">Number</option>
+                                <option value="text">Text</option>
+                            </select>
+                            <button type="button" class="btn btn-danger" onclick="removeInput(this)">Remove</button>
+                        </div>
+                    </div>
+                    <button type="button" class="btn btn-secondary" onclick="addInput()">Add Input</button>
+                </div>
+                <button type="submit" class="btn btn-primary">Create Tool</button>
+            </form>
+        </div>
+        <div id="result-section" class="form-section"></div>
+    </div>
+
+    <script>
+        let userId = null;
+
+        async function login() {
+            const userIdInput = document.getElementById('user-id').value;
+            const token = document.getElementById('token').value;
+            const response = await fetch('/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ user_id: userIdInput, token })
+            });
+            const result = await response.json();
+            if (result.status === 'success') {
+                userId = result.user_id;
+                document.getElementById('login-section').style.display = 'none';
+                document.getElementById('tool-form-section').style.display = 'block';
+            } else {
+                alert('Login failed: ' + result.message);
+            }
+        }
+
+        function addInput() {
+            const inputFields = document.getElementById('input-fields');
+            const newInput = document.createElement('div');
+            newInput.className = 'input-group mb-2';
+            newInput.innerHTML = `
+                <input type="text" class="form-control" placeholder="Input Label" name="input-label[]">
+                <input type="text" class="form-control" placeholder="Input Name" name="input-name[]">
+                <select class="form-select" name="input-type[]">
+                    <option value="number">Number</option>
+                    <option value="text">Text</option>
+                </select>
+                <button type="button" class="btn btn-danger" onclick="removeInput(this)">Remove</button>
+            `;
+            inputFields.appendChild(newInput);
+        }
+
+        function removeInput(button) {
+            button.parentElement.remove();
+        }
+
+        document.getElementById('tool-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const toolName = document.getElementById('tool-name').value;
+            const toolType = document.getElementById('tool-type').value;
+            const inputs = Array.from(document.getElementsByName('input-label[]')).map((label, i) => ({
+                label: label.value,
+                name: document.getElementsByName('input-name[]')[i].value,
+                type: document.getElementsByName('input-type[]')[i].value
+            }));
+            const response = await fetch('/create_tool', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ user_id: userId, token: 'dummy-token', tool_name: toolName, tool_type: toolType, inputs, outputs: ['result'] })
+            });
+            const result = await response.json();
+            if (result.status === 'success') {
+                document.getElementById('result-section').innerHTML = `
+                    <p>Tool created! Access it at: <a href="/tool/${result.tool_id}">${result.pinet_url}</a></p>
+                `;
+            } else {
+                alert('Error: ' + result.message);
+            }
+        });
+    </script>
 </body>
 </html>
