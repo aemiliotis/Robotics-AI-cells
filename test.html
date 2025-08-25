@@ -9,15 +9,15 @@
         body { padding: 20px; }
         .form-section { margin-bottom: 20px; }
     </style>
+    <!-- Pi Authentication SDK (load from Pi Network CDN, replace with actual URL) -->
+    <script src="https://sdk.pi.network/pi-sdk.js"></script>
 </head>
 <body>
     <div class="container">
         <h1>Pi ToolForge: Build Space Tools</h1>
         <div id="login-section" class="form-section">
             <h3>Login with Pi</h3>
-            <input type="text" id="user-id" class="form-control" placeholder="Pi User ID" required>
-            <input type="text" id="token" class="form-control" placeholder="Pi Token" required>
-            <button onclick="login()" class="btn btn-primary mt-2">Login</button>
+            <button onclick="piLogin()" class="btn btn-primary">Login with Pi Network</button>
         </div>
         <div id="tool-form-section" class="form-section" style="display: none;">
             <h3>Create a Tool</h3>
@@ -56,22 +56,32 @@
 
     <script>
         let userId = null;
+        let accessToken = null;
 
-        async function login() {
-            const userIdInput = document.getElementById('user-id').value;
-            const token = document.getElementById('token').value;
-            const response = await fetch('/login', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ user_id: userIdInput, token })
-            });
-            const result = await response.json();
-            if (result.status === 'success') {
-                userId = result.user_id;
-                document.getElementById('login-section').style.display = 'none';
-                document.getElementById('tool-form-section').style.display = 'block';
-            } else {
-                alert('Login failed: ' + result.message);
+        // Initialize Pi SDK
+        window.Pi.init({ version: "2.0", appId: "your_pi_app_id" }); // Replace with your Pi App ID
+
+        async function piLogin() {
+            try {
+                const authResult = await window.Pi.authenticate(['user_info']);
+                userId = authResult.user.uid;
+                accessToken = authResult.accessToken;
+                
+                // Send authentication to backend
+                const response = await fetch('/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ access_token: accessToken })
+                });
+                const result = await response.json();
+                if (result.status === 'success') {
+                    document.getElementById('login-section').style.display = 'none';
+                    document.getElementById('tool-form-section').style.display = 'block';
+                } else {
+                    alert('Pi Login failed: ' + result.message);
+                }
+            } catch (error) {
+                alert('Pi Login error: ' + error.message);
             }
         }
 
@@ -107,7 +117,7 @@
             const response = await fetch('/create_tool', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ user_id: userId, token: 'dummy-token', tool_name: toolName, tool_type: toolType, inputs, outputs: ['result'] })
+                body: JSON.stringify({ access_token: accessToken, tool_name: toolName, tool_type: toolType, inputs, outputs: ['result'] })
             });
             const result = await response.json();
             if (result.status === 'success') {
